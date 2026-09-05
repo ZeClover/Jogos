@@ -263,6 +263,82 @@
   cursor: not-allowed;
 }
 
+.upgrade-item.purchased {
+  opacity: 0.5;
+  border-color: rgba(45, 224, 194, 0.4);
+}
+
+.upgrade-item.purchased .price {
+  color: var(--accent-3);
+}
+
+.achievements-section {
+  margin-top: 2rem;
+}
+
+.achievements-section h2 {
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.achievements-section h2 span {
+  color: var(--accent-3);
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.9rem;
+}
+
+.achievements-desc {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+.achievements-desc strong {
+  color: #c9a4ff;
+}
+
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.achievement-card {
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius);
+  padding: 1rem 0.75rem;
+  text-align: center;
+  opacity: 0.5;
+}
+
+.achievement-card.unlocked {
+  opacity: 1;
+  border-color: rgba(255, 157, 60, 0.5);
+  box-shadow: 0 6px 18px rgba(255, 157, 60, 0.12);
+}
+
+.achievement-card .icon {
+  font-size: 1.8rem;
+  margin-bottom: 0.35rem;
+}
+
+.achievement-card .name {
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.achievement-card .desc {
+  color: var(--text-dim);
+  font-size: 0.72rem;
+}
+
 .reset-wrap {
   text-align: center;
   margin-top: 2rem;
