@@ -44,6 +44,9 @@
   font-weight: 700;
   font-size: 0.9rem;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 45vw;
 }
 
 .rank-bar-track {
@@ -273,6 +276,65 @@
   padding: 0.4rem 1rem;
   font-size: 0.8rem;
   cursor: pointer;
+}
+
+#train-btn {
+  touch-action: manipulation;
+}
+
+.shop-item,
+#prestige-btn,
+#reset-btn {
+  touch-action: manipulation;
+}
+
+@media (max-width: 480px) {
+  .ninja-page {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  #train-btn {
+    width: 120px;
+    height: 120px;
+    font-size: 2.1rem;
+  }
+
+  .stats-row {
+    gap: 0.6rem;
+  }
+
+  .stat-box {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .stat-box .value {
+    font-size: 1.3rem;
+  }
+
+  .shop-item {
+    flex-wrap: wrap;
+    padding: 0.75rem 0.9rem;
+  }
+
+  .shop-item .info {
+    min-width: 0;
+    flex-basis: calc(100% - 3.5rem);
+  }
+
+  .shop-item .cost {
+    flex-basis: 100%;
+    text-align: left;
+    margin-top: 0.35rem;
+    padding-left: calc(1.8rem + 1rem);
+  }
+
+  .shop-item .desc {
+    font-size: 0.75rem;
+  }
+
+  .prestige-stats {
+    gap: 0.6rem;
+  }
 }
 
 .floating-gain {
