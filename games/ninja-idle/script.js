@@ -71,11 +71,15 @@ const RANKS = [
   { title: 'Hokage', threshold: 150000000 },
 ];
 
+const PRESTIGE_DIVISOR = 1_000_000;
+const PRESTIGE_BONUS_PER_POINT = 0.02;
+
 let state = {
   chakra: 0,
   totalEarned: 0,
   clickPower: 1,
   owned: {},
+  prestigePoints: 0,
   lastSeen: Date.now(),
 };
 
@@ -92,7 +96,7 @@ function loadState() {
 
   const elapsedSeconds = Math.max(0, (Date.now() - (state.lastSeen || Date.now())) / 1000);
   if (elapsedSeconds > 5) {
-    const offlineCps = getTotalCps();
+    const offlineCps = getEffectiveCps();
     const cappedSeconds = Math.min(elapsedSeconds, 8 * 3600);
     const earned = offlineCps * cappedSeconds;
     if (earned > 1) {
@@ -119,6 +123,35 @@ function getUnitCost(unit) {
 
 function getTotalCps() {
   return UNITS.reduce((sum, unit) => sum + unit.baseCps * getUnitCount(unit.id), 0);
+}
+
+function getPrestigeMultiplier() {
+  return 1 + state.prestigePoints * PRESTIGE_BONUS_PER_POINT;
+}
+
+function getEffectiveCps() {
+  return getTotalCps() * getPrestigeMultiplier();
+}
+
+function getEffectiveClickPower() {
+  return state.clickPower * getPrestigeMultiplier();
+}
+
+function getPrestigeGain() {
+  return Math.floor(Math.cbrt(state.totalEarned / PRESTIGE_DIVISOR));
+}
+
+function doPrestige() {
+  const gain = getPrestigeGain();
+  if (gain <= 0) return;
+  state.prestigePoints += gain;
+  state.chakra = 0;
+  state.totalEarned = 0;
+  state.owned = {};
+  updateStats();
+  renderShop();
+  renderPrestige();
+  saveState();
 }
 
 function getCurrentRank() {
@@ -198,7 +231,7 @@ function buyUnit(unit) {
 
 function updateStats() {
   document.getElementById('chakra-value').textContent = formatNumber(state.chakra);
-  document.getElementById('cps-value').textContent = formatNumber(getTotalCps());
+  document.getElementById('cps-value').textContent = formatNumber(getEffectiveCps());
 
   const rank = getCurrentRank();
   const next = getNextRank();
@@ -224,36 +257,69 @@ function spawnFloatingGain(x, y, amount) {
 }
 
 function handleTrainClick(event) {
-  state.chakra += state.clickPower;
-  state.totalEarned += state.clickPower;
-  spawnFloatingGain(event.clientX, event.clientY, state.clickPower);
+  const amount = getEffectiveClickPower();
+  state.chakra += amount;
+  state.totalEarned += amount;
+  spawnFloatingGain(event.clientX, event.clientY, amount);
   updateStats();
   renderShop();
+  renderPrestige();
 }
 
 function tick() {
-  const cps = getTotalCps();
+  const cps = getEffectiveCps();
   if (cps > 0) {
     const delta = cps / 10;
     state.chakra += delta;
     state.totalEarned += delta;
     updateStats();
     renderShop();
+    renderPrestige();
   }
+}
+
+function renderPrestige() {
+  const gain = getPrestigeGain();
+  document.getElementById('prestige-points').textContent = formatNumber(state.prestigePoints);
+  document.getElementById('prestige-bonus').textContent = `+${Math.round((getPrestigeMultiplier() - 1) * 100)}%`;
+  document.getElementById('prestige-gain').textContent = `+${formatNumber(gain)}`;
+  const btn = document.getElementById('prestige-btn');
+  btn.disabled = gain <= 0;
 }
 
 function init() {
   loadState();
   updateStats();
   renderShop();
+  renderPrestige();
 
   document.getElementById('train-btn').addEventListener('click', handleTrainClick);
+
+  document.getElementById('prestige-btn').addEventListener('click', () => {
+    const gain = getPrestigeGain();
+    if (gain <= 0) return;
+    const ok = confirm(
+      `Ascender reinicia seu Chakra e seus aliados, mas concede +${gain} Fragmento(s) do Sábio permanente(s) ` +
+      `(bônus total passaria de +${Math.round((getPrestigeMultiplier() - 1) * 100)}% para ` +
+      `+${Math.round((1 + (state.prestigePoints + gain) * PRESTIGE_BONUS_PER_POINT - 1) * 100)}%). Continuar?`
+    );
+    if (ok) doPrestige();
+  });
+
   document.getElementById('reset-btn').addEventListener('click', () => {
-    if (confirm('Tem certeza que quer reiniciar todo o seu progresso?')) {
+    if (confirm('Tem certeza que quer reiniciar TODO o seu progresso, incluindo os Fragmentos do Sábio?')) {
       localStorage.removeItem(SAVE_KEY);
-      state = { chakra: 0, totalEarned: 0, clickPower: 1, owned: {}, lastSeen: Date.now() };
+      state = {
+        chakra: 0,
+        totalEarned: 0,
+        clickPower: 1,
+        owned: {},
+        prestigePoints: 0,
+        lastSeen: Date.now(),
+      };
       updateStats();
       renderShop();
+      renderPrestige();
     }
   });
 

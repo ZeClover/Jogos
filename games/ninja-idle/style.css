@@ -204,6 +204,62 @@
   font-size: 0.75rem;
 }
 
+.prestige-section {
+  margin-top: 2rem;
+}
+
+.prestige-section h2 {
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.prestige-panel {
+  background: var(--card);
+  border: 1px solid rgba(157, 92, 255, 0.35);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.prestige-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.prestige-stats .value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #c9a4ff;
+}
+
+.prestige-stats .label {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.prestige-desc {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin: 0 0 0.25rem;
+}
+
+#prestige-btn {
+  background: linear-gradient(135deg, #9d5cff, #ff5c8a);
+}
+
+#prestige-btn:disabled {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
+  cursor: not-allowed;
+}
+
 .reset-wrap {
   text-align: center;
   margin-top: 2rem;
