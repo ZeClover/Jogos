@@ -1,13 +1,19 @@
 const SAVE_KEY = 'relic-quest-save-v1';
 const REQUIRED_ENCOUNTERS = 3;
 const POTION_COST = 12;
+const HERO_ICON = '🥷';
+const HERO_IMG = 'assets/hero-kael.png';
+
+function setPortrait(el, img, fallbackIcon, alt) {
+  el.innerHTML = img ? `<img src="${img}" alt="${alt}">` : fallbackIcon;
+}
 
 const REGIONS = [
   {
     title: 'Floresta Sussurrante',
     flavor: 'A névoa cobre as árvores retorcidas à sua frente. Algo se move entre os galhos.',
     enemies: [
-      { name: 'Lobo Selvagem', icon: '🐺', hp: 18, atk: 5, exp: 8, gold: 6 },
+      { name: 'Lobo Selvagem', icon: '🐺', img: 'assets/lobo-selvagem.png', hp: 18, atk: 5, exp: 8, gold: 6 },
       { name: 'Bandido da Estrada', icon: '🗡️', hp: 22, atk: 6, exp: 10, gold: 9 },
       { name: 'Aranha Gigante', icon: '🕷️', hp: 16, atk: 7, exp: 9, gold: 7 },
     ],
@@ -157,6 +163,7 @@ function showScreen(name) {
 }
 
 function renderHeroPanel() {
+  setPortrait(document.getElementById('hero-portrait'), HERO_IMG, HERO_ICON, state.heroName);
   document.getElementById('hero-name-label').textContent = state.heroName;
   document.getElementById('hero-level').textContent = state.level;
   const maxHp = getMaxHp();
@@ -329,7 +336,7 @@ function buildItemMenu() {
 
 function renderBattle() {
   const { enemy, enemyHp, enemyMaxHp, isBoss } = currentBattle;
-  document.getElementById('enemy-icon').textContent = enemy.icon;
+  setPortrait(document.getElementById('enemy-icon'), enemy.img, enemy.icon, enemy.name);
   document.getElementById('battle-enemy-name').textContent = enemy.name;
   const hp = Math.max(0, enemyHp);
   document.getElementById('enemy-hp-fill').style.width = `${(hp / enemyMaxHp) * 100}%`;
