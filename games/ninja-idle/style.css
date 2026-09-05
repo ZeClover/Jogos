@@ -1,0 +1,240 @@
+.ninja-page {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+.ninja-page .back-link {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  color: var(--accent-3);
+  font-weight: 600;
+}
+
+.ninja-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.ninja-header h1 {
+  margin: 0 0 0.25rem;
+  background: linear-gradient(135deg, #ff9d3c, #ff5c8a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.ninja-header p {
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.rank-bar-wrap {
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  padding: 0.35rem 0.35rem 0.35rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+
+.rank-bar-wrap .rank-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.rank-bar-track {
+  flex: 1;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.rank-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff9d3c, #ff5c8a);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-box {
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-align: center;
+}
+
+.stat-box .value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--accent-3);
+}
+
+.stat-box .label {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.train-btn-wrap {
+  text-align: center;
+  margin: 1.5rem 0 2rem;
+}
+
+#train-btn {
+  cursor: pointer;
+  border: none;
+  border-radius: 50%;
+  width: 150px;
+  height: 150px;
+  font-size: 2.6rem;
+  background: radial-gradient(circle at 30% 30%, #ff9d3c, #ff5c8a 70%);
+  color: white;
+  box-shadow: 0 10px 30px rgba(255, 92, 138, 0.35);
+  transition: transform 0.08s ease;
+  user-select: none;
+}
+
+#train-btn:active {
+  transform: scale(0.94);
+}
+
+#train-btn small {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.shop-section h2 {
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.shop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius);
+  padding: 0.9rem 1.1rem;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, transform 0.1s ease;
+  color: var(--text);
+  font-family: inherit;
+  width: 100%;
+}
+
+.shop-item:hover:not(:disabled) {
+  border-color: rgba(124, 92, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.shop-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.shop-item .icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+}
+
+.shop-item .info {
+  flex: 1;
+}
+
+.shop-item .info .name {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shop-item .info .count {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 0.05rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+.shop-item .info .desc {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin-top: 0.15rem;
+}
+
+.shop-item .cost {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.shop-item .cost .price {
+  font-weight: 800;
+  color: var(--accent-3);
+}
+
+.shop-item .cost .cps {
+  display: block;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+}
+
+.reset-wrap {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.reset-wrap button {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-dim);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.floating-gain {
+  position: fixed;
+  pointer-events: none;
+  font-weight: 800;
+  color: #ffd23c;
+  animation: float-up 0.9s ease-out forwards;
+  z-index: 10;
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-60px);
+  }
+}

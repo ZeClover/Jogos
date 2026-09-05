@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Caminho do Ninja - Idle</title>
+<link rel="stylesheet" href="../../style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="ninja-page">
+  <a href="../../index.html" class="back-link">&larr; Voltar para os jogos</a>
+
+  <div class="ninja-header">
+    <h1>🍥 Caminho do Ninja</h1>
+    <p>Treine, acumule Chakra e trilhe o caminho até se tornar o Hokage.</p>
+  </div>
+
+  <div class="rank-bar-wrap">
+    <span class="rank-label" id="rank-label">Estudante da Academia</span>
+    <div class="rank-bar-track">
+      <div class="rank-bar-fill" id="rank-bar-fill"></div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="value" id="chakra-value">0</div>
+      <div class="label">Chakra</div>
+    </div>
+    <div class="stat-box">
+      <div class="value" id="cps-value">0</div>
+      <div class="label">Chakra / seg</div>
+    </div>
+  </div>
+
+  <div class="train-btn-wrap">
+    <button id="train-btn">
+      🥷
+      <small>Treinar</small>
+    </button>
+  </div>
+
+  <div class="shop-section">
+    <h2>Convocar Aliados</h2>
+    <div class="shop-list" id="shop-list"></div>
+  </div>
+
+  <div class="reset-wrap">
+    <button id="reset-btn">Reiniciar progresso</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
