@@ -14,10 +14,10 @@ const REGIONS = [
     flavor: 'A névoa cobre as árvores retorcidas à sua frente. Algo se move entre os galhos.',
     enemies: [
       { name: 'Lobo Selvagem', icon: '🐺', img: 'assets/lobo-selvagem.png', hp: 18, atk: 5, exp: 8, gold: 6 },
-      { name: 'Bandido da Estrada', icon: '🗡️', hp: 22, atk: 6, exp: 10, gold: 9 },
-      { name: 'Aranha Gigante', icon: '🕷️', hp: 16, atk: 7, exp: 9, gold: 7 },
+      { name: 'Bandido da Estrada', icon: '🗡️', img: 'assets/bandido-da-estrada.png', hp: 22, atk: 6, exp: 10, gold: 9 },
+      { name: 'Aranha Gigante', icon: '🕷️', img: 'assets/aranha-gigante.png', hp: 16, atk: 7, exp: 9, gold: 7 },
     ],
-    boss: { name: 'Guardião de Musgo', icon: '🌲', hp: 70, atk: 9, exp: 40, gold: 35 },
+    boss: { name: 'Guardião de Musgo', icon: '🌲', img: 'assets/guardiao-de-musgo.png', hp: 70, atk: 9, exp: 40, gold: 35 },
   },
   {
     title: 'Colinas Áridas',
