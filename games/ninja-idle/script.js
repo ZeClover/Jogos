@@ -149,7 +149,7 @@ function doPrestige() {
   state.totalEarned = 0;
   state.owned = {};
   updateStats();
-  renderShop();
+  refreshShop();
   renderPrestige();
   saveState();
 }
@@ -170,6 +170,7 @@ function getNextRank() {
 }
 
 function formatNumber(num) {
+  if (num < 10) return (Math.round(num * 10) / 10).toString();
   if (num < 1000) return Math.floor(num).toString();
   const units = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi'];
   const order = Math.floor(Math.log10(num) / 3);
@@ -194,28 +195,50 @@ function showOfflineToast(earned, seconds) {
   setTimeout(() => msg.remove(), 5000);
 }
 
-function renderShop() {
+const shopElements = {};
+
+function buildShop() {
   const list = document.getElementById('shop-list');
   list.innerHTML = '';
   UNITS.forEach((unit) => {
-    const cost = getUnitCost(unit);
-    const count = getUnitCount(unit.id);
     const btn = document.createElement('button');
     btn.className = 'shop-item';
-    btn.disabled = state.chakra < cost;
     btn.innerHTML = `
       <div class="icon">${unit.icon}</div>
       <div class="info">
-        <div class="name">${unit.name} <span class="count">${count}</span></div>
+        <div class="name">${unit.name} <span class="count">0</span></div>
         <div class="desc">${unit.desc} · +${formatNumber(unit.baseCps)} chakra/seg cada</div>
       </div>
       <div class="cost">
-        <div class="price">${formatNumber(cost)}</div>
+        <div class="price">0</div>
         <span class="cps">chakra</span>
       </div>
     `;
     btn.addEventListener('click', () => buyUnit(unit));
     list.appendChild(btn);
+    shopElements[unit.id] = {
+      btn,
+      countEl: btn.querySelector('.count'),
+      priceEl: btn.querySelector('.price'),
+    };
+  });
+  refreshShop();
+}
+
+function refreshShop() {
+  UNITS.forEach((unit) => {
+    const els = shopElements[unit.id];
+    if (!els) return;
+    const cost = getUnitCost(unit);
+    const count = getUnitCount(unit.id);
+    if (els.countEl.textContent !== String(count)) {
+      els.countEl.textContent = count;
+    }
+    const priceText = formatNumber(cost);
+    if (els.priceEl.textContent !== priceText) {
+      els.priceEl.textContent = priceText;
+    }
+    els.btn.disabled = state.chakra < cost;
   });
 }
 
@@ -224,7 +247,7 @@ function buyUnit(unit) {
   if (state.chakra < cost) return;
   state.chakra -= cost;
   state.owned[unit.id] = getUnitCount(unit.id) + 1;
-  renderShop();
+  refreshShop();
   updateStats();
   saveState();
 }
@@ -262,7 +285,7 @@ function handleTrainClick(event) {
   state.totalEarned += amount;
   spawnFloatingGain(event.clientX, event.clientY, amount);
   updateStats();
-  renderShop();
+  refreshShop();
   renderPrestige();
 }
 
@@ -273,7 +296,7 @@ function tick() {
     state.chakra += delta;
     state.totalEarned += delta;
     updateStats();
-    renderShop();
+    refreshShop();
     renderPrestige();
   }
 }
@@ -290,7 +313,7 @@ function renderPrestige() {
 function init() {
   loadState();
   updateStats();
-  renderShop();
+  buildShop();
   renderPrestige();
 
   document.getElementById('train-btn').addEventListener('click', handleTrainClick);
@@ -318,7 +341,7 @@ function init() {
         lastSeen: Date.now(),
       };
       updateStats();
-      renderShop();
+      refreshShop();
       renderPrestige();
     }
   });
