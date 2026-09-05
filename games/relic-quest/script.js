@@ -53,11 +53,11 @@ const REGIONS = [
     title: 'Fortaleza Sombria',
     flavor: 'Os portões negros se abrem. O ar pesa com a presença do Rei Sombrio.',
     enemies: [
-      { name: 'Cavaleiro Sombrio', icon: '🗡️', hp: 90, atk: 28, exp: 48, gold: 40 },
-      { name: 'Espectro', icon: '👻', hp: 80, atk: 32, exp: 50, gold: 42 },
-      { name: 'Sentinela de Ferro', icon: '🛡️', hp: 100, atk: 26, exp: 46, gold: 38 },
+      { name: 'Cavaleiro Sombrio', icon: '🗡️', img: 'assets/cavaleiro-sombrio.png', hp: 90, atk: 28, exp: 48, gold: 40 },
+      { name: 'Espectro', icon: '👻', img: 'assets/espectro.png', hp: 80, atk: 32, exp: 50, gold: 42 },
+      { name: 'Sentinela de Ferro', icon: '🛡️', img: 'assets/sentinela-de-ferro.png', hp: 100, atk: 26, exp: 46, gold: 38 },
     ],
-    boss: { name: 'Rei Sombrio', icon: '👑', hp: 500, atk: 38, exp: 0, gold: 0 },
+    boss: { name: 'Rei Sombrio', icon: '👑', img: 'assets/rei-sombrio.png', hp: 500, atk: 38, exp: 0, gold: 0 },
   },
 ];
 
