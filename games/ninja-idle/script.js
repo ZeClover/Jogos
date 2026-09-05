@@ -180,6 +180,26 @@ const UPGRADES = [
   },
 ];
 
+const ENEMIES = [
+  { name: 'Bandido Errante', icon: '🥷', hp: 40, atk: 3, rewardChakra: 200, rewardScrolls: 5 },
+  { name: 'Ronin Desertor', icon: '🗡️', hp: 90, atk: 6, rewardChakra: 800, rewardScrolls: 10 },
+  { name: 'Ninja Renegado', icon: '🌀', hp: 180, atk: 10, rewardChakra: 3000, rewardScrolls: 18 },
+  { name: 'Caçador Corrompido', icon: '🦉', hp: 320, atk: 16, rewardChakra: 12000, rewardScrolls: 30 },
+  { name: 'Fera Selada Menor', icon: '🐺', hp: 550, atk: 24, rewardChakra: 50000, rewardScrolls: 50 },
+  { name: 'Mercenário Rank-S', icon: '💀', hp: 900, atk: 34, rewardChakra: 220000, rewardScrolls: 80 },
+  { name: 'Golem de Argila Ancestral', icon: '🗿', hp: 1400, atk: 46, rewardChakra: 900000, rewardScrolls: 130 },
+  { name: 'Espectro Ressuscitado', icon: '👻', hp: 2200, atk: 60, rewardChakra: 4000000, rewardScrolls: 200 },
+  { name: 'Comandante da Alvorada', icon: '🌒', hp: 3400, atk: 78, rewardChakra: 18000000, rewardScrolls: 320 },
+  { name: 'Avatar do Caos Selado', icon: '👹', hp: 6000, atk: 100, rewardChakra: 90000000, rewardScrolls: 500 },
+];
+
+const BATTLE_UPGRADES = [
+  { id: 'iron_fist', name: 'Punho de Ferro', icon: '👊', desc: '+5 de Ataque por nível.', baseCost: 10, costGrowth: 1.3 },
+  { id: 'ninja_vitality', name: 'Vitalidade Ninja', icon: '❤️', desc: '+25 de Vida Máxima por nível.', baseCost: 8, costGrowth: 1.3 },
+  { id: 'battle_fury', name: 'Fúria de Batalha', icon: '🔥', desc: '+5% de Ataque por nível.', baseCost: 40, costGrowth: 1.5 },
+  { id: 'defensive_stance', name: 'Postura Defensiva', icon: '🛡️', desc: '-4% de dano recebido por nível (máx. 5).', baseCost: 40, costGrowth: 1.5, maxLevel: 5 },
+];
+
 const ACHIEVEMENTS = [
   { id: 'first_chakra', icon: '🌱', name: 'Primeiro Chakra', desc: 'Ganhe seu primeiro ponto de chakra.', check: (s) => s.lifetimeEarned >= 1 },
   { id: 'chakra_1k', icon: '📈', name: 'Aquecendo', desc: 'Acumule 1.000 de chakra na vida.', check: (s) => s.lifetimeEarned >= 1000 },
@@ -195,6 +215,10 @@ const ACHIEVEMENTS = [
   { id: 'prestige_10', icon: '♾️', name: 'Ciclo Eterno', desc: 'Ascenda 10 vezes.', check: (s) => s.prestigeCount >= 10 },
   { id: 'upgrades_5', icon: '🛠️', name: 'Colecionador', desc: 'Compre 5 upgrades diferentes.', check: (s) => s.lifetimeUpgrades.length >= 5 },
   { id: 'upgrades_all', icon: '🏆', name: 'Tudo Comprado', desc: 'Compre todos os upgrades.', check: (s) => s.lifetimeUpgrades.length >= UPGRADES.length },
+  { id: 'battle_first_win', icon: '⚔️', name: 'Primeira Vitória', desc: 'Vença sua primeira batalha na Arena.', check: (s) => s.totalBattlesWon >= 1 },
+  { id: 'battle_veteran', icon: '🎖️', name: 'Veterano de Guerra', desc: 'Vença 50 batalhas na Arena.', check: (s) => s.totalBattlesWon >= 50 },
+  { id: 'battle_ladder_complete', icon: '🏅', name: 'Lenda da Arena', desc: 'Derrote o chefe final da trilha de batalhas.', check: (s) => s.enemyLadderIndex >= ENEMIES.length },
+  { id: 'battle_endless_10', icon: '🌊', name: 'Onda Interminável', desc: 'Sobreviva a 10 ondas do Modo Interminável.', check: (s) => s.enemyLadderIndex >= ENEMIES.length + 10 },
 ];
 
 const PRESTIGE_DIVISOR = 1_000_000;
@@ -215,6 +239,13 @@ function createFreshState() {
     highestRankIndex: 0,
     lifetimeUpgrades: [],
     achievements: [],
+    battleScrolls: 0,
+    battleUpgrades: {},
+    enemyLadderIndex: 0,
+    enemyCurrentHp: null,
+    playerCurrentHp: null,
+    totalBattlesWon: 0,
+    autoAttackEnabled: false,
     lastSeen: Date.now(),
   };
 }
@@ -244,6 +275,8 @@ function loadState() {
       showOfflineToast(earned, cappedSeconds);
     }
   }
+
+  state.playerCurrentHp = getPlayerMaxHp();
 }
 
 function saveState() {
@@ -318,6 +351,122 @@ function getPrestigeGain() {
   return Math.floor(Math.cbrt(state.totalEarned / PRESTIGE_DIVISOR));
 }
 
+function getBattleUpgradeLevel(id) {
+  return state.battleUpgrades[id] || 0;
+}
+
+function getBattleUpgradeCost(upgrade) {
+  const level = getBattleUpgradeLevel(upgrade.id);
+  return Math.ceil(upgrade.baseCost * Math.pow(upgrade.costGrowth, level));
+}
+
+function getPlayerAttack() {
+  const flat = 5 + getBattleUpgradeLevel('iron_fist') * 5;
+  const percentBonus = 1 + getBattleUpgradeLevel('battle_fury') * 0.05;
+  return Math.round(flat * percentBonus * getEffectiveMultiplier());
+}
+
+function getPlayerMaxHp() {
+  return 50 + getBattleUpgradeLevel('ninja_vitality') * 25;
+}
+
+function getDamageReduction() {
+  return Math.min(0.8, getBattleUpgradeLevel('defensive_stance') * 0.04);
+}
+
+function getEnemyForWave(waveIndexBeyondLadder) {
+  const base = ENEMIES[ENEMIES.length - 1];
+  const n = waveIndexBeyondLadder + 1;
+  return {
+    name: `Onda Interminável ${n}`,
+    icon: '🌊',
+    hp: Math.round(base.hp * Math.pow(1.5, n)),
+    atk: Math.round(base.atk * Math.pow(1.3, n)),
+    rewardChakra: Math.round(base.rewardChakra * Math.pow(1.6, n)),
+    rewardScrolls: Math.round(base.rewardScrolls * Math.pow(1.4, n)),
+  };
+}
+
+function getCurrentEnemy() {
+  if (state.enemyLadderIndex < ENEMIES.length) return ENEMIES[state.enemyLadderIndex];
+  return getEnemyForWave(state.enemyLadderIndex - ENEMIES.length);
+}
+
+function getEnemyCurrentHp() {
+  const enemy = getCurrentEnemy();
+  return state.enemyCurrentHp == null ? enemy.hp : state.enemyCurrentHp;
+}
+
+function randomizeAmount(base) {
+  return Math.max(1, Math.round(base * (0.85 + Math.random() * 0.3)));
+}
+
+function logBattle(text, cssClass) {
+  const log = document.getElementById('battle-log');
+  const entry = document.createElement('div');
+  if (cssClass) entry.className = cssClass;
+  entry.textContent = text;
+  log.prepend(entry);
+  while (log.childNodes.length > 20) {
+    log.removeChild(log.lastChild);
+  }
+}
+
+function buyBattleUpgrade(upgrade) {
+  const level = getBattleUpgradeLevel(upgrade.id);
+  if (upgrade.maxLevel && level >= upgrade.maxLevel) return;
+  const cost = getBattleUpgradeCost(upgrade);
+  if (state.battleScrolls < cost) return;
+  state.battleScrolls -= cost;
+  state.battleUpgrades[upgrade.id] = level + 1;
+  state.playerCurrentHp = getPlayerMaxHp();
+  refreshBattleUpgrades();
+  renderBattle();
+  saveState();
+}
+
+function doAttack() {
+  const enemy = getCurrentEnemy();
+  let enemyHp = getEnemyCurrentHp();
+  const playerAtk = getPlayerAttack();
+  const dmgToEnemy = randomizeAmount(playerAtk);
+  enemyHp -= dmgToEnemy;
+  logBattle(`Você causou ${dmgToEnemy} de dano em ${enemy.name}.`);
+
+  if (enemyHp <= 0) {
+    state.totalBattlesWon += 1;
+    state.chakra += enemy.rewardChakra;
+    state.totalEarned += enemy.rewardChakra;
+    state.lifetimeEarned += enemy.rewardChakra;
+    state.battleScrolls += enemy.rewardScrolls;
+    logBattle(
+      `Você derrotou ${enemy.name}! +${formatNumber(enemy.rewardChakra)} chakra, +${enemy.rewardScrolls} pergaminhos.`,
+      'victory'
+    );
+    state.enemyLadderIndex += 1;
+    state.enemyCurrentHp = null;
+    state.playerCurrentHp = getPlayerMaxHp();
+    checkAchievements();
+  } else {
+    state.enemyCurrentHp = enemyHp;
+    const rawEnemyDmg = randomizeAmount(enemy.atk);
+    const dmgToPlayer = Math.max(0, Math.round(rawEnemyDmg * (1 - getDamageReduction())));
+    state.playerCurrentHp -= dmgToPlayer;
+    logBattle(`${enemy.name} revidou causando ${dmgToPlayer} de dano.`);
+    if (state.playerCurrentHp <= 0) {
+      logBattle('Você foi derrotado! Recuperou-se e pode tentar novamente.', 'defeat');
+      state.playerCurrentHp = getPlayerMaxHp();
+    }
+  }
+
+  renderBattle();
+  updateStats();
+  refreshShop();
+  refreshUpgrades();
+  refreshBattleUpgrades();
+  saveState();
+}
+
 function doPrestige() {
   const gain = getPrestigeGain();
   if (gain <= 0) return;
@@ -331,6 +480,7 @@ function doPrestige() {
   refreshShop();
   refreshUpgrades();
   renderPrestige();
+  renderBattle();
   checkAchievements();
   saveState();
 }
@@ -503,6 +653,75 @@ function buyUpgrade(upgrade) {
   saveState();
 }
 
+const battleUpgradeElements = {};
+
+function buildBattleUpgrades() {
+  const list = document.getElementById('battle-upgrades-list');
+  list.innerHTML = '';
+  BATTLE_UPGRADES.forEach((upgrade) => {
+    const btn = document.createElement('button');
+    btn.className = 'shop-item upgrade-item';
+    btn.innerHTML = `
+      <div class="icon">${upgrade.icon}</div>
+      <div class="info">
+        <div class="name">${upgrade.name} <span class="count">0</span></div>
+        <div class="desc">${upgrade.desc}</div>
+      </div>
+      <div class="cost">
+        <div class="price">0</div>
+        <span class="cps">pergaminhos</span>
+      </div>
+    `;
+    btn.addEventListener('click', () => buyBattleUpgrade(upgrade));
+    list.appendChild(btn);
+    battleUpgradeElements[upgrade.id] = {
+      btn,
+      countEl: btn.querySelector('.count'),
+      priceEl: btn.querySelector('.price'),
+    };
+  });
+  refreshBattleUpgrades();
+}
+
+function refreshBattleUpgrades() {
+  BATTLE_UPGRADES.forEach((upgrade) => {
+    const els = battleUpgradeElements[upgrade.id];
+    if (!els) return;
+    const level = getBattleUpgradeLevel(upgrade.id);
+    const maxedOut = Boolean(upgrade.maxLevel && level >= upgrade.maxLevel);
+    const cost = getBattleUpgradeCost(upgrade);
+    els.countEl.textContent = level;
+    els.priceEl.textContent = maxedOut ? 'Máximo' : formatNumber(cost);
+    els.btn.disabled = maxedOut || state.battleScrolls < cost;
+    els.btn.classList.toggle('purchased', maxedOut);
+  });
+}
+
+function renderBattle() {
+  const enemy = getCurrentEnemy();
+  const enemyHp = Math.max(0, getEnemyCurrentHp());
+  const enemyMaxHp = enemy.hp;
+  const playerMaxHp = getPlayerMaxHp();
+  const playerHp = Math.max(0, Math.min(playerMaxHp, state.playerCurrentHp == null ? playerMaxHp : state.playerCurrentHp));
+
+  document.getElementById('enemy-name').textContent = enemy.name;
+  document.getElementById('enemy-icon').textContent = enemy.icon;
+  document.getElementById('enemy-hp-fill').style.width = `${(enemyHp / enemyMaxHp) * 100}%`;
+  document.getElementById('enemy-hp-label').textContent = `${Math.round(enemyHp)} / ${enemyMaxHp}`;
+
+  document.getElementById('player-hp-fill').style.width = `${(playerHp / playerMaxHp) * 100}%`;
+  document.getElementById('player-hp-label').textContent = `${Math.round(playerHp)} / ${playerMaxHp}`;
+
+  document.getElementById('player-attack').textContent = getPlayerAttack();
+  document.getElementById('battle-scrolls').textContent = formatNumber(state.battleScrolls);
+
+  const progressLabel =
+    state.enemyLadderIndex < ENEMIES.length
+      ? `Estágio ${state.enemyLadderIndex + 1}/${ENEMIES.length}`
+      : `Modo Interminável — Onda ${state.enemyLadderIndex - ENEMIES.length + 1}`;
+  document.getElementById('arena-progress').textContent = progressLabel;
+}
+
 function renderAchievements() {
   const list = document.getElementById('achievements-list');
   list.innerHTML = '';
@@ -535,6 +754,7 @@ function checkAchievements() {
   if (changed) {
     renderAchievements();
     updateStats();
+    renderBattle();
     saveState();
   }
 }
@@ -614,11 +834,22 @@ function init() {
   updateStats();
   buildShop();
   buildUpgrades();
+  buildBattleUpgrades();
+  renderBattle();
   renderPrestige();
   renderAchievements();
   checkAchievements();
 
   document.getElementById('train-btn').addEventListener('click', handleTrainClick);
+
+  document.getElementById('attack-btn').addEventListener('click', doAttack);
+
+  const autoAttackCheckbox = document.getElementById('auto-attack-checkbox');
+  autoAttackCheckbox.checked = state.autoAttackEnabled;
+  autoAttackCheckbox.addEventListener('change', () => {
+    state.autoAttackEnabled = autoAttackCheckbox.checked;
+    saveState();
+  });
 
   document.getElementById('prestige-btn').addEventListener('click', () => {
     const gain = getPrestigeGain();
@@ -632,18 +863,25 @@ function init() {
   });
 
   document.getElementById('reset-btn').addEventListener('click', () => {
-    if (confirm('Tem certeza que quer reiniciar TODO o seu progresso, incluindo Fragmentos do Sábio e Conquistas?')) {
+    if (confirm('Tem certeza que quer reiniciar TODO o seu progresso, incluindo Fragmentos do Sábio, Conquistas e a Arena?')) {
       localStorage.removeItem(SAVE_KEY);
       state = createFreshState();
+      state.playerCurrentHp = getPlayerMaxHp();
       updateStats();
       refreshShop();
       refreshUpgrades();
+      refreshBattleUpgrades();
+      renderBattle();
       renderPrestige();
       renderAchievements();
+      autoAttackCheckbox.checked = false;
     }
   });
 
   setInterval(tick, 100);
+  setInterval(() => {
+    if (state.autoAttackEnabled) doAttack();
+  }, 1200);
   setInterval(saveState, 5000);
   window.addEventListener('beforeunload', saveState);
 }

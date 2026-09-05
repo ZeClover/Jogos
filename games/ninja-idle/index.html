@@ -51,6 +51,55 @@
     <div class="shop-list" id="upgrades-list"></div>
   </div>
 
+  <div class="arena-section">
+    <h2>Arena de Batalha <span id="arena-progress">Estágio 1/10</span></h2>
+    <div class="arena-panel">
+      <div class="arena-combatant">
+        <div class="arena-combatant-head">
+          <span class="arena-name" id="enemy-name">Bandido Errante</span>
+          <span class="arena-icon" id="enemy-icon">🥷</span>
+        </div>
+        <div class="hp-bar-track">
+          <div class="hp-bar-fill enemy" id="enemy-hp-fill"></div>
+        </div>
+        <div class="hp-label" id="enemy-hp-label">40 / 40</div>
+      </div>
+
+      <div class="arena-vs">⚔️</div>
+
+      <div class="arena-combatant">
+        <div class="arena-combatant-head">
+          <span class="arena-icon" id="player-icon">🥷</span>
+          <span class="arena-name">Você</span>
+        </div>
+        <div class="hp-bar-track">
+          <div class="hp-bar-fill player" id="player-hp-fill"></div>
+        </div>
+        <div class="hp-label" id="player-hp-label">50 / 50</div>
+      </div>
+
+      <div class="arena-stats">
+        <span>⚔️ Ataque: <strong id="player-attack">0</strong></span>
+        <span>📜 Pergaminhos: <strong id="battle-scrolls">0</strong></span>
+      </div>
+
+      <div class="arena-controls">
+        <button class="action-btn" id="attack-btn">Atacar</button>
+        <label class="auto-attack-toggle">
+          <input type="checkbox" id="auto-attack-checkbox" />
+          Auto-Atacar
+        </label>
+      </div>
+
+      <div class="battle-log" id="battle-log"></div>
+    </div>
+  </div>
+
+  <div class="shop-section">
+    <h2>Loja de Combate</h2>
+    <div class="shop-list" id="battle-upgrades-list"></div>
+  </div>
+
   <div class="prestige-section">
     <h2>Ascensão</h2>
     <div class="prestige-panel">
