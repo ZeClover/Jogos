@@ -33,11 +33,11 @@ const REGIONS = [
     title: 'Ruínas Submersas',
     flavor: 'Água escura pinga das colunas antigas. Ecos de vozes esquecidas ressoam.',
     enemies: [
-      { name: 'Esqueleto Afogado', icon: '💀', hp: 46, atk: 15, exp: 22, gold: 18 },
-      { name: 'Sereia Amaldiçoada', icon: '🧜', hp: 40, atk: 18, exp: 24, gold: 20 },
-      { name: 'Caranguejo Gigante', icon: '🦀', hp: 54, atk: 14, exp: 23, gold: 19 },
+      { name: 'Esqueleto Afogado', icon: '💀', img: 'assets/esqueleto-afogado.png', hp: 46, atk: 15, exp: 22, gold: 18 },
+      { name: 'Sereia Amaldiçoada', icon: '🧜', img: 'assets/sereia-amaldicoada.png', hp: 40, atk: 18, exp: 24, gold: 20 },
+      { name: 'Caranguejo Gigante', icon: '🦀', img: 'assets/caranguejo-gigante.png', hp: 54, atk: 14, exp: 23, gold: 19 },
     ],
-    boss: { name: 'Kraken Menor', icon: '🐙', hp: 210, atk: 22, exp: 110, gold: 100 },
+    boss: { name: 'Kraken Menor', icon: '🐙', img: 'assets/kraken-menor.png', hp: 210, atk: 22, exp: 110, gold: 100 },
   },
   {
     title: 'Montanha Gélida',
