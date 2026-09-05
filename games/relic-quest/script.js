@@ -23,11 +23,11 @@ const REGIONS = [
     title: 'Colinas Áridas',
     flavor: 'O vento quente levanta poeira sobre as colinas rachadas.',
     enemies: [
-      { name: 'Escorpião de Pedra', icon: '🦂', hp: 30, atk: 10, exp: 14, gold: 12 },
-      { name: 'Nômade Hostil', icon: '🏹', hp: 34, atk: 11, exp: 16, gold: 14 },
-      { name: 'Harpia', icon: '🦅', hp: 26, atk: 13, exp: 15, gold: 11 },
+      { name: 'Escorpião de Pedra', icon: '🦂', img: 'assets/escorpiao-de-pedra.png', hp: 30, atk: 10, exp: 14, gold: 12 },
+      { name: 'Nômade Hostil', icon: '🏹', img: 'assets/nomade-hostil.png', hp: 34, atk: 11, exp: 16, gold: 14 },
+      { name: 'Harpia', icon: '🦅', img: 'assets/harpia.png', hp: 26, atk: 13, exp: 15, gold: 11 },
     ],
-    boss: { name: 'Golem de Areia', icon: '🏜️', hp: 130, atk: 15, exp: 70, gold: 65 },
+    boss: { name: 'Golem de Areia', icon: '🏜️', img: 'assets/golem-de-areia.png', hp: 130, atk: 15, exp: 70, gold: 65 },
   },
   {
     title: 'Ruínas Submersas',
