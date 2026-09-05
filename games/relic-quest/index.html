@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Relíquias de Eldrin - Mini RPG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="rpg-page">
+  <a href="../../index.html" class="back-link">&larr; Voltar para os jogos</a>
+
+  <div class="rpg-header">
+    <h1>Relíquias de Eldrin</h1>
+    <p>Um mini RPG com aquele gostinho de JRPG antigo.</p>
+  </div>
+
+  <div class="hero-panel" id="hero-panel" hidden>
+    <div class="hero-panel-row">
+      <strong id="hero-name-label">Kael</strong>
+      <span>Nível <span id="hero-level">1</span></span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-tag">HP</span>
+      <div class="bar-track"><div class="bar-fill hp" id="hero-hp-fill"></div></div>
+      <span class="bar-label" id="hero-hp-label">30/30</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-tag">MP</span>
+      <div class="bar-track"><div class="bar-fill mp" id="hero-mp-fill"></div></div>
+      <span class="bar-label" id="hero-mp-label">5/5</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-tag">EXP</span>
+      <div class="bar-track"><div class="bar-fill exp" id="hero-exp-fill"></div></div>
+      <span class="bar-label" id="hero-exp-label">0/20</span>
+    </div>
+    <div class="hero-stats-line">
+      <span>⚔️ ATK <strong id="hero-atk">8</strong></span>
+      <span>🛡️ DEF <strong id="hero-def">4</strong></span>
+      <span>💰 <strong id="hero-gold">20</strong></span>
+      <span>🧪 <strong id="hero-potions">2</strong></span>
+    </div>
+  </div>
+
+  <div class="rpg-frame">
+
+    <!-- Tela de início -->
+    <section id="screen-intro" class="rpg-screen">
+      <p class="rpg-text">
+        As sombras avançam sobre o reino de Eldrin. Diz a lenda que cinco Relíquias
+        Ancestrais, quando reunidas, podem selar o retorno do Rei Sombrio.
+      </p>
+      <p class="rpg-text">Você é o último herói capaz de encontrá-las.</p>
+      <label class="rpg-label" for="hero-name-input">Nome do seu herói:</label>
+      <input type="text" id="hero-name-input" maxlength="12" placeholder="Kael" class="rpg-input" />
+      <button class="action-btn" id="start-journey-btn">Começar Jornada</button>
+    </section>
+
+    <!-- Tela da região / cidade -->
+    <section id="screen-region" class="rpg-screen" hidden>
+      <h2 class="region-title" id="region-title">Floresta Sussurrante</h2>
+      <p class="rpg-text" id="region-flavor">A névoa cobre as árvores retorcidas à sua frente.</p>
+
+      <div class="encounter-track" id="encounter-track"></div>
+
+      <div class="region-actions">
+        <button class="action-btn" id="explore-btn">Explorar</button>
+        <button class="action-btn boss-btn" id="boss-btn" hidden>Enfrentar Guardião</button>
+        <button class="action-btn secondary-btn" id="rest-btn">Descansar (<span id="rest-cost">5</span> ouro)</button>
+      </div>
+
+      <div class="shop-panel">
+        <h3>Loja</h3>
+        <div class="shop-rows" id="shop-rows"></div>
+      </div>
+    </section>
+
+    <!-- Tela de batalha -->
+    <section id="screen-battle" class="rpg-screen" hidden>
+      <div class="battle-enemy">
+        <div class="battle-name-row">
+          <span id="enemy-icon">👹</span>
+          <span id="battle-enemy-name">Inimigo</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill hp" id="enemy-hp-fill"></div></div>
+        <span class="bar-label" id="enemy-hp-label">10/10</span>
+      </div>
+
+      <div class="battle-log" id="battle-log"></div>
+
+      <div id="battle-menu-root">
+        <div class="battle-menu" id="battle-menu-main">
+          <button data-action="attack">Atacar</button>
+          <button data-action="skill">Técnica</button>
+          <button data-action="item">Item</button>
+          <button data-action="defend">Defender</button>
+          <button data-action="flee" id="flee-btn">Fugir</button>
+        </div>
+        <div class="battle-menu" id="battle-menu-skill" hidden></div>
+        <div class="battle-menu" id="battle-menu-item" hidden></div>
+      </div>
+    </section>
+
+    <!-- Tela de vitória final -->
+    <section id="screen-victory" class="rpg-screen" hidden>
+      <h2 class="region-title">O Selo é Restaurado</h2>
+      <p class="rpg-text" id="victory-text"></p>
+      <button class="action-btn" id="restart-btn">Jogar Novamente</button>
+    </section>
+
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
