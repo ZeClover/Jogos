@@ -69,6 +69,7 @@
     <!-- Tela da região / cidade -->
     <section id="screen-region" class="rpg-screen" hidden>
       <h2 class="region-title" id="region-title">Floresta Sussurrante</h2>
+      <p class="rpg-lore" id="region-lore" hidden></p>
       <p class="rpg-text" id="region-flavor">A névoa cobre as árvores retorcidas à sua frente.</p>
 
       <div class="encounter-track" id="encounter-track"></div>
@@ -87,14 +88,7 @@
 
     <!-- Tela de batalha -->
     <section id="screen-battle" class="rpg-screen" hidden>
-      <div class="battle-enemy">
-        <div class="portrait-frame enemy-portrait" id="enemy-icon">👹</div>
-        <div class="battle-name-row">
-          <span id="battle-enemy-name">Inimigo</span>
-        </div>
-        <div class="bar-track"><div class="bar-fill hp" id="enemy-hp-fill"></div></div>
-        <span class="bar-label" id="enemy-hp-label">10/10</span>
-      </div>
+      <div class="enemies-row" id="enemies-row"></div>
 
       <div class="battle-log" id="battle-log"></div>
 
