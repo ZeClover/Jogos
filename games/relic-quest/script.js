@@ -43,11 +43,11 @@ const REGIONS = [
     title: 'Montanha Gélida',
     flavor: 'O frio corta como lâminas. A neve esconde passos silenciosos.',
     enemies: [
-      { name: 'Lobo de Gelo', icon: '🐺', hp: 62, atk: 20, exp: 32, gold: 26 },
-      { name: 'Yeti Jovem', icon: '❄️', hp: 70, atk: 22, exp: 35, gold: 29 },
-      { name: 'Espírito Congelante', icon: '👻', hp: 56, atk: 24, exp: 33, gold: 27 },
+      { name: 'Lobo de Gelo', icon: '🐺', img: 'assets/lobo-de-gelo.png', hp: 62, atk: 20, exp: 32, gold: 26 },
+      { name: 'Yeti Jovem', icon: '❄️', img: 'assets/yeti-jovem.png', hp: 70, atk: 22, exp: 35, gold: 29 },
+      { name: 'Espírito Congelante', icon: '👻', img: 'assets/espirito-congelante.png', hp: 56, atk: 24, exp: 33, gold: 27 },
     ],
-    boss: { name: 'Dragão de Gelo Adormecido', icon: '🐉', hp: 320, atk: 30, exp: 170, gold: 150 },
+    boss: { name: 'Dragão de Gelo Adormecido', icon: '🐉', img: 'assets/dragao-de-gelo.png', hp: 320, atk: 30, exp: 170, gold: 150 },
   },
   {
     title: 'Fortaleza Sombria',
