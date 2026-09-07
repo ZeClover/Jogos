@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bar do Zé</title>
+<link rel="stylesheet" href="../../style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="lz-page">
+  <a href="../../index.html" class="back-link">&larr; Voltar para os jogos</a>
+
+  <div class="lz-header">
+    <h1>🍹 Bar do Zé</h1>
+    <p>Prepare o drinque certo antes que o cliente perca a paciência.</p>
+  </div>
+
+  <div class="lz-frame">
+
+    <!-- Tela de início -->
+    <section id="screen-intro" class="lz-screen">
+      <p class="lz-text">
+        Bem-vindo ao balcão! Cada cliente pede um drinque de verdade — siga o passo a
+        passo da receita (socar, mexer, balançar, servir na medida certa) antes que a
+        paciência acabe.
+      </p>
+      <p class="lz-text" id="record-text"></p>
+      <button class="action-btn" id="start-btn">Abrir o Bar</button>
+    </section>
+
+    <!-- Tela principal do dia -->
+    <section id="screen-day" class="lz-screen" hidden>
+      <div class="lz-topbar">
+        <span>📅 Dia <strong id="day-number">1</strong></span>
+        <span>💰 <strong id="money-value">0</strong></span>
+        <span>🔥 Combo <strong id="combo-value">0</strong></span>
+      </div>
+
+      <div class="queue-row" id="queue-row"></div>
+
+      <div class="order-panel">
+        <div class="order-title">Preparando</div>
+        <div class="recipe-name" id="recipe-name">🍹 Drinque</div>
+        <div class="patience-track"><div class="patience-fill" id="patience-fill"></div></div>
+        <div class="step-dots" id="step-dots"></div>
+      </div>
+
+      <div class="step-panel" id="step-panel">
+        <p class="step-label" id="step-label">Instrução do passo</p>
+        <div class="step-interaction" id="step-interaction"></div>
+      </div>
+
+      <div class="lz-log" id="lz-log"></div>
+    </section>
+
+    <!-- Resumo do dia -->
+    <section id="screen-summary" class="lz-screen" hidden>
+      <h2 class="lz-title">Fim do Expediente</h2>
+      <p class="lz-text" id="summary-text"></p>
+      <button class="action-btn" id="to-shop-btn">Ir para a Loja</button>
+    </section>
+
+    <!-- Loja -->
+    <section id="screen-shop" class="lz-screen" hidden>
+      <h2 class="lz-title">Loja</h2>
+      <p class="lz-text">💰 Dinheiro: <strong id="shop-money">0</strong></p>
+      <div class="shop-rows" id="shop-upgrade-rows"></div>
+      <button class="action-btn" id="next-day-btn">Começar Dia <span id="next-day-number">2</span></button>
+    </section>
+
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

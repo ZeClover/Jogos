@@ -1,0 +1,456 @@
+.lz-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+.lz-page .back-link {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  color: var(--accent-3);
+  font-weight: 600;
+}
+
+.lz-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.lz-header h1 {
+  margin: 0 0 0.25rem;
+  background: linear-gradient(135deg, #ffb347, #ff5c8a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.lz-header p {
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.lz-frame {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.lz-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.lz-screen[hidden] {
+  display: none;
+}
+
+.lz-text {
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.lz-title {
+  margin: 0;
+  text-align: center;
+  color: #ffb347;
+}
+
+.lz-topbar {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
+  color: var(--text-dim);
+}
+
+.lz-topbar strong {
+  color: #fff;
+}
+
+.queue-row {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  min-height: 28px;
+}
+
+.queue-icon {
+  font-size: 1.3rem;
+  opacity: 0.6;
+}
+
+.order-panel,
+.tray-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.order-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  margin-bottom: 0.6rem;
+}
+
+.order-items,
+.tray-items {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-height: 2.6rem;
+}
+
+.food-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 1.1rem;
+}
+
+.food-chip span.label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.tray-items .food-chip {
+  cursor: pointer;
+}
+
+.patience-track {
+  margin-top: 0.75rem;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.patience-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #4dff88, #ffd23c);
+  transition: width 0.1s linear, background 0.3s ease;
+}
+
+.patience-fill.low {
+  background: linear-gradient(90deg, #ff9d3c, #ff5c8a);
+}
+
+.patience-fill.critical {
+  background: #ff3b3b;
+}
+
+.recipe-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.step-dots {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  justify-content: center;
+}
+
+.step-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.step-dot.done {
+  background: #4dff88;
+}
+
+.step-dot.current {
+  background: #ffb347;
+}
+
+.step-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.25rem 1rem;
+  text-align: center;
+}
+
+.step-label {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.step-interaction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.choice-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.7rem 0.9rem;
+  cursor: pointer;
+  color: var(--text);
+  font-family: inherit;
+  touch-action: manipulation;
+  min-width: 78px;
+}
+
+.choice-btn:hover {
+  border-color: #ffb347;
+}
+
+.choice-btn.wrong {
+  animation: shake-btn 0.3s ease;
+  border-color: #ff5c8a;
+}
+
+.choice-btn .icon {
+  font-size: 1.7rem;
+}
+
+.choice-btn .name {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+@keyframes shake-btn {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.mash-btn {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: none;
+  background: radial-gradient(circle at 30% 30%, #ffb347, #ff5c8a 70%);
+  color: white;
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 8px 24px rgba(255, 92, 138, 0.3);
+  transition: transform 0.06s ease;
+}
+
+.mash-btn:active {
+  transform: scale(0.93);
+}
+
+.mash-counter {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #ffb347;
+}
+
+.mash-timer-track {
+  width: 200px;
+  max-width: 80vw;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.mash-timer-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #4dff88, #ffd23c);
+  transition: width 0.05s linear;
+}
+
+.pour-track {
+  position: relative;
+  width: 220px;
+  max-width: 85vw;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pour-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(77, 255, 136, 0.35);
+  border-left: 2px dashed #4dff88;
+  border-right: 2px dashed #4dff88;
+}
+
+.pour-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #fff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+.pour-stop-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.6rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.ingredients-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 0.6rem;
+}
+
+.ingredient-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.6rem 0.4rem;
+  cursor: pointer;
+  color: var(--text);
+  font-family: inherit;
+  touch-action: manipulation;
+  min-height: 64px;
+}
+
+.ingredient-btn:hover {
+  border-color: #ffb347;
+}
+
+.ingredient-btn .icon {
+  font-size: 1.6rem;
+}
+
+.ingredient-btn .name {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.lz-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.lz-actions .action-btn {
+  margin-top: 0;
+}
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-dim) !important;
+}
+
+.lz-log {
+  min-height: 1.4rem;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent-3);
+}
+
+.lz-log.fail {
+  color: #ff5c8a;
+}
+
+.shop-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.shop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+
+.shop-row .shop-info {
+  font-size: 0.95rem;
+}
+
+.shop-row .shop-info small {
+  display: block;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.shop-row button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+  cursor: pointer;
+  touch-action: manipulation;
+  flex-shrink: 0;
+}
+
+.shop-row button:disabled {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .lz-page {
+    padding: 1.25rem 0.85rem 3rem;
+  }
+
+  .lz-frame {
+    padding: 1rem;
+  }
+
+  .lz-topbar {
+    font-size: 0.85rem;
+  }
+
+  .ingredients-grid {
+    grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+  }
+}
