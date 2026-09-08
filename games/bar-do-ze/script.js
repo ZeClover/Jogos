@@ -12,7 +12,13 @@ const INGREDIENTS = {
   sal: { name: 'Sal', icon: '🧂' },
   coco: { name: 'Leite de Coco', icon: '🥥' },
   abacaxi: { name: 'Suco de Abacaxi', icon: '🍍' },
+  azeitona: { name: 'Azeitona', icon: '🫒' },
+  pepino: { name: 'Pepino', icon: '🥒' },
+  tomate: { name: 'Suco de Tomate', icon: '🍅' },
+  cafe: { name: 'Café Espresso', icon: '☕' },
 };
+
+const SIMON_ICONS = ['🍋', '🥃', '🍯', '🍒'];
 
 const RECIPES = [
   {
@@ -22,7 +28,7 @@ const RECIPES = [
     unlockDay: 1,
     steps: [
       { type: 'add', ingredient: 'limao', label: 'Corte e adicione o limão' },
-      { type: 'mash', verb: 'Socar', count: 7, time: 3, label: 'Socar o limão com açúcar' },
+      { type: 'tapmove', icon: '🍋', count: 8, time: 6, label: 'Socar o limão que foge pelo copo!' },
       { type: 'add', ingredient: 'destilado', label: 'Adicione a cachaça' },
       { type: 'add', ingredient: 'gelo', label: 'Adicione o gelo' },
       { type: 'mash', verb: 'Mexer', count: 5, time: 2.5, label: 'Mexa bem' },
@@ -34,7 +40,7 @@ const RECIPES = [
     icon: '🌿',
     unlockDay: 1,
     steps: [
-      { type: 'mash', verb: 'Socar', count: 7, time: 3, label: 'Socar a menta com limão' },
+      { type: 'rhythm', target: [42, 58], hitsNeeded: 3, label: 'Acerte o ponto certo 3 vezes seguidas!' },
       { type: 'add', ingredient: 'destilado', label: 'Adicione o rum' },
       { type: 'add', ingredient: 'gelo', label: 'Adicione o gelo' },
       { type: 'add', ingredient: 'refrigerante', label: 'Complete com água com gás' },
@@ -50,7 +56,7 @@ const RECIPES = [
       { type: 'add', ingredient: 'destilado', label: 'Adicione o rum' },
       { type: 'add', ingredient: 'refrigerante', label: 'Complete com refrigerante de cola' },
       { type: 'add', ingredient: 'limao', label: 'Adicione uma rodela de limão' },
-      { type: 'mash', verb: 'Mexer', count: 4, time: 2.5, label: 'Mexa bem' },
+      { type: 'dragfill', target: [65, 85], label: 'Segure para encher até a linha certa' },
     ],
   },
   {
@@ -61,7 +67,7 @@ const RECIPES = [
     steps: [
       { type: 'add', ingredient: 'destilado', label: 'Adicione a tequila' },
       { type: 'add', ingredient: 'limao', label: 'Adicione o limão' },
-      { type: 'mash', verb: 'Balançar', count: 10, time: 3.5, label: 'Balance a coqueteleira' },
+      { type: 'altmash', count: 10, time: 5, label: 'Balance alternando os lados da coqueteleira!' },
       { type: 'garnish', ingredient: 'sal', label: 'Salgue a borda do copo' },
     ],
   },
@@ -74,7 +80,7 @@ const RECIPES = [
       { type: 'add', ingredient: 'destilado', label: 'Adicione o whisky' },
       { type: 'add', ingredient: 'limao', label: 'Adicione o limão' },
       { type: 'add', ingredient: 'xarope', label: 'Adicione o xarope' },
-      { type: 'mash', verb: 'Balançar', count: 9, time: 3, label: 'Balance a coqueteleira' },
+      { type: 'simon', length: 4, label: 'Decore e repita a sequência do coquetel!' },
       { type: 'garnish', ingredient: 'cereja', label: 'Finalize com uma cereja' },
     ],
   },
@@ -85,7 +91,7 @@ const RECIPES = [
     unlockDay: 3,
     steps: [
       { type: 'add', ingredient: 'destilado', label: 'Adicione o gin' },
-      { type: 'add', ingredient: 'gelo', label: 'Adicione o gelo' },
+      { type: 'selecttap', target: 'gelo', count: 5, gridSize: 9, label: 'Toque só no gelo, evite o resto!' },
       { type: 'add', ingredient: 'refrigerante', label: 'Complete com água tônica' },
       { type: 'garnish', ingredient: 'menta', label: 'Finalize com uma folha de menta' },
     ],
@@ -99,7 +105,7 @@ const RECIPES = [
       { type: 'add', ingredient: 'destilado', label: 'Adicione o rum' },
       { type: 'add', ingredient: 'coco', label: 'Adicione o leite de coco' },
       { type: 'add', ingredient: 'abacaxi', label: 'Adicione o suco de abacaxi' },
-      { type: 'pour', verb: 'Bater no liquidificador', label: 'Bata até o ponto certo — nem cedo, nem demais', target: [55, 78] },
+      { type: 'sustain', target: [45, 65], holdTime: 2.5, label: 'Mantenha o ponteiro do liquidificador na faixa certa!' },
     ],
   },
   {
@@ -112,6 +118,128 @@ const RECIPES = [
       { type: 'add', ingredient: 'laranja', label: 'Complete com suco de laranja' },
       { type: 'pour', verb: 'Derramar a grenadine devagar', label: 'Pare bem no fundo, sem misturar demais', target: [15, 35] },
       { type: 'garnish', ingredient: 'cereja', label: 'Finalize com uma cereja' },
+    ],
+  },
+  // Drinques extras — comprados na loja com dinheiro, além das evoluções.
+  {
+    id: 'dry_martini',
+    name: 'Dry Martini',
+    icon: '🍸',
+    cost: 70,
+    steps: [
+      { type: 'add', ingredient: 'destilado', label: 'Adicione o gin' },
+      { type: 'add', ingredient: 'gelo', label: 'Adicione o gelo' },
+      { type: 'mash', verb: 'Mexer', count: 6, time: 3, label: 'Mexa bem (nunca agite!)' },
+      { type: 'garnish', ingredient: 'azeitona', label: 'Finalize com uma azeitona' },
+    ],
+  },
+  {
+    id: 'screwdriver',
+    name: 'Parafuso',
+    icon: '🍊',
+    cost: 45,
+    steps: [
+      { type: 'add', ingredient: 'destilado', label: 'Adicione a vodka' },
+      { type: 'add', ingredient: 'laranja', label: 'Complete com suco de laranja' },
+      { type: 'mash', verb: 'Mexer', count: 4, time: 2, label: 'Mexa bem' },
+    ],
+  },
+  {
+    id: 'bloody_mary',
+    name: 'Bloody Mary',
+    icon: '🍅',
+    cost: 90,
+    steps: [
+      { type: 'add', ingredient: 'destilado', label: 'Adicione a vodka' },
+      { type: 'add', ingredient: 'tomate', label: 'Adicione o suco de tomate' },
+      { type: 'add', ingredient: 'sal', label: 'Tempere com sal' },
+      { type: 'mash', verb: 'Mexer', count: 5, time: 2.5, label: 'Mexa bem' },
+      { type: 'garnish', ingredient: 'limao', label: 'Finalize com limão' },
+    ],
+  },
+  {
+    id: 'moscow_mule',
+    name: 'Moscow Mule',
+    icon: '🥒',
+    cost: 100,
+    steps: [
+      { type: 'add', ingredient: 'destilado', label: 'Adicione a vodka' },
+      { type: 'add', ingredient: 'limao', label: 'Adicione o limão' },
+      { type: 'add', ingredient: 'refrigerante', label: 'Complete com refrigerante de gengibre' },
+      { type: 'garnish', ingredient: 'pepino', label: 'Finalize com uma rodela de pepino' },
+    ],
+  },
+  {
+    id: 'daiquiri',
+    name: 'Daiquiri',
+    icon: '🍋',
+    cost: 60,
+    steps: [
+      { type: 'add', ingredient: 'destilado', label: 'Adicione o rum' },
+      { type: 'add', ingredient: 'limao', label: 'Adicione o limão' },
+      { type: 'add', ingredient: 'xarope', label: 'Adicione o xarope' },
+      { type: 'mash', verb: 'Balançar', count: 8, time: 3, label: 'Balance a coqueteleira' },
+    ],
+  },
+  {
+    id: 'white_russian',
+    name: 'White Russian',
+    icon: '☕',
+    cost: 110,
+    steps: [
+      { type: 'add', ingredient: 'destilado', label: 'Adicione a vodka' },
+      { type: 'add', ingredient: 'cafe', label: 'Adicione o licor de café' },
+      { type: 'add', ingredient: 'coco', label: 'Complete com creme de leite' },
+      { type: 'mash', verb: 'Mexer', count: 5, time: 2.5, label: 'Mexa bem' },
+    ],
+  },
+  {
+    id: 'paloma',
+    name: 'Paloma',
+    icon: '🍊',
+    cost: 75,
+    steps: [
+      { type: 'add', ingredient: 'destilado', label: 'Adicione a tequila' },
+      { type: 'add', ingredient: 'refrigerante', label: 'Complete com refrigerante cítrico' },
+      { type: 'add', ingredient: 'limao', label: 'Adicione o limão' },
+      { type: 'garnish', ingredient: 'sal', label: 'Salgue a borda do copo' },
+    ],
+  },
+  {
+    id: 'espresso_martini',
+    name: 'Espresso Martini',
+    icon: '☕',
+    cost: 120,
+    steps: [
+      { type: 'add', ingredient: 'destilado', label: 'Adicione a vodka' },
+      { type: 'add', ingredient: 'cafe', label: 'Adicione o café espresso' },
+      { type: 'add', ingredient: 'xarope', label: 'Adicione o xarope' },
+      { type: 'mash', verb: 'Balançar', count: 9, time: 3, label: 'Balance bem até formar espuma' },
+    ],
+  },
+  {
+    id: 'sex_on_beach',
+    name: 'Sex on the Beach',
+    icon: '🍑',
+    cost: 85,
+    steps: [
+      { type: 'add', ingredient: 'destilado', label: 'Adicione a vodka' },
+      { type: 'add', ingredient: 'laranja', label: 'Adicione o suco de laranja' },
+      { type: 'add', ingredient: 'abacaxi', label: 'Adicione o suco de abacaxi' },
+      { type: 'garnish', ingredient: 'cereja', label: 'Finalize com uma cereja' },
+    ],
+  },
+  {
+    id: 'caipiroska',
+    name: 'Caipiroska',
+    icon: '🍈',
+    cost: 55,
+    steps: [
+      { type: 'add', ingredient: 'limao', label: 'Corte e adicione o limão' },
+      { type: 'mash', verb: 'Socar', count: 6, time: 2.5, label: 'Socar o limão com açúcar' },
+      { type: 'add', ingredient: 'destilado', label: 'Adicione a vodka' },
+      { type: 'add', ingredient: 'gelo', label: 'Adicione o gelo' },
+      { type: 'mash', verb: 'Mexer', count: 4, time: 2, label: 'Mexa bem' },
     ],
   },
 ];
@@ -156,6 +284,7 @@ function createFreshState() {
     failed: 0,
     requiredCustomers: 5,
     upgrades: {},
+    purchasedRecipes: {},
     lastSeen: Date.now(),
   };
 }
@@ -188,7 +317,7 @@ function getUpgradeCost(upgrade) {
 }
 
 function getUnlockedRecipes() {
-  return RECIPES.filter((r) => r.unlockDay <= state.day);
+  return RECIPES.filter((r) => (r.unlockDay && r.unlockDay <= state.day) || state.purchasedRecipes[r.id]);
 }
 
 function getPatienceSeconds(recipe) {
@@ -215,6 +344,13 @@ function shuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+function placeRandom(el) {
+  const left = 10 + Math.random() * 70;
+  const top = 15 + Math.random() * 55;
+  el.style.left = `${left}%`;
+  el.style.top = `${top}%`;
 }
 
 function showScreen(name) {
@@ -279,8 +415,10 @@ function applyPatiencePenalty(seconds) {
 }
 
 function stopStepMechanics() {
-  if (round.mashTimerId) clearInterval(round.mashTimerId);
-  if (round.pourTimerId) clearInterval(round.pourTimerId);
+  if (!round) return;
+  if (round.stepTimerId) clearInterval(round.stepTimerId);
+  if (round.simonTimeouts) round.simonTimeouts.forEach((t) => clearTimeout(t));
+  round.simonTimeouts = [];
 }
 
 function renderCurrentStep() {
@@ -346,17 +484,411 @@ function renderCurrentStep() {
     interaction.appendChild(counter);
     interaction.appendChild(track);
 
-    clearInterval(round.mashTimerId);
-    round.mashTimerId = setInterval(() => {
+    clearInterval(round.stepTimerId);
+    round.stepTimerId = setInterval(() => {
       round.mashTimeLeft -= 0.05;
       const ratio = Math.max(0, round.mashTimeLeft / step.time);
       fill.style.width = `${ratio * 100}%`;
       if (round.mashTimeLeft <= 0) {
-        clearInterval(round.mashTimerId);
+        clearInterval(round.stepTimerId);
         applyPatiencePenalty(3);
         if (round) renderCurrentStep();
       }
     }, 50);
+  } else if (step.type === 'tapmove') {
+    round.tapCount = 0;
+    round.tapTimeLeft = step.time;
+
+    const area = document.createElement('div');
+    area.className = 'tapmove-area';
+    const target = document.createElement('button');
+    target.className = 'tapmove-target';
+    target.textContent = step.icon || '🍋';
+    placeRandom(target);
+    area.appendChild(target);
+
+    const counter = document.createElement('div');
+    counter.className = 'mash-counter';
+    counter.textContent = `0 / ${step.count}`;
+
+    const track = document.createElement('div');
+    track.className = 'mash-timer-track';
+    const fill = document.createElement('div');
+    fill.className = 'mash-timer-fill';
+    track.appendChild(fill);
+
+    target.addEventListener('click', () => {
+      round.tapCount += 1;
+      counter.textContent = `${round.tapCount} / ${step.count}`;
+      if (round.tapCount >= step.count) {
+        stopStepMechanics();
+        advanceStep();
+      } else {
+        placeRandom(target);
+      }
+    });
+
+    interaction.appendChild(area);
+    interaction.appendChild(counter);
+    interaction.appendChild(track);
+
+    clearInterval(round.stepTimerId);
+    round.stepTimerId = setInterval(() => {
+      round.tapTimeLeft -= 0.05;
+      const ratio = Math.max(0, round.tapTimeLeft / step.time);
+      fill.style.width = `${ratio * 100}%`;
+      if (round.tapTimeLeft <= 0) {
+        clearInterval(round.stepTimerId);
+        applyPatiencePenalty(3);
+        if (round) renderCurrentStep();
+      }
+    }, 50);
+  } else if (step.type === 'rhythm') {
+    round.rhythmPhase = 0;
+    round.rhythmHits = 0;
+    round.rhythmValue = 50;
+    const speed = 0.07 + Math.min(0.05, state.day * 0.003);
+
+    const track = document.createElement('div');
+    track.className = 'pour-track';
+    const zone = document.createElement('div');
+    zone.className = 'pour-zone';
+    zone.style.left = `${step.target[0]}%`;
+    zone.style.width = `${step.target[1] - step.target[0]}%`;
+    const needle = document.createElement('div');
+    needle.className = 'pour-indicator';
+    track.appendChild(zone);
+    track.appendChild(needle);
+
+    const counter = document.createElement('div');
+    counter.className = 'mash-counter';
+    counter.textContent = `0 / ${step.hitsNeeded}`;
+
+    const hitBtn = document.createElement('button');
+    hitBtn.className = 'pour-stop-btn';
+    hitBtn.textContent = 'Bater!';
+    hitBtn.addEventListener('click', () => {
+      const value = round.rhythmValue;
+      if (value >= step.target[0] && value <= step.target[1]) {
+        round.rhythmHits += 1;
+        counter.textContent = `${round.rhythmHits} / ${step.hitsNeeded}`;
+        if (round.rhythmHits >= step.hitsNeeded) {
+          clearInterval(round.stepTimerId);
+          advanceStep();
+        }
+      } else {
+        round.rhythmHits = 0;
+        counter.textContent = `0 / ${step.hitsNeeded}`;
+        hitBtn.classList.add('wrong');
+        setTimeout(() => hitBtn.classList.remove('wrong'), 300);
+        applyPatiencePenalty(1.5);
+      }
+    });
+
+    interaction.appendChild(track);
+    interaction.appendChild(counter);
+    interaction.appendChild(hitBtn);
+
+    clearInterval(round.stepTimerId);
+    round.stepTimerId = setInterval(() => {
+      round.rhythmPhase += speed;
+      round.rhythmValue = 50 + 50 * Math.sin(round.rhythmPhase);
+      needle.style.left = `${round.rhythmValue}%`;
+    }, 30);
+  } else if (step.type === 'dragfill') {
+    round.fillValue = 0;
+    round.fillHolding = false;
+    const speed = 3.2;
+
+    const track = document.createElement('div');
+    track.className = 'fill-track';
+    const zone = document.createElement('div');
+    zone.className = 'fill-zone';
+    zone.style.bottom = `${step.target[0]}%`;
+    zone.style.height = `${step.target[1] - step.target[0]}%`;
+    const level = document.createElement('div');
+    level.className = 'fill-level';
+    track.appendChild(zone);
+    track.appendChild(level);
+
+    const btn = document.createElement('button');
+    btn.className = 'fill-btn';
+    btn.textContent = 'Segure para Encher';
+
+    const stopFilling = () => {
+      if (!round || !round.fillHolding) return;
+      round.fillHolding = false;
+      clearInterval(round.stepTimerId);
+      const value = round.fillValue;
+      if (value >= step.target[0] && value <= step.target[1]) {
+        advanceStep();
+      } else {
+        applyPatiencePenalty(3);
+        round.fillValue = 0;
+        level.style.height = '0%';
+      }
+    };
+
+    btn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (!round) return;
+      round.fillHolding = true;
+      clearInterval(round.stepTimerId);
+      round.stepTimerId = setInterval(() => {
+        if (!round) return;
+        round.fillValue = Math.min(100, round.fillValue + speed);
+        level.style.height = `${round.fillValue}%`;
+        if (round.fillValue >= 100) {
+          stopFilling();
+        }
+      }, 30);
+    });
+    btn.addEventListener('pointerup', stopFilling);
+    btn.addEventListener('pointerleave', stopFilling);
+    btn.addEventListener('pointercancel', stopFilling);
+
+    interaction.appendChild(track);
+    interaction.appendChild(btn);
+  } else if (step.type === 'altmash') {
+    round.altCount = 0;
+    round.altLast = null;
+    round.altTimeLeft = step.time;
+
+    const row = document.createElement('div');
+    row.className = 'alt-row';
+    const leftBtn = document.createElement('button');
+    leftBtn.className = 'alt-btn';
+    leftBtn.textContent = '⬅️';
+    const rightBtn = document.createElement('button');
+    rightBtn.className = 'alt-btn';
+    rightBtn.textContent = '➡️';
+
+    const counter = document.createElement('div');
+    counter.className = 'mash-counter';
+    counter.textContent = `0 / ${step.count}`;
+
+    const track = document.createElement('div');
+    track.className = 'mash-timer-track';
+    const fill = document.createElement('div');
+    fill.className = 'mash-timer-fill';
+    track.appendChild(fill);
+
+    const press = (side, btn) => {
+      if (round.altLast !== side) {
+        round.altLast = side;
+        round.altCount += 1;
+        counter.textContent = `${round.altCount} / ${step.count}`;
+        if (round.altCount >= step.count) {
+          stopStepMechanics();
+          advanceStep();
+        }
+      } else {
+        btn.classList.add('wrong');
+        setTimeout(() => btn.classList.remove('wrong'), 200);
+      }
+    };
+    leftBtn.addEventListener('click', () => press('left', leftBtn));
+    rightBtn.addEventListener('click', () => press('right', rightBtn));
+
+    row.appendChild(leftBtn);
+    row.appendChild(rightBtn);
+    interaction.appendChild(row);
+    interaction.appendChild(counter);
+    interaction.appendChild(track);
+
+    clearInterval(round.stepTimerId);
+    round.stepTimerId = setInterval(() => {
+      round.altTimeLeft -= 0.05;
+      const ratio = Math.max(0, round.altTimeLeft / step.time);
+      fill.style.width = `${ratio * 100}%`;
+      if (round.altTimeLeft <= 0) {
+        clearInterval(round.stepTimerId);
+        applyPatiencePenalty(3);
+        if (round) renderCurrentStep();
+      }
+    }, 50);
+  } else if (step.type === 'simon') {
+    const length = step.length || 4;
+    round.simonSeq = Array.from({ length }, () => SIMON_ICONS[Math.floor(Math.random() * SIMON_ICONS.length)]);
+    round.simonUserIndex = 0;
+    round.simonTimeouts = [];
+
+    const status = document.createElement('p');
+    status.className = 'lz-text';
+    status.textContent = 'Observe a sequência...';
+
+    const grid = document.createElement('div');
+    grid.className = 'simon-grid';
+    const buttons = SIMON_ICONS.map((icon) => {
+      const btn = document.createElement('button');
+      btn.className = 'simon-btn';
+      btn.textContent = icon;
+      btn.disabled = true;
+      grid.appendChild(btn);
+      return btn;
+    });
+
+    interaction.appendChild(status);
+    interaction.appendChild(grid);
+
+    const enableInput = () => {
+      if (!round) return;
+      status.textContent = 'Repita a sequência!';
+      buttons.forEach((btn) => (btn.disabled = false));
+    };
+
+    const playSequence = () => {
+      round.simonSeq.forEach((icon, i) => {
+        const t1 = setTimeout(() => {
+          const btn = buttons[SIMON_ICONS.indexOf(icon)];
+          btn.classList.add('active');
+          const t2 = setTimeout(() => btn.classList.remove('active'), 380);
+          round.simonTimeouts.push(t2);
+        }, i * 650);
+        round.simonTimeouts.push(t1);
+      });
+      const tEnd = setTimeout(enableInput, round.simonSeq.length * 650);
+      round.simonTimeouts.push(tEnd);
+    };
+
+    buttons.forEach((btn, i) => {
+      btn.addEventListener('click', () => {
+        if (btn.disabled || !round) return;
+        const icon = SIMON_ICONS[i];
+        if (icon === round.simonSeq[round.simonUserIndex]) {
+          btn.classList.add('active');
+          setTimeout(() => btn.classList.remove('active'), 150);
+          round.simonUserIndex += 1;
+          if (round.simonUserIndex >= round.simonSeq.length) {
+            advanceStep();
+          }
+        } else {
+          buttons.forEach((b) => (b.disabled = true));
+          status.textContent = 'Errou! Observe de novo...';
+          applyPatiencePenalty(2.5);
+          setTimeout(() => {
+            if (round) renderCurrentStep();
+          }, 500);
+        }
+      });
+    });
+
+    playSequence();
+  } else if (step.type === 'selecttap') {
+    round.selectFound = 0;
+    const gridSize = step.gridSize || 9;
+    const targetCount = step.count;
+    const targetId = step.target;
+    const otherIds = shuffle(Object.keys(INGREDIENTS).filter((id) => id !== targetId));
+    const cells = [];
+    for (let i = 0; i < targetCount; i++) cells.push(targetId);
+    for (let i = cells.length; i < gridSize; i++) cells.push(otherIds[i % otherIds.length]);
+    const shuffled = shuffle(cells);
+
+    const grid = document.createElement('div');
+    grid.className = 'select-grid';
+    const counter = document.createElement('div');
+    counter.className = 'mash-counter';
+    counter.textContent = `0 / ${targetCount}`;
+
+    shuffled.forEach((id) => {
+      const ing = INGREDIENTS[id];
+      const cell = document.createElement('button');
+      cell.className = 'select-cell';
+      cell.innerHTML = `<span class="icon">${ing.icon}</span>`;
+      cell.addEventListener('click', () => {
+        if (cell.disabled) return;
+        if (id === targetId) {
+          cell.disabled = true;
+          cell.classList.add('done');
+          round.selectFound += 1;
+          counter.textContent = `${round.selectFound} / ${targetCount}`;
+          if (round.selectFound >= targetCount) {
+            advanceStep();
+          }
+        } else {
+          cell.classList.add('wrong');
+          setTimeout(() => cell.classList.remove('wrong'), 300);
+          applyPatiencePenalty(1.5);
+        }
+      });
+      grid.appendChild(cell);
+    });
+
+    interaction.appendChild(grid);
+    interaction.appendChild(counter);
+  } else if (step.type === 'sustain') {
+    round.sustainValue = 20;
+    round.sustainHolding = false;
+    round.sustainProgress = 0;
+    const holdTimeMs = (step.holdTime || 2.5) * 1000;
+    const push = 3.2;
+    const gravity = 2.2;
+
+    const track = document.createElement('div');
+    track.className = 'pour-track';
+    const zone = document.createElement('div');
+    zone.className = 'pour-zone';
+    zone.style.left = `${step.target[0]}%`;
+    zone.style.width = `${step.target[1] - step.target[0]}%`;
+    const needle = document.createElement('div');
+    needle.className = 'pour-indicator';
+    track.appendChild(zone);
+    track.appendChild(needle);
+
+    const progressTrack = document.createElement('div');
+    progressTrack.className = 'mash-timer-track';
+    const progressFill = document.createElement('div');
+    progressFill.className = 'mash-timer-fill';
+    progressFill.style.width = '0%';
+    progressTrack.appendChild(progressFill);
+
+    const btn = document.createElement('button');
+    btn.className = 'fill-btn';
+    btn.textContent = 'Segurar';
+
+    btn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (!round) return;
+      round.sustainHolding = true;
+    });
+    btn.addEventListener('pointerup', () => {
+      if (!round) return;
+      round.sustainHolding = false;
+    });
+    btn.addEventListener('pointerleave', () => {
+      if (!round) return;
+      round.sustainHolding = false;
+    });
+    btn.addEventListener('pointercancel', () => {
+      if (!round) return;
+      round.sustainHolding = false;
+    });
+
+    interaction.appendChild(track);
+    interaction.appendChild(progressTrack);
+    interaction.appendChild(btn);
+
+    clearInterval(round.stepTimerId);
+    round.stepTimerId = setInterval(() => {
+      if (!round) return;
+      round.sustainValue += (round.sustainHolding ? push : -gravity) * 0.3;
+      round.sustainValue = Math.max(0, Math.min(100, round.sustainValue));
+      needle.style.left = `${round.sustainValue}%`;
+
+      const inZone = round.sustainValue >= step.target[0] && round.sustainValue <= step.target[1];
+      if (inZone) {
+        round.sustainProgress += 30;
+        progressFill.style.width = `${Math.min(100, (round.sustainProgress / holdTimeMs) * 100)}%`;
+        if (round.sustainProgress >= holdTimeMs) {
+          clearInterval(round.stepTimerId);
+          advanceStep();
+        }
+      } else {
+        round.sustainProgress = 0;
+        progressFill.style.width = '0%';
+      }
+    }, 30);
   } else if (step.type === 'pour') {
     round.pourPhase = 0;
     const speed = 0.05 + Math.min(0.05, state.day * 0.004);
@@ -378,7 +910,7 @@ function renderCurrentStep() {
     stopBtn.addEventListener('click', () => {
       const value = round.pourValue;
       if (value >= step.target[0] && value <= step.target[1]) {
-        clearInterval(round.pourTimerId);
+        clearInterval(round.stepTimerId);
         advanceStep();
       } else {
         applyPatiencePenalty(3);
@@ -388,8 +920,8 @@ function renderCurrentStep() {
     interaction.appendChild(track);
     interaction.appendChild(stopBtn);
 
-    clearInterval(round.pourTimerId);
-    round.pourTimerId = setInterval(() => {
+    clearInterval(round.stepTimerId);
+    round.stepTimerId = setInterval(() => {
       round.pourPhase += speed;
       round.pourValue = 50 + 50 * Math.sin(round.pourPhase);
       indicator.style.left = `${round.pourValue}%`;
@@ -493,8 +1025,9 @@ function endDay(early) {
 function renderShop() {
   document.getElementById('shop-money').textContent = state.money;
   document.getElementById('next-day-number').textContent = state.day + 1;
-  const root = document.getElementById('shop-upgrade-rows');
-  root.innerHTML = '';
+
+  const upgradeRoot = document.getElementById('shop-upgrade-rows');
+  upgradeRoot.innerHTML = '';
   UPGRADES.forEach((upgrade) => {
     const level = getUpgradeLevel(upgrade.id);
     const maxed = level >= upgrade.maxLevel;
@@ -515,7 +1048,30 @@ function renderShop() {
       renderShop();
     });
     row.appendChild(btn);
-    root.appendChild(row);
+    upgradeRoot.appendChild(row);
+  });
+
+  const drinkRoot = document.getElementById('shop-drink-rows');
+  drinkRoot.innerHTML = '';
+  RECIPES.filter((r) => r.cost).forEach((recipe) => {
+    const owned = Boolean(state.purchasedRecipes[recipe.id]);
+    const row = document.createElement('div');
+    row.className = 'shop-row';
+    row.innerHTML = `
+      <div class="shop-info">${recipe.icon} ${recipe.name}<small>${recipe.steps.length} passos no preparo</small></div>
+    `;
+    const btn = document.createElement('button');
+    btn.textContent = owned ? 'Desbloqueado' : `$${recipe.cost}`;
+    btn.disabled = owned || state.money < recipe.cost;
+    btn.addEventListener('click', () => {
+      if (owned || state.money < recipe.cost) return;
+      state.money -= recipe.cost;
+      state.purchasedRecipes[recipe.id] = true;
+      saveState();
+      renderShop();
+    });
+    row.appendChild(btn);
+    drinkRoot.appendChild(row);
   });
 }
 

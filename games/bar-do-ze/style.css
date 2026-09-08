@@ -58,6 +58,14 @@
   color: #ffb347;
 }
 
+.lz-subtitle {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .lz-topbar {
   display: flex;
   justify-content: space-between;
@@ -327,6 +335,153 @@
   color: white;
   cursor: pointer;
   touch-action: manipulation;
+}
+
+.tapmove-area {
+  position: relative;
+  width: 230px;
+  max-width: 85vw;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.tapmove-target {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: radial-gradient(circle at 30% 30%, #ffe58a, #ffb347 70%);
+  font-size: 1.6rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: left 0.15s ease, top 0.15s ease;
+  box-shadow: 0 6px 18px rgba(255, 179, 71, 0.35);
+}
+
+.pour-stop-btn.wrong {
+  animation: shake-btn 0.3s ease;
+}
+
+.fill-track {
+  position: relative;
+  width: 56px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.fill-zone {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: rgba(77, 255, 136, 0.35);
+  border-top: 2px dashed #4dff88;
+  border-bottom: 2px dashed #4dff88;
+}
+
+.fill-level {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0%;
+  background: linear-gradient(180deg, #ffd23c, #ff9d3c);
+  transition: height 0.05s linear;
+}
+
+.fill-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.4rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+.alt-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.alt-btn {
+  width: 90px;
+  height: 90px;
+  border-radius: 16px;
+  border: none;
+  background: radial-gradient(circle at 30% 30%, #ffb347, #ff5c8a 70%);
+  color: white;
+  font-size: 1.8rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 8px 24px rgba(255, 92, 138, 0.3);
+}
+
+.alt-btn.wrong {
+  animation: shake-btn 0.2s ease;
+}
+
+.simon-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+}
+
+.simon-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 1.6rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.simon-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.simon-btn.active {
+  border-color: #ffb347;
+  background: rgba(255, 179, 71, 0.3);
+}
+
+.select-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.select-cell {
+  width: 58px;
+  height: 58px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 1.5rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.select-cell.done {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.select-cell.wrong {
+  animation: shake-btn 0.3s ease;
+  border-color: #ff5c8a;
 }
 
 .ingredients-grid {
