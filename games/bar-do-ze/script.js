@@ -2,15 +2,25 @@ const SAVE_KEY = 'bar-do-ze-save-v2';
 
 const INGREDIENTS = {
   gelo: { name: 'Gelo', icon: '🧊' },
-  destilado: { name: 'Destilado', icon: '🥃' },
+  cachaca: { name: 'Cachaça', icon: '🥃' },
+  rum: { name: 'Rum', icon: '🥃' },
+  tequila: { name: 'Tequila', icon: '🥃' },
+  whisky: { name: 'Whisky', icon: '🥃' },
+  gin: { name: 'Gin', icon: '🍸' },
+  vodka: { name: 'Vodka', icon: '🥃' },
   limao: { name: 'Limão', icon: '🍋' },
   refrigerante: { name: 'Água com Gás', icon: '🥤' },
+  cola: { name: 'Refrigerante de Cola', icon: '🥤' },
+  tonica: { name: 'Água Tônica', icon: '🫧' },
+  gengibre: { name: 'Refrigerante de Gengibre', icon: '🫚' },
+  citrico: { name: 'Refrigerante Cítrico', icon: '🧃' },
   laranja: { name: 'Suco de Laranja', icon: '🍊' },
   xarope: { name: 'Xarope', icon: '🍯' },
   menta: { name: 'Menta', icon: '🌿' },
   cereja: { name: 'Cereja', icon: '🍒' },
   sal: { name: 'Sal', icon: '🧂' },
   coco: { name: 'Leite de Coco', icon: '🥥' },
+  creme_leite: { name: 'Creme de Leite', icon: '🥛' },
   abacaxi: { name: 'Suco de Abacaxi', icon: '🍍' },
   azeitona: { name: 'Azeitona', icon: '🫒' },
   pepino: { name: 'Pepino', icon: '🥒' },
@@ -19,6 +29,44 @@ const INGREDIENTS = {
 };
 
 const SIMON_ICONS = ['🍋', '🥃', '🍯', '🍒'];
+
+const CUSTOMERS = [
+  { name: 'Marina', avatar: '👩' },
+  { name: 'Léo', avatar: '🧑' },
+  { name: 'Dona Célia', avatar: '👵' },
+  { name: 'Seu Joaquim', avatar: '👴' },
+  { name: 'Bia', avatar: '👩‍🦱' },
+  { name: 'Rafa', avatar: '🧔' },
+  { name: 'Duda', avatar: '👱‍♀️' },
+  { name: 'Théo', avatar: '👨‍🦰' },
+  { name: 'Sol', avatar: '🧕' },
+  { name: 'Igor', avatar: '👨' },
+  { name: 'Vivi', avatar: '👩‍🦳' },
+  { name: 'Caíque', avatar: '👦' },
+  { name: 'Renata', avatar: '👩‍🦲' },
+  { name: 'Pedrinho', avatar: '🧒' },
+];
+
+const DIALOGUE = {
+  caipirinha: ['Depois desse calor, só uma Caipirinha bem gelada resolve!', 'Faz uma Caipirinha capricho, hoje o dia foi difícil.'],
+  mojito: ['Tô com vontade de um Mojito bem refrescante!', 'Um Mojito, por favor — com bastante hortelã.'],
+  cuba_libre: ['Me vê uma Cuba Libre, rapidinho!', 'Uma Cuba Libre pra comemorar o fim do expediente.'],
+  margarita: ['Sextou! Bora de Margarita.', 'Uma Margarita bem salgada na borda, por favor.'],
+  whisky_sour: ['Hoje o clima pede um Whisky Sour.', 'Um Whisky Sour bem equilibrado, se puder.'],
+  gin_tonica: ['Um Gin Tônica bem geladinho, por favor.', 'Tô testando gins novos, me faz um Gin Tônica.'],
+  pina_colada: ['Fecha os olhos e imagina uma praia... me traz uma Piña Colada.', 'Uma Piña Colada bem cremosa, por favor!'],
+  tequila_sunrise: ['Um Tequila Sunrise, quero ver aquele degradê bonito.', 'Capricha no Tequila Sunrise, é pro Instagram.'],
+  dry_martini: ['Um Dry Martini. Mexido, nunca batido.', 'Me vê um Dry Martini, sofisticado como eu.'],
+  screwdriver: ['Só um Parafuso simples, sem enrolação.', 'Um Parafuso bem gelado, por favor.'],
+  bloody_mary: ['Ressaca pesada hoje... um Bloody Mary salva.', 'Capricha no tempero do meu Bloody Mary.'],
+  moscow_mule: ['Um Moscow Mule, adoro aquele gostinho de gengibre.', 'Me faz um Moscow Mule bem gelado.'],
+  daiquiri: ['Um Daiquiri clássico, por favor.', 'Tô com vontade de um Daiquiri bem cítrico.'],
+  white_russian: ['Um White Russian, bem cremoso.', 'Me faz um White Russian, hoje o dia pede.'],
+  paloma: ['Uma Paloma bem refrescante pra esse calor.', 'Nunca provei, mas quero uma Paloma!'],
+  espresso_martini: ['Preciso de cafeína... um Espresso Martini, por favor.', 'Um Espresso Martini bem espumoso.'],
+  sex_on_beach: ['Um Sex on the Beach, bem tropical.', 'Me faz um Sex on the Beach caprichado.'],
+  caipiroska: ['Gosto mais de vodka. Uma Caipiroska, por favor.', 'Uma Caipiroska bem batida, por favor.'],
+};
 
 const RECIPES = [
   {
@@ -29,7 +77,7 @@ const RECIPES = [
     steps: [
       { type: 'add', ingredient: 'limao', label: 'Corte e adicione o limão' },
       { type: 'tapmove', icon: '🍋', count: 8, time: 6, label: 'Socar o limão que foge pelo copo!' },
-      { type: 'add', ingredient: 'destilado', label: 'Adicione a cachaça' },
+      { type: 'add', ingredient: 'cachaca', label: 'Adicione a cachaça' },
       { type: 'add', ingredient: 'gelo', label: 'Adicione o gelo' },
       { type: 'mash', verb: 'Mexer', count: 5, time: 2.5, label: 'Mexa bem' },
     ],
@@ -41,7 +89,7 @@ const RECIPES = [
     unlockDay: 1,
     steps: [
       { type: 'rhythm', target: [42, 58], hitsNeeded: 3, label: 'Acerte o ponto certo 3 vezes seguidas!' },
-      { type: 'add', ingredient: 'destilado', label: 'Adicione o rum' },
+      { type: 'add', ingredient: 'rum', label: 'Adicione o rum' },
       { type: 'add', ingredient: 'gelo', label: 'Adicione o gelo' },
       { type: 'add', ingredient: 'refrigerante', label: 'Complete com água com gás' },
       { type: 'mash', verb: 'Mexer', count: 5, time: 2.5, label: 'Mexa bem' },
@@ -53,8 +101,8 @@ const RECIPES = [
     icon: '🥤',
     unlockDay: 1,
     steps: [
-      { type: 'add', ingredient: 'destilado', label: 'Adicione o rum' },
-      { type: 'add', ingredient: 'refrigerante', label: 'Complete com refrigerante de cola' },
+      { type: 'add', ingredient: 'rum', label: 'Adicione o rum' },
+      { type: 'add', ingredient: 'cola', label: 'Complete com refrigerante de cola' },
       { type: 'add', ingredient: 'limao', label: 'Adicione uma rodela de limão' },
       { type: 'dragfill', target: [65, 85], label: 'Segure para encher até a linha certa' },
     ],
@@ -65,7 +113,7 @@ const RECIPES = [
     icon: '🍹',
     unlockDay: 2,
     steps: [
-      { type: 'add', ingredient: 'destilado', label: 'Adicione a tequila' },
+      { type: 'add', ingredient: 'tequila', label: 'Adicione a tequila' },
       { type: 'add', ingredient: 'limao', label: 'Adicione o limão' },
       { type: 'altmash', count: 10, time: 5, label: 'Balance alternando os lados da coqueteleira!' },
       { type: 'garnish', ingredient: 'sal', label: 'Salgue a borda do copo' },
@@ -77,7 +125,7 @@ const RECIPES = [
     icon: '🥃',
     unlockDay: 2,
     steps: [
-      { type: 'add', ingredient: 'destilado', label: 'Adicione o whisky' },
+      { type: 'add', ingredient: 'whisky', label: 'Adicione o whisky' },
       { type: 'add', ingredient: 'limao', label: 'Adicione o limão' },
       { type: 'add', ingredient: 'xarope', label: 'Adicione o xarope' },
       { type: 'simon', length: 4, label: 'Decore e repita a sequência do coquetel!' },
@@ -90,9 +138,9 @@ const RECIPES = [
     icon: '🍸',
     unlockDay: 3,
     steps: [
-      { type: 'add', ingredient: 'destilado', label: 'Adicione o gin' },
+      { type: 'add', ingredient: 'gin', label: 'Adicione o gin' },
       { type: 'selecttap', target: 'gelo', count: 5, gridSize: 9, label: 'Toque só no gelo, evite o resto!' },
-      { type: 'add', ingredient: 'refrigerante', label: 'Complete com água tônica' },
+      { type: 'add', ingredient: 'tonica', label: 'Complete com água tônica' },
       { type: 'garnish', ingredient: 'menta', label: 'Finalize com uma folha de menta' },
     ],
   },
@@ -102,7 +150,7 @@ const RECIPES = [
     icon: '🍍',
     unlockDay: 3,
     steps: [
-      { type: 'add', ingredient: 'destilado', label: 'Adicione o rum' },
+      { type: 'add', ingredient: 'rum', label: 'Adicione o rum' },
       { type: 'add', ingredient: 'coco', label: 'Adicione o leite de coco' },
       { type: 'add', ingredient: 'abacaxi', label: 'Adicione o suco de abacaxi' },
       { type: 'sustain', target: [45, 65], holdTime: 2.5, label: 'Mantenha o ponteiro do liquidificador na faixa certa!' },
@@ -114,7 +162,7 @@ const RECIPES = [
     icon: '🌅',
     unlockDay: 4,
     steps: [
-      { type: 'add', ingredient: 'destilado', label: 'Adicione a tequila' },
+      { type: 'add', ingredient: 'tequila', label: 'Adicione a tequila' },
       { type: 'add', ingredient: 'laranja', label: 'Complete com suco de laranja' },
       { type: 'pour', verb: 'Derramar a grenadine devagar', label: 'Pare bem no fundo, sem misturar demais', target: [15, 35] },
       { type: 'garnish', ingredient: 'cereja', label: 'Finalize com uma cereja' },
@@ -127,7 +175,7 @@ const RECIPES = [
     icon: '🍸',
     cost: 70,
     steps: [
-      { type: 'add', ingredient: 'destilado', label: 'Adicione o gin' },
+      { type: 'add', ingredient: 'gin', label: 'Adicione o gin' },
       { type: 'add', ingredient: 'gelo', label: 'Adicione o gelo' },
       { type: 'mash', verb: 'Mexer', count: 6, time: 3, label: 'Mexa bem (nunca agite!)' },
       { type: 'garnish', ingredient: 'azeitona', label: 'Finalize com uma azeitona' },
@@ -139,7 +187,7 @@ const RECIPES = [
     icon: '🍊',
     cost: 45,
     steps: [
-      { type: 'add', ingredient: 'destilado', label: 'Adicione a vodka' },
+      { type: 'add', ingredient: 'vodka', label: 'Adicione a vodka' },
       { type: 'add', ingredient: 'laranja', label: 'Complete com suco de laranja' },
       { type: 'mash', verb: 'Mexer', count: 4, time: 2, label: 'Mexa bem' },
     ],
@@ -150,7 +198,7 @@ const RECIPES = [
     icon: '🍅',
     cost: 90,
     steps: [
-      { type: 'add', ingredient: 'destilado', label: 'Adicione a vodka' },
+      { type: 'add', ingredient: 'vodka', label: 'Adicione a vodka' },
       { type: 'add', ingredient: 'tomate', label: 'Adicione o suco de tomate' },
       { type: 'add', ingredient: 'sal', label: 'Tempere com sal' },
       { type: 'mash', verb: 'Mexer', count: 5, time: 2.5, label: 'Mexa bem' },
@@ -163,9 +211,9 @@ const RECIPES = [
     icon: '🥒',
     cost: 100,
     steps: [
-      { type: 'add', ingredient: 'destilado', label: 'Adicione a vodka' },
+      { type: 'add', ingredient: 'vodka', label: 'Adicione a vodka' },
       { type: 'add', ingredient: 'limao', label: 'Adicione o limão' },
-      { type: 'add', ingredient: 'refrigerante', label: 'Complete com refrigerante de gengibre' },
+      { type: 'add', ingredient: 'gengibre', label: 'Complete com refrigerante de gengibre' },
       { type: 'garnish', ingredient: 'pepino', label: 'Finalize com uma rodela de pepino' },
     ],
   },
@@ -175,7 +223,7 @@ const RECIPES = [
     icon: '🍋',
     cost: 60,
     steps: [
-      { type: 'add', ingredient: 'destilado', label: 'Adicione o rum' },
+      { type: 'add', ingredient: 'rum', label: 'Adicione o rum' },
       { type: 'add', ingredient: 'limao', label: 'Adicione o limão' },
       { type: 'add', ingredient: 'xarope', label: 'Adicione o xarope' },
       { type: 'mash', verb: 'Balançar', count: 8, time: 3, label: 'Balance a coqueteleira' },
@@ -187,9 +235,9 @@ const RECIPES = [
     icon: '☕',
     cost: 110,
     steps: [
-      { type: 'add', ingredient: 'destilado', label: 'Adicione a vodka' },
+      { type: 'add', ingredient: 'vodka', label: 'Adicione a vodka' },
       { type: 'add', ingredient: 'cafe', label: 'Adicione o licor de café' },
-      { type: 'add', ingredient: 'coco', label: 'Complete com creme de leite' },
+      { type: 'add', ingredient: 'creme_leite', label: 'Complete com creme de leite' },
       { type: 'mash', verb: 'Mexer', count: 5, time: 2.5, label: 'Mexa bem' },
     ],
   },
@@ -199,8 +247,8 @@ const RECIPES = [
     icon: '🍊',
     cost: 75,
     steps: [
-      { type: 'add', ingredient: 'destilado', label: 'Adicione a tequila' },
-      { type: 'add', ingredient: 'refrigerante', label: 'Complete com refrigerante cítrico' },
+      { type: 'add', ingredient: 'tequila', label: 'Adicione a tequila' },
+      { type: 'add', ingredient: 'citrico', label: 'Complete com refrigerante cítrico' },
       { type: 'add', ingredient: 'limao', label: 'Adicione o limão' },
       { type: 'garnish', ingredient: 'sal', label: 'Salgue a borda do copo' },
     ],
@@ -211,7 +259,7 @@ const RECIPES = [
     icon: '☕',
     cost: 120,
     steps: [
-      { type: 'add', ingredient: 'destilado', label: 'Adicione a vodka' },
+      { type: 'add', ingredient: 'vodka', label: 'Adicione a vodka' },
       { type: 'add', ingredient: 'cafe', label: 'Adicione o café espresso' },
       { type: 'add', ingredient: 'xarope', label: 'Adicione o xarope' },
       { type: 'mash', verb: 'Balançar', count: 9, time: 3, label: 'Balance bem até formar espuma' },
@@ -223,7 +271,7 @@ const RECIPES = [
     icon: '🍑',
     cost: 85,
     steps: [
-      { type: 'add', ingredient: 'destilado', label: 'Adicione a vodka' },
+      { type: 'add', ingredient: 'vodka', label: 'Adicione a vodka' },
       { type: 'add', ingredient: 'laranja', label: 'Adicione o suco de laranja' },
       { type: 'add', ingredient: 'abacaxi', label: 'Adicione o suco de abacaxi' },
       { type: 'garnish', ingredient: 'cereja', label: 'Finalize com uma cereja' },
@@ -237,7 +285,7 @@ const RECIPES = [
     steps: [
       { type: 'add', ingredient: 'limao', label: 'Corte e adicione o limão' },
       { type: 'mash', verb: 'Socar', count: 6, time: 2.5, label: 'Socar o limão com açúcar' },
-      { type: 'add', ingredient: 'destilado', label: 'Adicione a vodka' },
+      { type: 'add', ingredient: 'vodka', label: 'Adicione a vodka' },
       { type: 'add', ingredient: 'gelo', label: 'Adicione o gelo' },
       { type: 'mash', verb: 'Mexer', count: 4, time: 2, label: 'Mexa bem' },
     ],
@@ -377,6 +425,13 @@ function renderTopbar() {
   document.getElementById('day-number').textContent = state.day;
   document.getElementById('money-value').textContent = state.money;
   document.getElementById('combo-value').textContent = state.combo;
+}
+
+function renderCustomerLine() {
+  if (!round || !round.customer) return;
+  document.getElementById('customer-avatar').textContent = round.customer.avatar;
+  document.getElementById('customer-name').textContent = round.customer.name;
+  document.getElementById('customer-quote').textContent = `"${round.quote}"`;
 }
 
 function setLog(text, isFail) {
@@ -947,13 +1002,19 @@ function startNextCustomer() {
   }
   const recipe = shuffle(getUnlockedRecipes())[0];
   const timeTotal = getPatienceSeconds(recipe);
+  const customer = shuffle(CUSTOMERS)[0];
+  const lines = DIALOGUE[recipe.id] || [`Um(a) ${recipe.name}, por favor!`];
+  const quote = shuffle(lines)[0];
   round = {
     recipe,
     stepIndex: 0,
     timeTotal,
     timeLeft: timeTotal,
+    customer,
+    quote,
   };
   document.getElementById('recipe-name').textContent = `${recipe.icon} ${recipe.name}`;
+  renderCustomerLine();
   renderQueue();
   renderTopbar();
   updatePatienceBar();

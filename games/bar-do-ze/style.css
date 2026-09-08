@@ -94,6 +94,37 @@
   opacity: 0.6;
 }
 
+.customer-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+}
+
+.customer-avatar {
+  font-size: 1.6rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.customer-text strong {
+  display: block;
+  font-size: 0.85rem;
+  color: #ffb347;
+  margin-bottom: 0.15rem;
+}
+
+.customer-text p {
+  margin: 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--text-dim);
+  line-height: 1.35;
+}
+
 .order-panel,
 .tray-panel {
   background: rgba(255, 255, 255, 0.03);
