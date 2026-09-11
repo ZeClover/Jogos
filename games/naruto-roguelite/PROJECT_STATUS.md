@@ -9,9 +9,10 @@
 **MARCO 0 — FUNDAÇÃO: concluído e validado.**
 **MARCO 1 — COMBATE MÍNIMO: concluído e validado.**
 **MARCO 2 — EFFECT ENGINE: concluído e validado.**
+**MARCO 3 — JUTSUS: concluído e validado.**
 
-Próximo: **MARCO 3 — Jutsus** (engine data-driven completa: fichas reais de
-jutsu substituindo as ações JUTSU genéricas do Marco 1/2).
+Próximo: **MARCO 4 — Personagens** (recursos exclusivos, passivas,
+loadouts — fichas reais dos 4 Genin do Vertical Slice).
 
 ## Visão geral do projeto
 
@@ -61,11 +62,11 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
 - **Dev console** (`index.html` + `src/ui/devconsole.js`): página de
   diagnóstico que carrega a engine via ES Modules no browser e exercita
   ao vivo RNG/Seed, registries, Asset Manifest, validadores e save/load.
-- **Testes automatizados**: 153 casos (`node --test`, zero dependências)
+- **Testes automatizados**: 181 casos (`node --test`, zero dependências)
   cobrindo Marco 0 (ids, rng, seed, registry, validators, save, asset
   manifest, data registries), Marco 1 (atributos, dano/defesa/acerto,
-  posições/alcance, ordem de turno, ações, CombatState ponta a ponta) e
-  Marco 2 (Effect Engine — ver abaixo).
+  posições/alcance, ordem de turno, ações, CombatState ponta a ponta),
+  Marco 2 (Effect Engine) e Marco 3 (Jutsus — ver abaixo).
 
 ### Concluído (Marco 1 — Combate Mínimo)
 
@@ -136,27 +137,60 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   contínuo e Reações disparadas linha a linha; novo painel "Catálogo"
   com contagem de Tags/Estados/Reações.
 
+### Concluído (Marco 3 — Jutsus)
+
+- **Catálogo de Jutsus** (`src/data/catalog/jutsus.js`): as 12 fichas do
+  Vertical Slice (`docs/design/13`) — Kage Bunshin, Rasengan, Katon:
+  Gōkakyū, Chidori, Kagemane, Kawarimi, Uzumaki Naruto Rendan, Shishi
+  Rendan, Kai, First Aid, Shadow Setup, Analyze — com os números finais
+  do doc (Power/Accuracy/Custo/Cooldown), registradas na Registry
+  `jutsus`. Simplificações documentadas por jutsu (sinergia com Clones,
+  Sharingan, manutenção de Kagemane etc.) em DECISIONS.md D016.
+- **Ponte dado→motor** (`src/engine/combat/jutsu.js`): `resolveJutsuFields`
+  mescla a ficha do catálogo com a `action` (override pontual permitido);
+  `isOnCooldown`/`setCooldown`/`tickCooldowns` — cooldown por combatente,
+  tickado a cada fim de rodada.
+- **Cinco efeitos de jutsu** em `handleJutsu` (`actions.js`): `DAMAGE`
+  (default, com bônus de acerto/crítico contra Imobilizado herdado do
+  Marco 2), `HEAL`, `CLEANSE` (remove Estados com `removal: 'CURA'`,
+  usado por Kai), `ARM_REACTION` (Kawarimi) e `UTILITY` (efeitos sem
+  dano/cura, ex: Shadow Setup aplicando Focado em si mesmo).
+- **Kawarimi funcional**: arma uma esquiva no turno do usuário (consome
+  Chakra + slot REACAO), que dispara automaticamente no próximo golpe
+  single-target elegível — falha contra AoE, ataques inevitáveis e
+  enquanto o próprio usuário está Imobilizado (`effects.js#
+  tryEvadeWithReaction`). Primeiro uso real do slot REACAO desde o
+  Marco 1.
+- **Novos alcances**: `ALLY` (suporte/cura, mesmo lado incluindo o
+  próprio ator) e `AREA` (nesta versão, alvo único nomeado — isento de
+  Kawarimi; resolução multi-alvo real fica para quando houver
+  necessidade concreta, ver D016 #5).
+- **Rasengan "quebra guarda"**: campo `ignoresGuard` zera a guarda do
+  alvo só para aquele golpe.
+- **Dev console**: combate de demonstração agora usa fichas reais via
+  `jutsuId` (Gōkakyū, Kawarimi quando o Chakra está baixo); painel de
+  Catálogo lista as 12 fichas.
+
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **153/153
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **181/181
   passando**.
-- Dev console verificado no Chromium headless (Playwright), Marcos 0-2:
+- Dev console verificado no Chromium headless (Playwright), Marcos 0-3:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
   200 (único 404 é o `favicon.ico` padrão do navegador), botões "Salvar
   demo"/"Limpar" fazem round-trip de save corretamente, seção de
   validadores detecta as 4 classes de problema esperadas, painel de
-  Combate roda um 1v1 completo com Queimando aplicando/resistindo/
-  causando dano contínuo visível no log, painel de Catálogo mostra 21
-  Tags/29 Estados/5 Reações.
+  Combate roda um 1v1 completo usando Gōkakyū/Kawarimi reais do
+  catálogo, painel de Catálogo mostra 21 Tags/29 Estados/5 Reações/12
+  Jutsus.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
-Nenhum item em andamento — Marcos 0, 1 e 2 fechados.
+Nenhum item em andamento — Marcos 0-3 fechados.
 
 ## Pendente (próximos marcos, não começados)
 
-- Marco 3 — Jutsus (engine data-driven completa)
 - Marco 4 — Personagens (recursos, passivas, loadouts)
 - Marco 5 — Inimigos e IA
 - Marco 6 — Vertical Slice (Naruto/Sasuke/Sakura/Shikamaru Genin, País das
@@ -191,7 +225,7 @@ sem pedido explícito do usuário).
 | Tipo | Atual | Meta |
 |---|---|---|
 | Personagens/versões | 0 | 500–800+ |
-| Jutsus | 0 | 1.000–1.500+ |
+| Jutsus | 12 | 1.000–1.500+ |
 | Passivas | 0 | 400–600+ |
 | Itens | 0 | 500+ |
 | Bosses/elites | 0 | 200–300+ |
@@ -203,20 +237,20 @@ sem pedido explícito do usuário).
 | Estados | 29 | — (vocabulário fechado) |
 | Reações | 5 | — (cresce conforme combinações fizerem sentido) |
 
-(Personagens/Jutsus/etc. esperados em 0 até o Marco 3/4, em lotes, conforme
-CANON_RULES.md "qualidade > quantidade". Tags/Estados/Reações já são o
-vocabulário completo do doc 01 — não crescem "em lote" do mesmo jeito.)
+(Personagens/Itens/etc. esperados em 0 até o Marco 4+, em lotes, conforme
+CANON_RULES.md "qualidade > quantidade". Jutsus começou com o lote do
+Vertical Slice (12) — próximos lotes maiores vêm quando houver mais
+personagens para equipá-los. Tags/Estados/Reações já são o vocabulário
+completo do doc 01 — não crescem "em lote" do mesmo jeito.)
 
 ## Próximo passo
 
-Iniciar **Marco 3 — Jutsus**: engine data-driven completa de fichas de
-jutsu (ID, Nome, Rank, Categoria, Natureza, Tags, Custo, Power, Accuracy,
-Range, Target, Prep, Cooldown, Estados, Condições, Upgrades, Compatibilidade
-— ver `docs/design/02` e `11_TEMPLATES_FICHAS.md`), substituindo as ações
-`JUTSU` genéricas montadas à mão no Marco 1/2 por jutsus reais carregados
-de `src/data/index.js` (`jutsus` Registry). Primeiro lote: os jutsus do
-Vertical Slice em `docs/design/13_JUTSUS_VERTICAL_SLICE.md` (Kage Bunshin,
-Rasengan, Katon: Gōkakyū, Chidori, Kagemane, Kawarimi, Uzumaki Naruto
-Rendan, Shishi Rendan, Kai, First Aid, Shadow Setup, Analyze). É também a
-hora de revisitar a relação Power↔atributo do atacante (D012) com dados
-reais, e dar ao slot de Reação um uso de verdade (Kawarimi).
+Iniciar **Marco 4 — Personagens**: fichas reais dos 4 Genin do Vertical
+Slice (Naruto, Sasuke, Sakura, Shikamaru — `docs/design/12`), cada um com
+loadout real (4 Ativas + 1 Reação + 1 Suprema + até 3 passivas, usando os
+jutsus já catalogados), recurso exclusivo (Clones do Naruto, Planejamento
+do Shikamaru — os primeiros a existir de verdade, destravando as
+simplificações documentadas em D016 #7 para Kage Bunshin/Rasengan/Uzumaki
+Naruto Rendan/Analyze), Custo de Esquadrão e passivas. É também a hora de
+revisitar a relação Power↔atributo do atacante (D012) com dados reais de
+personagem.

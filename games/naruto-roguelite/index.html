@@ -10,13 +10,14 @@
 
 <header class="dev-header">
   <h1>🍥 Naruto Roguelite</h1>
-  <span class="badge">Marco 2 — Effect Engine</span>
+  <span class="badge">Marco 3 — Jutsus</span>
   <span id="boot-status"><span class="pill warn">carregando engine…</span></span>
   <p>
     Console de diagnóstico da engine, não a UI final do jogo. Prova que RNG/Seed,
-    registries de conteúdo, validadores, save/load, combate por turnos e agora
-    Tags/Estados/Reações funcionam. Ver <code>PROJECT_STATUS.md</code> para o
-    estado completo do projeto e <code>docs/design/</code> para a documentação oficial.
+    registries de conteúdo, validadores, save/load, combate por turnos, Tags/
+    Estados/Reações e agora fichas reais de Jutsu (Vertical Slice) funcionam.
+    Ver <code>PROJECT_STATUS.md</code> para o estado completo do projeto e
+    <code>docs/design/</code> para a documentação oficial.
   </p>
 </header>
 
@@ -40,13 +41,14 @@
   </section>
 
   <section class="panel" style="grid-column: 1 / -1">
-    <h2>⚔️ Combate + Effect Engine (Marcos 1 e 2)</h2>
+    <h2>⚔️ Combate + Effect Engine + Jutsus (Marcos 1-3)</h2>
     <p class="hint">
       Combate 1v1 de demonstração (não é conteúdo real — personagens de verdade
       chegam no Marco 4) rodando via <code>CombatState</code>: turnos ordenados
-      por Velocidade, ações Ataque Básico/Jutsu, dano com mitigação por Defesa,
-      Chakra que persiste e regenera entre rodadas, e agora Estados (o Gōkakyū
-      do Naruto tenta aplicar Queimando) e Reações data-driven.
+      por Velocidade, dano com mitigação por Defesa, Chakra que persiste e
+      regenera entre rodadas, Estados/Reações data-driven, e agora fichas REAIS
+      do catálogo de Jutsus (Katon: Gōkakyū tenta Queimando; Kawarimi arma uma
+      esquiva quando o Chakra não alcança para outro Gōkakyū).
     </p>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
       <input id="combat-seed-input" type="text" placeholder="seed do combate"
@@ -67,7 +69,7 @@
 
   <section class="panel">
     <h2>📚 Registries de conteúdo</h2>
-    <p class="hint">Personagens/jutsus/itens etc. vazios no Marco 0 — populados em lotes a partir do Marco 3/4.</p>
+    <p class="hint">Jutsus populados no Marco 3 (Vertical Slice); personagens/itens/etc. ainda vazios, chegam no Marco 4+.</p>
     <div id="registries-output"></div>
   </section>
 

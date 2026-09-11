@@ -31,13 +31,13 @@ test('isValidRangeTarget MELEE só aceita a linha de frente ocupada do time inim
   const actor = combatant('atacante', POSITIONS.FRENTE);
   const front = combatant('inimigo-frente', POSITIONS.FRENTE);
   const back = combatant('inimigo-tras', POSITIONS.TRAS);
-  const enemyTeam = [front, back];
+  const sideMembers = [front, back];
 
   assert.equal(isValidRangeTarget({
-    actor, target: front, range: 'MELEE', enemyTeam,
+    actor, target: front, range: 'MELEE', sideMembers,
   }), true);
   assert.equal(isValidRangeTarget({
-    actor, target: back, range: 'MELEE', enemyTeam,
+    actor, target: back, range: 'MELEE', sideMembers,
   }), false);
 });
 
@@ -46,36 +46,67 @@ test('isValidRangeTarget MELEE libera a próxima linha quando a de frente morre'
   const front = combatant('inimigo-frente', POSITIONS.FRENTE);
   applyDamage(front, 999);
   const back = combatant('inimigo-tras', POSITIONS.TRAS);
-  const enemyTeam = [front, back];
+  const sideMembers = [front, back];
 
   assert.equal(isValidRangeTarget({
-    actor, target: back, range: 'MELEE', enemyTeam,
+    actor, target: back, range: 'MELEE', sideMembers,
   }), true);
 });
 
 test('isValidRangeTarget RANGED aceita qualquer linha viva', () => {
   const actor = combatant('atacante', POSITIONS.TRAS);
   const back = combatant('inimigo-tras', POSITIONS.TRAS);
-  const enemyTeam = [combatant('inimigo-frente', POSITIONS.FRENTE), back];
+  const sideMembers = [combatant('inimigo-frente', POSITIONS.FRENTE), back];
   assert.equal(isValidRangeTarget({
-    actor, target: back, range: 'RANGED', enemyTeam,
+    actor, target: back, range: 'RANGED', sideMembers,
   }), true);
+});
+
+test('isValidRangeTarget AREA se comporta como RANGED (alvo único nomeado)', () => {
+  const actor = combatant('atacante', POSITIONS.TRAS);
+  const back = combatant('inimigo-tras', POSITIONS.TRAS);
+  const sideMembers = [combatant('inimigo-frente', POSITIONS.FRENTE), back];
+  assert.equal(isValidRangeTarget({
+    actor, target: back, range: 'AREA', sideMembers,
+  }), true);
+});
+
+test('isValidRangeTarget ALLY aceita alvo do mesmo lado do ator (inclusive ele mesmo)', () => {
+  const actor = combatant('curandeiro', POSITIONS.TRAS);
+  const aliado = combatant('aliado', POSITIONS.CENTRO);
+  const sideMembers = [actor, aliado];
+
+  assert.equal(isValidRangeTarget({
+    actor, target: aliado, range: 'ALLY', sideMembers,
+  }), true);
+  assert.equal(isValidRangeTarget({
+    actor, target: actor, range: 'ALLY', sideMembers,
+  }), true);
+});
+
+test('isValidRangeTarget ALLY rejeita quando o ator não está entre os membros do lado do alvo', () => {
+  const actor = combatant('inimigo', POSITIONS.FRENTE);
+  const alvoAliadoDeOutrem = combatant('aliado-do-outro-time', POSITIONS.CENTRO);
+  const sideMembers = [alvoAliadoDeOutrem]; // ator não está nessa lista
+  assert.equal(isValidRangeTarget({
+    actor, target: alvoAliadoDeOutrem, range: 'ALLY', sideMembers,
+  }), false);
 });
 
 test('isValidRangeTarget SELF só aceita o próprio ator', () => {
   const actor = combatant('a', POSITIONS.CENTRO);
   const other = combatant('b', POSITIONS.CENTRO);
   assert.equal(isValidRangeTarget({
-    actor, target: actor, range: 'SELF', enemyTeam: [],
+    actor, target: actor, range: 'SELF', sideMembers: [],
   }), true);
   assert.equal(isValidRangeTarget({
-    actor, target: other, range: 'SELF', enemyTeam: [],
+    actor, target: other, range: 'SELF', sideMembers: [],
   }), false);
 });
 
 test('isValidRangeTarget lança em alcance desconhecido', () => {
   const actor = combatant('a', POSITIONS.CENTRO);
   assert.throws(() => isValidRangeTarget({
-    actor, target: actor, range: 'TELEPORTE', enemyTeam: [],
+    actor, target: actor, range: 'TELEPORTE', sideMembers: [],
   }));
 });

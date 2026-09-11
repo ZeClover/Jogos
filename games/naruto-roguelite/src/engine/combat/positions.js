@@ -1,10 +1,18 @@
 // Posicionamento Frente/Centro/Trás e alcance (CANON_RULES.md #Combate:
 // "Jutsus possuem alcance. Movimento... precisam reconhecer essas linhas.").
 //
-// Sem grid tático completo: alcance MELEE só pode mirar a linha mais à
-// frente do time inimigo que ainda tem alguém vivo (a "linha de frente"
-// muda dinamicamente conforme personagens caem); RANGED mira qualquer
-// linha; SELF só mira o próprio ator.
+// Sem grid tático completo:
+// - MELEE só pode mirar a linha mais à frente do lado do alvo que ainda
+//   tem alguém vivo (a "linha de frente" muda dinamicamente conforme
+//   personagens caem);
+// - RANGED mira qualquer linha inimiga;
+// - AREA (Marco 3) é como RANGED — um alvo nomeado só, resolução
+//   multi-alvo simultânea fica para quando houver necessidade real (ver
+//   DECISIONS.md) — a diferença é só semântica: fica marcado como "efeito
+//   de área" para outras regras (ex: Kawarimi falha contra AoE);
+// - ALLY (Marco 3) mira qualquer combatente vivo do mesmo lado do ator,
+//   incluindo ele mesmo (cura/suporte);
+// - SELF só mira o próprio ator.
 
 import { POSITIONS } from '../enums.js';
 import { isAlive } from './combatant.js';
@@ -21,16 +29,18 @@ export function frontmostOccupiedLine(combatants) {
 
 /**
  * Confere se `target` é um alvo válido para uma ação de `actor` com o
- * alcance dado, considerando o time inimigo de `target` (`enemyTeam`, os
- * combatentes do lado oposto ao de `actor`).
+ * alcance dado. `sideMembers` é a lista de combatentes do MESMO lado que
+ * `target` (para MELEE, usado para achar a linha de frente; para ALLY,
+ * usado para confirmar que `actor` está nesse mesmo lado).
  */
 export function isValidRangeTarget({
-  actor, target, range, enemyTeam,
+  actor, target, range, sideMembers,
 }) {
   if (range === 'SELF') return target.id === actor.id;
-  if (range === 'RANGED' || range === 'ALL') return true;
+  if (range === 'RANGED' || range === 'AREA' || range === 'ALL') return true;
+  if (range === 'ALLY') return sideMembers.some((c) => c.id === actor.id);
   if (range === 'MELEE') {
-    const frontLine = frontmostOccupiedLine(enemyTeam);
+    const frontLine = frontmostOccupiedLine(sideMembers);
     return frontLine !== null && target.position === frontLine;
   }
   throw new Error(`isValidRangeTarget: alcance desconhecido "${range}"`);

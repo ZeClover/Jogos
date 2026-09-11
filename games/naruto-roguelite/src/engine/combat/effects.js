@@ -168,3 +168,45 @@ export function attackerBonusFromTargetStates(target) {
   if (hasState(target, IMOBILIZADO_STATE_ID)) return IMOBILIZADO_ATTACK_BONUS;
   return { accuracyBonus: 0, critBonus: 0 };
 }
+
+// --- Reação armada (Kawarimi e afins) — Marco 3 ---------------------------
+//
+// Kawarimi (doc 01/13) não é uma Reação no sentido do catálogo acima (não
+// depende de um Estado gatilho) — é uma ação que o próprio combatente joga
+// no seu turno para "armar" uma esquiva, que dispara automaticamente contra
+// o próximo golpe elegível antes do seu próximo turno. Isso encaixa no
+// motor pull-based sem precisar de um mecanismo de interrupção de verdade:
+// armar consome o slot/Chakra na hora; disparar só verifica um sinalizador.
+
+/** Arma uma reação de esquiva (ex: Kawarimi) — consumida pelo próximo golpe elegível. */
+export function armReaction(combatant, { jutsuId = null, sourceId = null } = {}) {
+  combatant.pendingReaction = { jutsuId, sourceId };
+}
+
+/**
+ * Se `target` tem uma reação armada e o golpe recebido é elegível para
+ * evasão (não é área, não é inevitável, e o alvo não está Imobilizado —
+ * "falha contra certos AoE, inevitáveis e enquanto Imobilizado", doc 01),
+ * consome a reação e devolve true (o golpe é evitado). Caso contrário,
+ * não mexe em nada e devolve false.
+ */
+export function tryEvadeWithReaction(target, { range, inevitable = false } = {}) {
+  if (!target.pendingReaction) return false;
+  if (range === 'AREA') return false;
+  if (inevitable) return false;
+  if (hasState(target, IMOBILIZADO_STATE_ID)) return false;
+
+  target.pendingReaction = null;
+  return true;
+}
+
+/** Remove todos os Estados ativos cuja definição marca `removal: 'CURA'` (ex: Kai). */
+export function cleanseCurableStates(combatant, statusCatalog) {
+  const removed = [];
+  for (const active of combatant.states) {
+    const def = statusCatalog?.get(active.stateId);
+    if (def?.removal === 'CURA') removed.push(active.stateId);
+  }
+  for (const stateId of removed) removeState(combatant, stateId);
+  return removed;
+}

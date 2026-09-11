@@ -3,6 +3,46 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Marco 3 — Jutsus
+
+### Adicionado
+
+- `src/data/catalog/jutsus.js` — as 12 fichas do Vertical Slice (doc 13):
+  Kage Bunshin, Rasengan, Katon: Gōkakyū, Chidori, Kagemane, Kawarimi,
+  Uzumaki Naruto Rendan, Shishi Rendan, Kai, First Aid, Shadow Setup,
+  Analyze. Registradas na Registry `jutsus`.
+- `src/engine/combat/jutsu.js` — `resolveJutsuFields` (mescla ficha do
+  catálogo + override da action), `isOnCooldown`/`setCooldown`/
+  `tickCooldowns`.
+- `effects.js`: `armReaction`/`tryEvadeWithReaction` (Kawarimi) e
+  `cleanseCurableStates` (Kai).
+- `actions.js`: `handleJutsu` reescrito com 5 efeitos (`DAMAGE`, `HEAL`,
+  `CLEANSE`, `ARM_REACTION`, `UTILITY`); `resolveAttack` (usado por
+  ATAQUE_BASICO e JUTSU/DAMAGE) agora checa Kawarimi antes de rolar
+  acerto; slot de uma ação JUTSU com `jutsuId` respeita o que a ficha
+  pede (ex: Kawarimi usa REACAO automaticamente).
+- `positions.js`: alcances `ALLY` (suporte, mesmo lado) e `AREA` (alvo
+  único, isento de Kawarimi); parâmetro renomeado de `enemyTeam` para
+  `sideMembers` (agora serve tanto ataque quanto suporte).
+- `combatant.js`: `cooldowns` (Map) e `pendingReaction`.
+- `state.js`: `CombatState` aceita `jutsuCatalog`, tica cooldowns a cada
+  fim de rodada.
+- `enums.js`: `JUTSU_CATEGORIES`, `JUTSU_EFFECTS`, `JUTSU_RANGES`.
+- Dev console: combate de demonstração passa a usar jutsus reais via
+  `jutsuId` (Gōkakyū, Kawarimi); painel de Catálogo lista as 12 fichas.
+- 28 novos testes (`tests/combat/jutsu.test.js`,
+  `tests/combat/jutsu_integration.test.js`, extensão de
+  `tests/combat/positions.test.js` e `tests/data/catalog.test.js`) —
+  total do projeto: 181 testes.
+- DECISIONS.md D016 (campo `effect`, Kawarimi pull-based, cooldowns,
+  simplificações por jutsu).
+
+### Validado
+
+- `npm test`: 181/181 passando.
+- Dev console testado em Chromium headless (Playwright): combate roda
+  usando Gōkakyū/Kawarimi reais do catálogo, sem erros de página.
+
 ## Marco 2 — Effect Engine
 
 ### Adicionado

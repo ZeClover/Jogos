@@ -7,6 +7,7 @@ import { isAlive } from './combatant.js';
 import { computeTurnOrder } from './turnOrder.js';
 import { resolveAction } from './actions.js';
 import { tickStates } from './effects.js';
+import { tickCooldowns } from './jutsu.js';
 import { ACTION_BUDGET_PER_ROUND } from '../enums.js';
 
 export class CombatState {
@@ -18,9 +19,11 @@ export class CombatState {
    * @param {Map} [params.statusCatalog] - id -> definição de Estado (src/data/catalog/statuses.js).
    *   Sem isso, Estados ainda podem ser tickados (duração) mas sem dano contínuo.
    * @param {object[]} [params.reactionCatalog] - definições de Reação (src/data/catalog/reactions.js).
+   * @param {Map} [params.jutsuCatalog] - id -> ficha de Jutsu (src/data/catalog/jutsus.js).
+   *   Sem isso, ações JUTSU com `jutsuId` são rejeitadas com UNKNOWN_JUTSU.
    */
   constructor({
-    teamA, teamB, seedManager, statusCatalog = new Map(), reactionCatalog = [],
+    teamA, teamB, seedManager, statusCatalog = new Map(), reactionCatalog = [], jutsuCatalog = new Map(),
   }) {
     if (!teamA?.length || !teamB?.length) {
       throw new Error('CombatState: teamA e teamB precisam ter ao menos 1 combatente');
@@ -31,6 +34,7 @@ export class CombatState {
     this.rng = seedManager.combat;
     this.statusCatalog = statusCatalog;
     this.reactionCatalog = reactionCatalog;
+    this.jutsuCatalog = jutsuCatalog;
     this.round = 0;
     this.turnOrder = [];
     this.turnIndex = 0;
@@ -152,6 +156,7 @@ export class CombatState {
       }
       const stateEvents = tickStates(c, this.statusCatalog);
       for (const event of stateEvents) this._log({ round: this.round, ...event });
+      tickCooldowns(c);
     }
     this._log({ type: 'ROUND_END', round: this.round });
   }

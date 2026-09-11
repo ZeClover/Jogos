@@ -83,3 +83,20 @@ export const ASSET_ID_PREFIXES = Object.freeze([
 export const ASSET_STATUSES = Object.freeze([
   'missing', 'placeholder', 'prompt_ready', 'generated', 'reviewed', 'integrated',
 ]);
+
+// Vocabulário de fichas de Jutsu (Marco 3). Ver docs/design/02 e
+// 11_TEMPLATES_FICHAS.md, e CANON_RULES.md #Jutsus.
+export const JUTSU_CATEGORIES = Object.freeze([
+  'TAIJUTSU', 'NINJUTSU', 'GENJUTSU', 'DEFESA', 'ESPECIAL',
+]);
+
+// Efeito mecânico de uma ação JUTSU (não é um campo do doc original — é a
+// forma como o Marco 3 organiza "o que a ficha realmente faz" dentro do
+// motor genérico; ver DECISIONS.md D016).
+export const JUTSU_EFFECTS = Object.freeze([
+  'DAMAGE', 'HEAL', 'CLEANSE', 'ARM_REACTION', 'UTILITY',
+]);
+
+export const JUTSU_RANGES = Object.freeze([
+  'MELEE', 'RANGED', 'AREA', 'ALLY', 'SELF',
+]);

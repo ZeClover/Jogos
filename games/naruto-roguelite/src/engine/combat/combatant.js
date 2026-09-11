@@ -33,6 +33,8 @@ export function createCombatant({
     actionBudget: { ...ACTION_BUDGET_PER_ROUND },
     states: [],
     controlApplications: new Map(),
+    cooldowns: new Map(),
+    pendingReaction: null,
   };
 }
 

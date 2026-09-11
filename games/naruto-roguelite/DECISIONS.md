@@ -281,3 +281,86 @@ Eletrificação" etc.), mas não formaliza todos os números (duração exata,
    `src/engine/effects/` separado — por ora só combate consome Estados;
    mover para um módulo mais genérico é reversível caso Missões/Eventos
    (Marco 7) precisem aplicar Estados fora de combate.
+
+## D016 — Jutsus (Marco 3): campo `effect`, Kawarimi, cooldowns
+
+**Contexto:** `docs/design/13_JUTSUS_VERTICAL_SLICE.md` dá 12 fichas reais
+(Kage Bunshin, Rasengan, Gōkakyū, Chidori, Kagemane, Kawarimi, Uzumaki
+Naruto Rendan, Shishi Rendan, Kai, First Aid, Shadow Setup, Analyze), mas
+elas fazem coisas mecanicamente bem diferentes (dano, cura, limpar
+Estado, armar uma esquiva, efeitos sem combate ainda implementado) — o
+handler `JUTSU` do Marco 1/2 só sabia causar dano.
+
+**Decisões:**
+
+1. **Campo `effect` na ficha** (`DAMAGE` default | `HEAL` | `CLEANSE` |
+   `ARM_REACTION` | `UTILITY`) decide qual ramo de `handleJutsu` roda. Não
+   é um campo do template oficial do doc 02 — é a forma como o Marco 3
+   organiza "o que a ficha realmente faz" dentro do motor genérico; os
+   campos oficiais do template (Rank, Categoria, Natureza, Tags, Custo,
+   Power, Accuracy, Range, Target, Prep, Cooldown, Estados, Condições)
+   continuam todos presentes na ficha.
+2. **`resolveJutsuFields` (jutsu.js) mescla a ficha do catálogo com a
+   `action`** — a `action` (o que o chamador passa a `resolveAction`) pode
+   sobrescrever qualquer campo pontualmente (útil em testes e, mais
+   adiante, para upgrades de run no Marco 8 que ajustam um jutsu
+   temporariamente sem reescrever o catálogo inteiro).
+3. **Cooldown vive no combatente** (`combatant.cooldowns: Map<jutsuId,
+   rounds>`), tickado a cada fim de rodada junto dos Estados. Só existe
+   quando a ação carrega `jutsuId` — ações JUTSU genéricas (sem ficha,
+   como usadas nos testes do Marco 1/2) continuam funcionando sem
+   cooldown, mantendo compatibilidade retroativa total.
+4. **Kawarimi implementado como "arma reação no próprio turno, dispara no
+   próximo golpe elegível"** (`effects.js#armReaction`/
+   `tryEvadeWithReaction`), não como uma interrupção de verdade. O motor é
+   pull-based (só quem está na vez age); simular uma reação real ao golpe
+   de outro combatente exigiria um mecanismo de interrupção que nada mais
+   no jogo precisa ainda. Armar consome Chakra e o slot REACAO no ato;
+   disparar é automático e gratuito no primeiro golpe single-target
+   elegível (nem AoE, nem inevitável, nem com o defensor Imobilizado —
+   as 3 exceções citadas no doc). `resolveAttack` (usado tanto por
+   ATAQUE_BASICO quanto pelo ramo DAMAGE de JUTSU) é o único ponto que
+   checa isso, então qualquer ataque single-target futuro herda o
+   comportamento de graça.
+5. **`range: 'ALLY'`** (novo, além de MELEE/RANGED/SELF do Marco 1) cobre
+   jutsus de suporte (First Aid, Kai) — válido para qualquer vivo do
+   mesmo lado do ator, incluindo ele mesmo. **`range: 'AREA'`** (Gōkakyū)
+   nesta versão se comporta como RANGED (um alvo nomeado só) — a única
+   diferença prática é que isenta o alvo de Kawarimi (`tryEvadeWithReaction`
+   recusa `range === 'AREA'`), como o doc pede ("Kawarimi falha contra
+   certos AoE"). Atingir todos os inimigos simultaneamente é adiado até
+   haver necessidade real de resolução multi-alvo — implementar isso sem
+   um caso de uso concreto seria superarquitetar.
+6. **`ignoresGuard: true`** (Rasengan, "quebra guarda") zera o parâmetro
+   `guard` passado para `computeDamage`, sem alterar a fórmula em si.
+7. **Simplificações explícitas por jutsu** (documentadas também como
+   `note` na própria ficha, para quem ler `jutsus.js` direto):
+   - Kage Bunshin/Uzumaki Naruto Rendan: geração/consumo do recurso
+     exclusivo "Clones" do Naruto — recursos exclusivos por personagem
+     são Marco 4 (CANON_RULES #Recursos), cataloga-se a ficha, não o
+     recurso.
+   - Rasengan: sinergia de poder com número de Clones ativos — mesma
+     razão, depende do recurso do item acima.
+   - Chidori: bônus de accuracy com Sharingan ativo — Sharingan é
+     transformação de personagem (Marco 4), não um Estado de combate;
+     fica em 80% fixo.
+   - Kagemane: "manutenção de 5 Chakra/rodada" para sustentar Imobilizado
+     não implementada — o Estado expira pela duração normal (2 rodadas)
+     em vez de precisar de pagamento contínuo do atacante. Sustentação
+     por rodada é um mecanismo novo (dreno do CASTER, não do alvo — o
+     `dot` do Effect Engine já dreno o alvo, não serve aqui) sem outro
+     jutsu do lote pedindo o mesmo; melhor esperar um segundo caso de uso
+     antes de generalizar.
+   - Shadow Setup: "melhora o Kagemane por 2 rounds" modelado como o
+     Estado genérico Focado (BUFF já catalogado) em si mesmo, não como um
+     bônus específico ao próximo Kagemane — não existe ainda um hook de
+     "sinergia entre jutsus nomeados".
+   - Analyze: "revela informação e gera Planejamento" — Arquivo Ninja
+     (Marco 7+) e o recurso "Planejamento" do Shikamaru (Marco 4) não
+     existem; ficha catalogada com custo/slot corretos, sem efeito
+     mecânico extra.
+8. **Rank "Especial" do doc 13 (Analyze) virou `rank: 'E'` + `special:
+   true`**, não um 9º valor no enum `RANKS` — CANON_RULES fecha os ranks
+   em E/D/C/B/A/S/Kinjutsu/EX; "Especial" no doc 13 lê como descrição da
+   natureza da ação (ação especial de utilidade), não uma nova categoria
+   de poder.

@@ -1,11 +1,13 @@
-// Dev console dos Marcos 0 (Fundação), 1 (Combate Mínimo) e 2 (Effect Engine).
+// Dev console dos Marcos 0 (Fundação), 1 (Combate Mínimo), 2 (Effect
+// Engine) e 3 (Jutsus).
 //
 // Isto NÃO é a UI final do jogo (essa vem em marcos futuros, guiada pela
 // Style Bible Visual). É uma página de diagnóstico que prova, no navegador,
 // que a engine core funciona: RNG/Seed determinística, registries de
 // conteúdo, validadores, save/load e um combate de exemplo com Tags/
-// Estados/Reações rodando de ponta a ponta. Nenhum dado aqui é conteúdo
-// real do jogo — os personagens/jutsus da run chegam a partir do Marco 3/4.
+// Estados/Reações/Jutsus reais do catálogo rodando de ponta a ponta.
+// Nenhum personagem aqui é conteúdo real do jogo (isso é Marco 4) — mas os
+// jutsus usados já são as fichas reais do Vertical Slice.
 
 import { SeedManager, generateSeedString } from '../engine/seed.js';
 import {
@@ -15,7 +17,9 @@ import { SaveManager, CURRENT_SCHEMA_VERSION, createMemoryStorage } from '../eng
 import { Registry } from '../engine/registry.js';
 import { summarizeRegistries, registries } from '../data/index.js';
 import '../data/catalog/index.js';
-import { tags, statuses, reactions } from '../data/index.js';
+import {
+  tags, statuses, reactions, jutsus,
+} from '../data/index.js';
 import {
   assetManifest, assetBacklogP1, summarizeManifestByStatus, resolveAssetSrc,
 } from '../content/asset_manifest.js';
@@ -210,11 +214,11 @@ function makeDemoFighter(id, name, overrides, position) {
 }
 
 /**
- * Combate 1v1 de demonstração — não é conteúdo real do jogo (isso é Marco 4),
- * só prova que CombatState/ações/dano/Estados/Reações funcionam de ponta a
- * ponta. O "Gōkakyū" do Naruto aqui carrega TAG_KATON_001 e tenta aplicar
- * Queimando (chance normal, sujeita a resistência) para exercitar o Effect
- * Engine no meio de um combate real.
+ * Combate 1v1 de demonstração — não é conteúdo real do jogo (personagens
+ * de verdade chegam no Marco 4), mas o Naruto aqui usa fichas REAIS do
+ * catálogo de Jutsus (Marco 3): Katon: Gōkakyū (dano + tenta Queimando) e,
+ * quando o Chakra não alcança, arma Kawarimi para tentar evitar o próximo
+ * golpe do bandido antes de partir para o Ataque Básico.
  */
 function runDemoCombat(seed) {
   const naruto = makeDemoFighter('demo-naruto', 'Naruto (demo)', {
@@ -231,6 +235,7 @@ function runDemoCombat(seed) {
     seedManager: new SeedManager(seed),
     statusCatalog: statuses,
     reactionCatalog: reactions.all(),
+    jutsuCatalog: jutsus,
   });
 
   let guard = 0;
@@ -239,18 +244,16 @@ function runDemoCombat(seed) {
     const actor = state.combatants.get(actorId);
     const targetId = actorId === naruto.id ? bandido.id : naruto.id;
 
-    const action = (actorId === naruto.id && actor.chakra >= 18)
-      ? {
-        type: ACTION_TYPES.JUTSU,
-        targetId,
-        category: 'NINJUTSU',
-        power: 30,
-        cost: 18,
-        range: 'RANGED',
-        tags: ['TAG_KATON_001'],
-        appliesStates: [{ stateId: 'STATUS_QUEIMANDO_001', chance: 0.6 }],
-      }
-      : { type: ACTION_TYPES.ATAQUE_BASICO, targetId };
+    let action;
+    if (actorId === naruto.id && actor.chakra >= 18) {
+      action = { type: ACTION_TYPES.JUTSU, jutsuId: 'JUT_KATON_GOKAKYU_001', targetId };
+    } else if (actorId === naruto.id && actor.chakra >= 10 && !actor.pendingReaction) {
+      action = {
+        type: ACTION_TYPES.JUTSU, jutsuId: 'JUT_KAWARIMI_001', targetId: actor.id,
+      };
+    } else {
+      action = { type: ACTION_TYPES.ATAQUE_BASICO, targetId };
+    }
 
     state.applyAction(actorId, action);
     guard += 1;
@@ -283,15 +286,24 @@ function renderCombat() {
     if (event.type === 'STATE_EXPIRED') return `  [Estado expira] ${event.stateId} em ${event.targetId}`;
     if (event.type === 'ACTION') {
       const { actorId, action, result } = event;
-      if (!result.applied) return `  ${actorId} tenta ${action.type} -> recusado (${result.reason})`;
-      if (result.hit === false) return `  ${actorId} usa ${action.type} em ${action.targetId} -> errou`;
+      const label = action.jutsuId ?? action.type;
+      if (!result.applied) return `  ${actorId} tenta ${label} -> recusado (${result.reason})`;
+      if (result.armed) return `  ${actorId} arma ${label} (Reação)`;
+      if (result.evaded) return `  ${actorId} usa ${label} em ${action.targetId} -> evitado por Kawarimi!`;
+      if (result.removedStates) {
+        return `  ${actorId} usa ${label} em ${action.targetId} -> limpa [${result.removedStates.join(', ') || 'nada para limpar'}]`;
+      }
+      if (result.healed !== undefined) {
+        return `  ${actorId} usa ${label} em ${action.targetId} -> cura ${result.healed} (alvo em ${result.targetHp} HP)`;
+      }
+      if (result.hit === false) return `  ${actorId} usa ${label} em ${action.targetId} -> errou`;
       if (result.damage !== undefined) {
         const statesTxt = describeStateResult(result.appliedStates, 'Estados');
         const reactionsTxt = describeStateResult(result.reactions, 'Reações');
-        return `  ${actorId} usa ${action.type} em ${action.targetId} -> ${result.damage} de dano`
+        return `  ${actorId} usa ${label} em ${action.targetId} -> ${result.damage} de dano`
           + `${result.isCrit ? ' (crítico!)' : ''} (alvo em ${result.targetHp} HP)${statesTxt}${reactionsTxt}`;
       }
-      return `  ${actorId} usa ${action.type}`;
+      return `  ${actorId} usa ${label}`;
     }
     return `  ${event.type}`;
   });
@@ -314,7 +326,7 @@ function renderCombat() {
   `);
 }
 
-// --- Catálogo (Tags/Estados/Reações) ------------------------------------
+// --- Catálogo (Tags/Estados/Reações/Jutsus) -----------------------------
 
 function renderCatalog() {
   mount('catalog-output', `
@@ -322,11 +334,16 @@ function renderCatalog() {
       <div class="stat"><div class="n">${tags.size}</div><div class="l">Tags</div></div>
       <div class="stat"><div class="n">${statuses.size}</div><div class="l">Estados</div></div>
       <div class="stat"><div class="n">${reactions.size}</div><div class="l">Reações</div></div>
+      <div class="stat"><div class="n">${jutsus.size}</div><div class="l">Jutsus</div></div>
     </div>
     <p class="hint" style="margin-top:10px">
       ${statuses.all().filter((s) => s.controlType).length} Estados de Controle (resistência adaptativa),
       ${statuses.all().filter((s) => s.dot).length} com dano contínuo.
       Ver <code>docs/design/01_COMBATE_TAGS_ESTADOS_REACOES.md</code> e <code>DECISIONS.md</code> D015.
+    </p>
+    <p class="hint">
+      Jutsus (Vertical Slice, doc 13): ${jutsus.all().map((j) => j.name).join(', ')}.
+      Ver <code>DECISIONS.md</code> D016.
     </p>
   `);
 }
