@@ -1,10 +1,11 @@
-// Catálogo de Regiões (Marco 7) — primeira região: País das Ondas
-// (PROMPT MESTRE §54, mesma região do Vertical Slice/Marco 6). Ver
-// CANON_RULES.md: "Regiões precisam ter identidade mecânica e de loot,
-// não só visual" — aqui a identidade mecânica é o pool de Inimigos por
-// tier + o boss fixo + a distribuição de tipo de nó; identidade de LOOT
-// fica pendente até Itens/Economia existirem (doc 03, ainda não
-// implementado) — ver DECISIONS.md D020.
+// Catálogo de Regiões — País das Ondas (Marco 7, PROMPT MESTRE §54, mesma
+// região do Vertical Slice/Marco 6) e Floresta da Morte (Marco 9, 2º Ato
+// — Ascensão). Ver CANON_RULES.md: "Regiões precisam ter identidade
+// mecânica e de loot, não só visual" — a identidade mecânica é o pool de
+// Inimigos por tier (fixo ou gerado, `useGenerator`) + o boss/capstone +
+// a distribuição de tipo de nó; identidade de LOOT fica pendente até
+// Itens/Economia existirem (doc 03, ainda não implementado) — ver
+// DECISIONS.md D020/D023.
 import { regions } from '../index.js';
 
 export const REGION_DEFINITIONS = [
@@ -26,6 +27,25 @@ export const REGION_DEFINITIONS = [
       { type: 'DESCANSO', weight: 2 },
     ],
     lootIdentityNote: 'Identidade de loot regional (drops/mercadores específicos do País das Ondas) adiada até o catálogo de Itens/Economia (doc 03) existir — ver DECISIONS.md D020.',
+  },
+  {
+    id: 'REG_FLORESTA_DA_MORTE_001',
+    name: 'Floresta da Morte',
+    act: 'ASCENSAO',
+    description: 'Mata fechada e hostil que cerca a etapa de sobrevivência do Exame Chūnin — trilhas emaranhadas, feras gigantes e outros times de genin competindo pelos mesmos pergaminhos.',
+    useGenerator: true,
+    // Sem enemyPoolByTier/bossId de propósito: mapGenerator.js gera as
+    // fichas de inimigo (e o Mini-Boss capstone) via
+    // src/engine/generator/enemyGenerator.js — "Gerador combina peças
+    // validadas, não inventa tudo do zero" (doc 09) — ver DECISIONS.md
+    // D023. Nenhum boss autorado (fases/telegraph reais) existe ainda
+    // para esta Região; o capstone é um Mini-Boss gerado (D023 #3).
+    nodeTypeWeights: [
+      { type: 'MISSAO', weight: 5 },
+      { type: 'ELITE', weight: 3 },
+      { type: 'DESCANSO', weight: 1 },
+    ],
+    lootIdentityNote: 'Identidade de loot regional adiada até Itens/Economia (doc 03) existir — ver DECISIONS.md D020/D023.',
   },
 ];
 

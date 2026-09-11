@@ -5,6 +5,14 @@
 // monta a estrutura de nós + arestas a partir da ficha de Região (dado,
 // src/data/catalog/regions.js). Ver DECISIONS.md D020 para o que fica de
 // fora (LOJA/HOSPITAL/TREINO/RECRUTAMENTO/DUNGEON/SEGREDO/EVENTO).
+//
+// Marco 9: Região com `useGenerator: true` monta seus inimigos via
+// `enemyGenerator.js` em vez de `region.enemyPoolByTier` — as fichas
+// geradas (efêmeras, sem ID estável) ficam em `map.generatedEnemies`
+// (objeto plano `{id: def}`, serializável), separado de `enemyIds` (que
+// continua só array de strings) — ver DECISIONS.md D023 #2.
+
+import { generateEnemy, generateMiniBoss } from '../generator/enemyGenerator.js';
 
 const MISSION_LAYER_COUNT = 2; // camadas de nó comum antes do boss
 const NODES_PER_MISSION_LAYER = 2; // "2-4 rotas" — 2 nós por camada com aresta dupla ocasional
@@ -22,13 +30,19 @@ function pickEnemyTier(rng) {
   return rng.weightedPick(TIER_BY_MISSION_LAYER_WEIGHTS);
 }
 
+function registerGenerated(generatedEnemies, def) {
+  generatedEnemies[def.id] = def;
+  return def.id;
+}
+
 function buildMissaoNode({
-  region, layer, index, rng,
+  region, layer, index, rng, generatedEnemies,
 }) {
   const tier = pickEnemyTier(rng);
-  const pool = region.enemyPoolByTier[tier] ?? region.enemyPoolByTier.COMMON;
   const enemyCount = rng.int(1, 2);
-  const enemyIds = Array.from({ length: enemyCount }, () => rng.pick(pool));
+  const enemyIds = region.useGenerator
+    ? Array.from({ length: enemyCount }, () => registerGenerated(generatedEnemies, generateEnemy({ rank: tier, rng })))
+    : Array.from({ length: enemyCount }, () => rng.pick(region.enemyPoolByTier[tier] ?? region.enemyPoolByTier.COMMON));
   return {
     id: `NODE_${layer}_${index}`,
     type: 'MISSAO',
@@ -40,15 +54,19 @@ function buildMissaoNode({
   };
 }
 
-function buildEliteNode({ region, layer, index }) {
-  const eliteIds = region.enemyPoolByTier.ELITE ?? [];
+function buildEliteNode({
+  region, layer, index, rng, generatedEnemies,
+}) {
+  const enemyIds = region.useGenerator
+    ? [registerGenerated(generatedEnemies, generateEnemy({ rank: 'ELITE', rng }))]
+    : (region.enemyPoolByTier.ELITE ?? []);
   return {
     id: `NODE_${layer}_${index}`,
     type: 'ELITE',
     layer,
     name: 'Emboscada de Elite',
     objectiveType: 'CACA',
-    enemyIds: eliteIds,
+    enemyIds,
     rank: 'B',
   };
 }
@@ -60,16 +78,40 @@ function buildDescansoNode({ layer, index }) {
 }
 
 function buildNode({
-  region, type, layer, index, rng,
+  region, type, layer, index, rng, generatedEnemies,
 }) {
   if (type === 'DESCANSO') return buildDescansoNode({ layer, index });
-  if (type === 'ELITE') return buildEliteNode({ region, layer, index });
+  if (type === 'ELITE') {
+    return buildEliteNode({
+      region, layer, index, rng, generatedEnemies,
+    });
+  }
   return buildMissaoNode({
-    region, layer, index, rng,
+    region, layer, index, rng, generatedEnemies,
   });
 }
 
-function buildBossNode({ region, layer }) {
+function buildBossNode({
+  region, layer, rng, generatedEnemies,
+}) {
+  if (region.useGenerator && !region.bossId) {
+    // Sem boss autorado (fases/telegraph, CANON_RULES #30) para esta Região
+    // ainda — capstone é um Mini-Boss gerado (tier já previsto em
+    // ENEMY_TIERS desde o Marco 0), com IA ELITE genérica em vez de um
+    // perfil bespoke (D023 #3).
+    const def = generateMiniBoss({ rng });
+    registerGenerated(generatedEnemies, def);
+    return {
+      id: `NODE_${layer}_0`,
+      type: 'BOSS',
+      layer,
+      name: 'Confronto Final',
+      objectiveType: 'DUELO',
+      enemyIds: [def.id],
+      rank: 'B',
+      isBoss: true,
+    };
+  }
   return {
     id: `NODE_${layer}_0`,
     type: 'BOSS',
@@ -113,18 +155,21 @@ function connectLayer(current, next, rng) {
  * @param {import('../rng.js').RngStream} params.rng
  */
 export function generateRegionMap({ region, rng }) {
+  const generatedEnemies = {};
   const layers = [];
   for (let layer = 0; layer < MISSION_LAYER_COUNT; layer += 1) {
     const nodes = [];
     for (let index = 0; index < NODES_PER_MISSION_LAYER; index += 1) {
       const type = rng.weightedPick(region.nodeTypeWeights.map((e) => ({ item: e.type, weight: e.weight })));
       nodes.push(buildNode({
-        region, type, layer, index, rng,
+        region, type, layer, index, rng, generatedEnemies,
       }));
     }
     layers.push(nodes);
   }
-  layers.push([buildBossNode({ region, layer: MISSION_LAYER_COUNT })]);
+  layers.push([buildBossNode({
+    region, layer: MISSION_LAYER_COUNT, rng, generatedEnemies,
+  })]);
 
   for (let i = 0; i < layers.length - 1; i += 1) {
     connectLayer(layers[i], layers[i + 1], rng);
@@ -134,6 +179,7 @@ export function generateRegionMap({ region, rng }) {
     regionId: region.id,
     layers,
     startNodeIds: layers[0].map((n) => n.id),
+    generatedEnemies,
   };
 }
 

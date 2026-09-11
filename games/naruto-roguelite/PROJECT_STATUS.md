@@ -15,8 +15,9 @@
 **MARCO 6 — VERTICAL SLICE: concluído e validado.**
 **MARCO 7 — RUN / MISSÕES / MAPA: concluído e validado.**
 **MARCO 8 — PROGRESSÃO: concluído e validado.**
+**MARCO 9 — PROTÓTIPO 3 ATOS: primeiro passo concluído e validado (gerador procedural + 2ª Região).**
 
-Próximo: **MARCO 9 — Protótipo 3 Atos**.
+Próximo: **MARCO 10 — Expansão** (ou continuar aprofundando o Marco 9 com mais Atos/Regiões antes de avançar — ver "Próximo passo").
 
 ## Visão geral do projeto
 
@@ -72,9 +73,9 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   posições/alcance, ordem de turno, ações, CombatState ponta a ponta),
   Marco 2 (Effect Engine), Marco 3 (Jutsus), Marco 4 (Personagens),
   Marco 5 (Inimigos e IA), Marco 6 (campanha/roteiro), Marco 7 (mapa/
-  missão/reclassificação/run) e Marco 8 (Maestria/Arquivo/Ameaça/conta —
-  ver abaixo; as UIs jogáveis em si não têm testes Node, são validadas
-  via Playwright).
+  missão/reclassificação/run), Marco 8 (Maestria/Arquivo/Ameaça/conta) e
+  Marco 9 (gerador procedural de inimigo — ver abaixo; as UIs jogáveis em
+  si não têm testes Node, são validadas via Playwright).
 
 ### Concluído (Marco 1 — Combate Mínimo)
 
@@ -361,9 +362,44 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   booleano, conta como único save novo, Pós-game/Economia Permanente
   fora de escopo).
 
+### Concluído (Marco 9 — Protótipo 3 Atos, primeiro passo)
+
+- **Gerador procedural de Inimigo** (`src/engine/generator/
+  enemyGenerator.js`): `generateEnemy`/`generateMiniBoss` combinam Rank
+  (curva de stats já calibrada no Marco 5) + Natureza (Tag já catalogada
+  no Marco 2, +15% de sabor em 1 atributo) + Traço/Arma (bancos de
+  palavras genéricos) — "Gerador combina peças validadas, não inventa
+  tudo do zero" (doc 09). Nunca fabrica jutsu novo (só Ataque Básico);
+  nunca registra na Registry `enemies` (ficha efêmera, D023 #1).
+- **Mini-Boss como capstone sem boss autorado** (`mapGenerator.js#
+  buildBossNode`): tier `MINI_BOSS` (`ENEMY_TIERS` desde o Marco 0,
+  nunca usado até agora) com âncora de stats própria e IA `ELITE`
+  genérica — honesto sobre não ser um Boss de verdade (fases/telegraph,
+  CANON_RULES #30) sem fabricar um design que não existe ainda (D023 #3).
+- **`map.generatedEnemies`**: objeto plano separado de `enemyIds`
+  (compatibilidade total com a Região de pool fixo do Marco 7 — País das
+  Ondas continua byte-a-byte igual, testado).
+- **2ª Região: Floresta da Morte** (`src/data/catalog/regions.js`, Ato
+  Ascensão, `useGenerator: true`) — cenário do Exame Chūnin (já citado
+  como pós-game suportado, PROMPT MESTRE §39), sem personagens nomeados
+  específicos do arco.
+- **Modo Run com seleção de Região** (`src/ui/run.js`): seletor na
+  Introdução; `buildEnemyTeam`/o card de nó no Mapa resolvem inimigo via
+  `bosses` -> `enemies` -> `generatedEnemies`; corrigida uma tela de
+  Vitória que estava fixa em "País das Ondas"/"Zabuza" mesmo jogando
+  outra Região (bug pego na validação Playwright deste marco, ver
+  Validado).
+- 8 novos testes (`tests/generator/enemyGenerator.test.js`, extensão de
+  `tests/run/mapGenerator.test.js` e `tests/data/regions_missions_catalog.test.js`)
+  — total do projeto: 325 testes.
+- DECISIONS.md D023 (gerador só combina peças validadas, Mini-Boss
+  honesto em vez de Boss fabricado, `generatedEnemies` separado de
+  `enemyIds`, Floresta da Morte como 2ª Região, "calibrar" interpretado
+  como validar com mais conteúdo em vez de mudar fórmulas sem dado novo).
+
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **313/313
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **325/325
   passando**.
 - Dev console verificado no Chromium headless (Playwright), Marcos 0-5:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
@@ -404,15 +440,29 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   (reload completo da página, não só re-render em memória) — a conta
   volta com Vitórias/Maestria/Arquivo intactos e o seletor de Nível de
   Ameaça aparece na Introdução.
+- **Gerador procedural + Floresta da Morte (Marco 9) verificado no
+  Chromium headless (Playwright)**: seletor de Região troca a descrição/
+  mapa exibidos; nós de Missão/Elite mostram nomes gerados reais (ex:
+  "Veterano de Doton (Traiçoeiro, Correntes)", "Elite de Raiton
+  (Disciplinado, Espada Curta)"); combate contra inimigo gerado aplica
+  dano/crítico/movimento normalmente; Run jogada até vencer o capstone
+  Mini-Boss gerado ("Capitão de Hyōton..."), tela de Vitória mostra o
+  nome certo da Região/inimigo (bug de texto fixo "País das Ondas/
+  Zabuza" encontrado e corrigido durante esta validação); sem nenhum
+  erro de página em nenhuma das execuções.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
-Nenhum item em andamento — Marcos 0-8 fechados.
+Nenhum item em andamento — Marcos 0-9 (primeiro passo) fechados.
 
-## Pendente (próximos marcos, não começados)
+## Pendente (próximos marcos/aprofundamentos, não começados)
 
-- Marco 9 — Protótipo 3 Atos
+- Marco 9 — Protótipo 3 Atos: mais Atos/Regiões, Boss autorado de
+  verdade para a Floresta da Morte (fases/telegraph reais, não só
+  Mini-Boss gerado), Gerador de Missão completo (facção/complicação/
+  modificador/recompensa/flags do doc 04 — depende de Facções, doc 06,
+  ainda não implementado)
 - Marco 10 — Expansão
 
 ## Bugs conhecidos
@@ -446,7 +496,7 @@ sem pedido explícito do usuário).
 | Bosses/elites | 1 | 200–300+ |
 | Eventos | 0 | 300+ |
 | Templates de missão | 4 | 200+ |
-| Regiões | 1 | 50+ |
+| Regiões | 2 | 50+ |
 | Conquistas | 0 | 500+ |
 | Tags | 21 | — (vocabulário fechado) |
 | Estados | 29 | — (vocabulário fechado) |
@@ -456,21 +506,21 @@ sem pedido explícito do usuário).
 CANON_RULES.md "qualidade > quantidade". Personagens/Jutsus/Passivas
 começaram com o lote do Vertical Slice (4/13/1); Inimigos/Bosses com o
 primeiro lote do País das Ondas (4/1, Marco 5); Templates de Missão/
-Regiões com o primeiro lote do Marco 7 (4/1) — próximos lotes maiores
-vêm em Konoha Genins/Suna/etc. (PROMPT MESTRE §78). Tags/Estados/Reações
-já são o vocabulário completo do doc 01 — não crescem "em lote" do mesmo
-jeito.)
+Regiões com o primeiro lote do Marco 7 (4/1, Marco 9 soma a 2ª Região
+via Gerador em vez de lote autorado) — próximos lotes maiores vêm em
+Konoha Genins/Suna/etc. (PROMPT MESTRE §78). Tags/Estados/Reações já são
+o vocabulário completo do doc 01 — não crescem "em lote" do mesmo jeito.)
 
 ## Próximo passo
 
-Iniciar **Marco 9 — Protótipo 3 Atos**: os Marcos 1-8 fecham um loop
-completo (Combate + Effect Engine + Jutsus + Personagens + Inimigos/IA +
-Vertical Slice + Run/Mapa/Missões + Progressão) mas só para 1 Ato
-(Formação) com 1 Região. O Marco 9 é quando calibrar de verdade os
-números provisórios acumulados desde o Marco 1 (D012/D017/D020/D022) com
-mais conteúdo real para comparar, e expandir para pelo menos mais um Ato
-(Ascensão) — mais Regiões, mais Personagens/Jutsus/Inimigos/Bosses em
-lote (PROMPT MESTRE §78), sempre validando antes de crescer mais
+O Marco 9 deu o primeiro passo (Gerador procedural de Inimigo + Floresta
+da Morte como 2ª Região/Ato Ascensão, D023) mas o "Protótipo 3 Atos"
+completo pede mais: um Boss de verdade para a Floresta da Morte (fases/
+telegraph reais, CANON_RULES #30 — hoje é só um Mini-Boss gerado, D023
+#3), possivelmente um 3º Ato, e o Gerador de Missão completo do doc 04
+(facção/complicação/modificador/recompensa/flags — precisa do sistema de
+Facções, doc 06, ainda não implementado). Continuar aprofundando o
+Marco 9 nessa direção antes de ir para o **Marco 10 — Expansão**
 (CANON_RULES — "não expandir antes de validar"). Pendências explícitas
 que continuam em aberto de marcos anteriores: salvar/carregar uma Run em
 andamento (D020 #9), "recuar" voltando uma camada no mapa (D020 #9),

@@ -102,3 +102,49 @@ test('findNode acha um nó em qualquer camada, e devolve undefined/null para id 
   assert.equal(findNode(map, target.id), target);
   assert.equal(findNode(map, 'NODE_NAO_EXISTE'), null);
 });
+
+test('região com useGenerator:true tem generatedEnemies vazio', () => {
+  const map = buildMap();
+  assert.deepEqual(map.generatedEnemies, {});
+});
+
+const GENERATOR_REGION = {
+  id: 'REG_FIXTURE_GEN_001',
+  useGenerator: true,
+  nodeTypeWeights: [
+    { type: 'MISSAO', weight: 5 },
+    { type: 'ELITE', weight: 2 },
+    { type: 'DESCANSO', weight: 2 },
+  ],
+  // sem bossId de propósito: capstone deve virar Mini-Boss gerado (D023 #3).
+};
+
+function buildGeneratorMap(seed = 'gen-map-test') {
+  return generateRegionMap({ region: GENERATOR_REGION, rng: createRngStream(seed) });
+}
+
+test('região com useGenerator:true popula generatedEnemies para todo enemyId de nó MISSAO/ELITE/BOSS', () => {
+  const map = buildGeneratorMap();
+  const allEnemyIds = map.layers.flatMap((layer) => layer.flatMap((node) => node.enemyIds ?? []));
+  for (const id of allEnemyIds) {
+    assert.ok(map.generatedEnemies[id], `enemyId "${id}" sem ficha gerada correspondente`);
+  }
+});
+
+test('região com useGenerator:true e sem bossId termina num nó BOSS com Mini-Boss gerado (tier MINI_BOSS, IA ELITE)', () => {
+  const map = buildGeneratorMap();
+  const bossNode = map.layers.at(-1)[0];
+  assert.equal(bossNode.type, 'BOSS');
+  assert.equal(bossNode.isBoss, true);
+  const bossDef = map.generatedEnemies[bossNode.enemyIds[0]];
+  assert.equal(bossDef.tier, 'MINI_BOSS');
+  assert.equal(bossDef.aiLevel, 'ELITE');
+});
+
+test('região com useGenerator:true não referencia nenhum ID do catálogo estático de Inimigos', () => {
+  const map = buildGeneratorMap();
+  const allEnemyIds = map.layers.flatMap((layer) => layer.flatMap((node) => node.enemyIds ?? []));
+  for (const id of allEnemyIds) {
+    assert.ok(id.startsWith('GEN_'), `id "${id}" não parece gerado`);
+  }
+});

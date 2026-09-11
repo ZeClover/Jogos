@@ -753,3 +753,76 @@ o jogador aprendeu", com conteúdo não descoberto como `???`.
    tem hoje; implementá-los agora com 1 boss e 0 itens seria construir
    um sistema vazio. `victories`/`runsPlayed` já ficam registrados em
    `accountState` como base para quando isso for retomado.
+
+## D023 — Protótipo 3 Atos (Marco 9): Gerador procedural de Inimigo, Mini-Boss como capstone, 2ª Região
+
+**Contexto:** PROMPT MESTRE §53 (Marco 9) pede calibrar os números
+provisórios acumulados desde o Marco 1 e expandir para pelo menos mais um
+Ato. `docs/design/09_BALANCEAMENTO_E_GERADOR.md` é explícito sobre COMO
+expandir: "Gerador combina peças validadas, não inventa tudo do zero" —
+e `docs/design/05_INIMIGOS_ELITES_BOSSES.md` já descreve um Gerador de
+Inimigo (Origem + Rank + Natureza + Especialização + Arma + Traço + Jutsu
++ Modificador) e cita nomes de bosses canônicos (Gaara, Itachi, Pain...)
+só como EXEMPLOS do nível de profundidade esperado — não como fichas
+prontas para autorar sem base real de números/fases.
+
+**Decisões:**
+
+1. **Inimigo gerado é efêmero, nunca registrado na Registry `enemies`.**
+   `generateEnemy`/`generateMiniBoss`
+   (`src/engine/generator/enemyGenerator.js`) devolvem um objeto solto
+   com ID sintético (`GEN_<rank>_<n>`) sem promessa de estabilidade entre
+   runs (CANON_RULES "IDs não mudam por rename" é sobre conteúdo
+   AUTORADO permanente — um `GEN_*` não é isso). Fichas geradas também
+   não entram no Arquivo Ninja (D022 #3) — só conteúdo estável do
+   catálogo é "descoberto" de verdade.
+2. **O Gerador só combina peças já validadas em marcos anteriores, sem
+   fabricar jutsu novo**: a curva de stats por tier já calibrada no
+   Marco 5 (D018 #6, mesmos números-âncora de `enemies.js`) e as 6 Tags
+   de Natureza já catalogadas no Marco 2 (D015 #1) — cada Natureza dá só
+   um bônus de sabor de +15% em UM atributo (mesmo espírito das
+   associações natureza/mecânica de D015/D018, não uma regra nova).
+   Todo inimigo gerado usa exclusivamente Ataque Básico — nenhum golpe
+   especial é inventado sem ficha real, mesma disciplina de D018 sobre
+   Bandido/Mercenário não terem jutsu. Nome/Título vem de bancos de
+   palavras genéricos (Traço + Arma), sem citar nenhum nome canônico
+   específico do universo Naruto.
+3. **Capstone de Região sem boss autorado é um Mini-Boss gerado, não um
+   Boss de verdade.** CANON_RULES #30 exige de um Boss "identidade,
+   fases, telegraph, counters, fraquezas mecânicas" — um Zabuza de
+   verdade (D018) leva design real que este marco não tem base para
+   fabricar para uma 2ª Região sem doc específico. `ENEMY_TIERS` já
+   listava `MINI_BOSS` desde o Marco 0 sem nunca ter sido usado — agora
+   ganha uma âncora de stats própria (acima de ELITE) e usa a estratégia
+   `ELITE` genérica de `ai.js` (Marco 5) em vez de um `aiProfile`
+   bespoke, honesto sobre não ser um "Boss" no sentido pleno do
+   CANON_RULES. `mapGenerator.js#buildBossNode` decide entre boss real
+   (`region.bossId`) e mini-boss gerado (`region.useGenerator` sem
+   `bossId`) — o node continua marcado `isBoss: true`/tipo `BOSS` (é o
+   fim da Run de qualquer forma), só o rank cai de A para B para refletir
+   a diferença.
+4. **`map.generatedEnemies` é um objeto plano separado de `enemyIds`**
+   (`src/engine/run/mapGenerator.js`) — `node.enemyIds` continua só um
+   array de strings (compatível com D020, testado), e as fichas geradas
+   completas ficam à parte, indexadas por id, ainda serializáveis em
+   JSON puro (mantém D020 #7). `buildEnemyTeam` (`run.js`) resolve um
+   `enemyId` tentando `bosses` -> `enemies` -> `generatedEnemies`, nessa
+   ordem.
+5. **2ª Região: Floresta da Morte, Ato Ascensão** — local canônico já
+   citado como pós-game suportado no PROMPT MESTRE §39 ("Chūnin Exam"),
+   usada aqui só como cenário/ambientação (sem citar personagens
+   nomeados específicos do arco). `useGenerator: true`, sem
+   `enemyPoolByTier`/`bossId` — todo o pool de inimigo e o capstone vêm
+   do Gerador. Prova que o sistema de Região (D020) já suporta os dois
+   modos (pool fixo autorado E gerado) sem mudar `mapGenerator.js` para
+   quem usa pool fixo (País das Ondas continua byte-a-byte igual,
+   testado).
+6. **"Calibrar os números provisórios" (Marco 9) neste passo foi, na
+   prática, VALIDAR que eles seguem coerentes com mais conteúdo** (Run
+   completa na Floresta da Morte jogada via Playwright, sem HP
+   desproporcional/combate impossível) em vez de reabrir cada fórmula
+   das D012/D017/D020/D022 uma a uma sem dado empírico novo que
+   justifique mudar algum número específico — mudar por mudar seria
+   inventar calibração sem base, o oposto do que CANON_RULES pede.
+   Nenhuma fórmula foi alterada neste marco; revisar de novo quando
+   houver mais Atos/Regiões para comparar.

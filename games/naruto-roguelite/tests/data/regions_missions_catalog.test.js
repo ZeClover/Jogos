@@ -11,15 +11,15 @@ import { MISSION_OBJECTIVE_TYPES, NODE_TYPES } from '../../src/engine/enums.js';
 
 test('o catálogo de Regiões foi registrado ao ser importado', () => {
   assert.equal(regions.size, REGION_DEFINITIONS.length);
-  assert.equal(REGION_DEFINITIONS.length, 1, 'primeira região: País das Ondas');
+  assert.equal(REGION_DEFINITIONS.length, 2, 'País das Ondas (Marco 7) + Floresta da Morte (Marco 9)');
 });
 
 test('o catálogo de Templates de Missão foi registrado ao ser importado', () => {
   assert.equal(missions.size, MISSION_TEMPLATES.length);
 });
 
-test('toda Região tem ID bem formado e boss/inimigos do pool resolvidos nos catálogos reais', () => {
-  for (const region of REGION_DEFINITIONS) {
+test('Região com pool fixo (sem useGenerator) tem boss/inimigos do pool resolvidos nos catálogos reais', () => {
+  for (const region of REGION_DEFINITIONS.filter((r) => !r.useGenerator)) {
     assert.ok(isWellFormedId(region.id));
     assert.ok(bosses.has(region.bossId), `${region.id}: bossId desconhecido "${region.bossId}"`);
     for (const [tier, ids] of Object.entries(region.enemyPoolByTier)) {
@@ -27,6 +27,13 @@ test('toda Região tem ID bem formado e boss/inimigos do pool resolvidos nos cat
         assert.ok(enemies.has(enemyId), `${region.id}: enemyId desconhecido "${enemyId}" no tier ${tier}`);
       }
     }
+  }
+});
+
+test('Região com useGenerator:true tem ID bem formado e NÃO declara enemyPoolByTier/bossId estático', () => {
+  for (const region of REGION_DEFINITIONS.filter((r) => r.useGenerator)) {
+    assert.ok(isWellFormedId(region.id));
+    assert.equal(region.enemyPoolByTier, undefined);
   }
 });
 

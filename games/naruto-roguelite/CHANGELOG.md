@@ -3,6 +3,48 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Marco 9 — Protótipo 3 Atos (primeiro passo: Gerador + 2ª Região)
+
+### Adicionado
+
+- `src/engine/generator/enemyGenerator.js` — `generateEnemy`/
+  `generateMiniBoss`: gerador procedural de Inimigo combinando Rank
+  (curva já calibrada no Marco 5) + Natureza (Tag do Marco 2, +15% de
+  sabor) + Traço/Arma (bancos de palavras genéricos); nunca fabrica
+  jutsu, nunca registra na Registry `enemies` (ficha efêmera).
+- `src/engine/run/mapGenerator.js`: Região com `useGenerator: true`
+  monta MISSAO/ELITE via o gerador; sem `bossId`, o capstone vira um
+  Mini-Boss gerado (tier `MINI_BOSS`, IA `ELITE` genérica) em vez de um
+  Boss fabricado sem fases/telegraph reais. Novo campo
+  `map.generatedEnemies` (objeto plano, serializável) guarda as fichas
+  geradas separado de `enemyIds`; regiões de pool fixo (País das Ondas)
+  continuam com o mesmo comportamento de antes, byte a byte.
+- `src/data/catalog/regions.js` — 2ª Região: Floresta da Morte (Ato
+  Ascensão, cenário do Exame Chūnin), `useGenerator: true`.
+- `src/ui/run.js`: seletor de Região na Introdução; resolução de
+  inimigo (`buildEnemyTeam`, cards do Mapa) passa a checar
+  `generatedEnemies` além de `enemies`/`bosses`; corrigido bug pego na
+  validação Playwright — a tela de Vitória estava fixa em "País das
+  Ondas"/"Zabuza Momochi" mesmo jogando outra Região.
+- 8 novos testes (`tests/generator/enemyGenerator.test.js`, extensão de
+  `tests/run/mapGenerator.test.js` e
+  `tests/data/regions_missions_catalog.test.js`) — total do projeto:
+  325 testes.
+- DECISIONS.md D023 (gerador só combina peças validadas, Mini-Boss
+  honesto em vez de Boss fabricado, `generatedEnemies` separado de
+  `enemyIds`, Floresta da Morte, "calibrar" interpretado como validar
+  com mais conteúdo).
+
+### Validado
+
+- `npm test`: 325/325 passando.
+- `run.html` testado em Chromium headless (Playwright): troca de Região
+  atualiza mapa/descrição; nomes de inimigo gerado aparecem corretamente
+  nos nós e no HUD de batalha; combate contra inimigo gerado (dano/
+  crítico/movimento) funciona normalmente; Run completa até vencer o
+  Mini-Boss capstone, com a tela de Vitória mostrando o nome certo da
+  Região/inimigo após a correção do bug acima; sem erros de página.
+
 ## Marco 8 — Progressão
 
 ### Adicionado

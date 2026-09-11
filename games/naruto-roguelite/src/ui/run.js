@@ -32,7 +32,7 @@ import {
   xpToNextLevel, MASTERY_MAX_LEVEL,
 } from '../engine/progression/index.js';
 
-const REGION_ID = 'REG_PAIS_DAS_ONDAS_001';
+const DEFAULT_REGION_ID = 'REG_PAIS_DAS_ONDAS_001';
 const SQUAD_IDS = [
   'CHAR_NARUTO_GENIN_001', 'CHAR_SASUKE_GENIN_001', 'CHAR_SAKURA_GENIN_001', 'CHAR_SHIKAMARU_GENIN_001',
 ];
@@ -72,6 +72,7 @@ const R = {
   threatLevel: THREAT_MIN,
   encounteredIds: new Set(),
   runEndSummary: null,
+  regionId: DEFAULT_REGION_ID,
 };
 
 function escapeHtml(str) {
@@ -105,7 +106,11 @@ function buildEnemyTeam(node) {
   const seenCount = new Map();
   const combatants = node.enemyIds.map((enemyId) => {
     const bossDef = bosses.get(enemyId);
-    const def = bossDef ?? enemies.get(enemyId);
+    // Marco 9: Regiões com useGenerator (ex: Floresta da Morte) montam
+    // fichas efêmeras em `run.map.generatedEnemies` — não passam pela
+    // Registry `enemies` (D023 #1). `createCombatantFromEnemy` já aceita
+    // qualquer objeto no formato certo, gerado ou não.
+    const def = bossDef ?? enemies.get(enemyId) ?? R.run.map.generatedEnemies[enemyId];
     const n = (seenCount.get(enemyId) ?? 0) + 1;
     seenCount.set(enemyId, n);
     const combatantId = n > 1 ? `${enemyId}#${n}` : enemyId;
@@ -115,7 +120,10 @@ function buildEnemyTeam(node) {
     // Ameaça (Marco 8): sob nível suficiente, inimigos comuns "sobem" 1 nível de IA — nunca stat bruto (ver DECISIONS.md D022).
     const aiLevel = effectiveAiLevel(def.aiLevel, R.threatLevel);
     meta.set(combatant.id, { aiLevel, aiProfile: def.aiProfile ?? null });
-    R.encounteredIds.add(enemyId);
+    // Arquivo Ninja (Marco 8) só registra conteúdo estável do catálogo —
+    // fichas geradas (GEN_*) são efêmeras, sem identidade fixa entre runs
+    // (D023 #1), então não entram no Arquivo.
+    if (!def.generated) R.encounteredIds.add(enemyId);
     return combatant;
   });
   return { combatants, meta };
@@ -194,11 +202,12 @@ function buildActionPayload(option, targetId) {
 
 // --- Fluxo da Run ------------------------------------------------------
 
-function startRun(seedInput, threatLevelInput) {
+function startRun(seedInput, threatLevelInput, regionIdInput) {
   const seed = seedInput?.trim() || generateSeedString();
   R.seedManager = new SeedManager(seed);
   R.threatLevel = R.account.threatUnlocked ? clampThreatLevel(Number(threatLevelInput) || THREAT_MIN) : THREAT_MIN;
-  R.run = createRun({ region: regions.get(REGION_ID), seedManager: R.seedManager });
+  R.regionId = regions.has(regionIdInput) ? regionIdInput : DEFAULT_REGION_ID;
+  R.run = createRun({ region: regions.get(R.regionId), seedManager: R.seedManager });
   R.squadSnapshot = null;
   R.encounteredIds = new Set();
   R.runEndSummary = null;
@@ -236,7 +245,7 @@ function finalizeRunIfEnded() {
     chronicle: R.run.chronicle,
     squadIds: SQUAD_IDS,
     encounteredIds: [...R.encounteredIds],
-    regionId: REGION_ID,
+    regionId: R.regionId,
     won: R.run.status === 'VICTORY',
   });
   saveManager.save('account', R.account);
@@ -519,7 +528,7 @@ function renderAccountPanel() {
 }
 
 function renderIntroScreen() {
-  const region = regions.get(REGION_ID);
+  const region = regions.get(R.regionId);
   const defs = SQUAD_IDS.map((id) => characters.get(id));
   const threatOptions = R.account.threatUnlocked
     ? `
@@ -530,6 +539,9 @@ function renderIntroScreen() {
       </div>
     `
     : '';
+  const regionOptions = regions.all().map((r) => `
+    <option value="${r.id}" ${r.id === R.regionId ? 'selected' : ''}>${escapeHtml(r.name)} (Ato ${escapeHtml(r.act)})</option>
+  `).join('');
 
   return `
     <div class="vs-scroll">
@@ -539,7 +551,14 @@ function renderIntroScreen() {
         Esquadrão: Naruto, Sasuke, Sakura e Shikamaru (Custo ${computeSquadCost(defs)}/12).
         O mapa (missões, elites, descanso e o confronto final) é gerado a partir
         de uma seed — a mesma seed sempre produz o mesmo mapa.
+        ${region.useGenerator ? 'Os inimigos desta Região são gerados proceduralmente (Marco 9), não vêm de uma ficha fixa.' : ''}
       </p>
+      <div style="display:flex;gap:8px;align-items:center;margin:14px 0;flex-wrap:wrap">
+        <label for="run-region-select" class="vs-hint">Região:</label>
+        <select id="run-region-select" style="background:#fff;border:1px solid var(--panel-border);color:var(--ink);border-radius:6px;padding:6px 8px;font-family:inherit">
+          ${regionOptions}
+        </select>
+      </div>
       <div style="display:flex;gap:8px;align-items:center;margin:14px 0;flex-wrap:wrap">
         <input id="run-seed-input" type="text" placeholder="seed da run (opcional)"
                style="flex:1;min-width:200px;background:#fff;border:1px solid var(--panel-border);
@@ -557,7 +576,9 @@ function renderMapScreen() {
   ensureNodesReclassified();
   const nodes = availableNodes(R.run);
   const cards = nodes.map((node) => {
-    const enemyNames = (node.enemyIds ?? []).map((id) => (bosses.get(id) ?? enemies.get(id))?.name).filter(Boolean);
+    const enemyNames = (node.enemyIds ?? [])
+      .map((id) => (bosses.get(id) ?? enemies.get(id) ?? R.run.map.generatedEnemies[id])?.name)
+      .filter(Boolean);
     return `
       <button class="vs-node-card ${node.isBoss ? 'is-boss' : ''} ${node.reclassified ? 'is-reclassified' : ''}" data-node-id="${node.id}">
         <h4>${NODE_LABEL[node.type]}${node.reclassified ? ' ⚠️' : ''}</h4>
@@ -654,10 +675,12 @@ function renderRunEndSummary() {
 }
 
 function renderVictoryScreen() {
+  const region = regions.get(R.regionId);
+  const bossNames = R.teamB.map((c) => c.name).join(', ');
   return `
     <div class="vs-scroll vs-end-screen">
-      <h2>🏆 País das Ondas protegido!</h2>
-      <p class="vs-hint">Zabuza Momochi foi derrotado no Dia ${R.run.day}. Seed: <code>${escapeHtml(R.run.seed)}</code></p>
+      <h2>🏆 ${escapeHtml(region.name)} superada!</h2>
+      <p class="vs-hint">${escapeHtml(bossNames)} foi derrotado(a) no Dia ${R.run.day}. Seed: <code>${escapeHtml(R.run.seed)}</code></p>
       ${renderRunEndSummary()}
       ${renderChronicle()}
       <p><button class="vs-btn" data-restart>Jogar outra Run</button></p>
@@ -702,6 +725,7 @@ function handleClick(event) {
     startRun(
       document.getElementById('run-seed-input')?.value,
       document.getElementById('run-threat-input')?.value,
+      document.getElementById('run-region-select')?.value,
     );
     return;
   }
@@ -721,5 +745,13 @@ function handleClick(event) {
   if (targetEl && R.pendingAction) onSelectTarget(targetEl.dataset.targetId);
 }
 
+function handleChange(event) {
+  if (event.target.id === 'run-region-select') {
+    R.regionId = event.target.value;
+    render();
+  }
+}
+
 document.getElementById('app').addEventListener('click', handleClick);
+document.getElementById('app').addEventListener('change', handleChange);
 render();
