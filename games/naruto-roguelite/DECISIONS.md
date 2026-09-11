@@ -929,3 +929,80 @@ já tinha 6 Content IDs de Item reais e prontos (`ITEM_KUNAI_BASIC_001`,
    só prova que o motor de Item funciona de ponta a ponta (catálogo real
    + `ACTION_TYPES.ITEM` + UI jogável), não tenta resolver a Economia
    inteira do doc 03 de uma vez.
+
+## D026 — Pendências do Marco 9 retomadas: Facções/Reputação (doc 06) e 3ª Região/Ato (Suna)
+
+**Contexto:** por pedido explícito do usuário, antes de continuar o
+Marco 10 (Expansão) as duas pendências deixadas em aberto no Marco 9
+(Protótipo 3 Atos) foram fechadas: (1) o sistema de Facções e Reputação
+do `docs/design/06_EVENTOS_RELACOES_FACCOES_NARRATIVA.md`, citado desde
+D020 como bloqueio do Gerador de Missão completo; e (2) um 3º Ato/Região
+para aprofundar o protótipo, seguindo o mesmo padrão de D023/D024
+(Floresta da Morte + Serpente).
+
+**Decisões:**
+
+1. **Catálogo de Facções** (`src/data/catalog/factions.js`) — as 14
+   facções nomeadas explicitamente no doc 06 (Konoha, Suna, Kiri, Kumo,
+   Iwa, Ame, Oto, Taki, Kusa, País do Ferro, Akatsuki, ANBU, Raiz,
+   Nukenin), cada uma só `{id, name, description}` — o doc não dá mais
+   dado nenhum (sem stats/loadout/território detalhado); a descrição é
+   geografia/papel básico já canônico (ex: "vila oculta da Areia, no
+   País do Vento"), não uma invenção de identidade nova (CANON_RULES
+   #30/#79).
+2. **Reputação de Facção como sistema numérico simples e provisório**
+   (`src/engine/progression/reputation.js`) — um valor por facção em
+   `[-50, 50]`, mapeado para os 5 `REPUTATION_LEVELS` já canonizados no
+   Marco 0 (HOSTIL/RUIM/NEUTRA/BOA/ALIADA) por limiares fixos
+   (`<=-20`/`<=-5`/`<5`/`<20`/resto) — o doc não dá números, então os
+   limiares e os deltas por resultado de missão (+8/+5/+2/-3/-8 para
+   Sucesso Perfeito/Sucesso/Sucesso Parcial/Falha/Desastre) são
+   provisórios, mesmo espírito de D020 #2 (limiares de resultado de
+   missão) — revisáveis sem mudar a arquitetura.
+3. **Toda Região ganha um `factionId` opcional** (`regions.js`) — a
+   Facção "dona"/anfitriã da Região: País das Ondas -> Nukenin (o boss é
+   Zabuza Momochi, um nukenin de Kiri, não uma missão oficial da vila),
+   Floresta da Morte -> Konoha (sede do Exame Chūnin), Suna -> Suna. Uma
+   Região sem `factionId` simplesmente não afeta reputação nenhuma —
+   nada quebra por não ter uma (nenhuma Região do Vertical Slice/Marco 6
+   precisou mudar).
+4. **Reputação é persistida em `accountState.js` (conta), não em
+   `runState.js` (run)** — mesmo nível de `mastery`/`archive`/`threat`
+   (Marco 8): sobrevive entre runs via `SaveManager`. `applyRunEnd` ganha
+   um parâmetro `factionId` (passado pela UI a partir da Região jogada) e
+   aplica `applyChronicleToReputation` sobre toda a Crônica da run,
+   somando o delta de cada missão completada na Facção daquela Região —
+   um resultado `'DESCANSO'` não tem entrada no mapa de deltas e não
+   afeta reputação.
+5. **Uma Região tem no máximo 1 Facção associada** — suficiente para o
+   escopo atual (nenhuma missão individual escolhe uma Facção diferente
+   da Região, o Gerador de Missão completo do doc 04 com
+   facção/complicação/modificador/recompensa/flags por missão continua
+   fora de escopo, exigiria muito mais que Facções sozinhas). UI
+   (`run.js`) mostra a Reputação de cada Facção já descoberta (Região já
+   visitada) na tela de Introdução, e o delta da run recém-terminada nas
+   telas de Vitória/Derrota.
+6. **3º Ato/Região: Suna** (`REG_SUNA_001`, Ato `MUNDO_SHINOBI`,
+   `useGenerator: true` para MISSAO/ELITE) — mesmo padrão exato de D023
+   (Floresta da Morte): sem `enemyPoolByTier` estático, o Gerador
+   procedural do Marco 9 já é genérico o bastante para qualquer Região
+   sem mudança de código.
+7. **Boss autorado para Suna: Escorpião do Deserto**
+   (`BOSS_ESCORPIAO_DESERTO_001`) — mesmo espírito de D024 (Serpente da
+   Floresta da Morte): uma fera genérica do bioma, não um personagem
+   canônico nomeado (evita fabricar Gaara/Kankurō/Temari sem base de
+   design real). 3 fases por %HP (Tocaia na Areia/Ferroada/Fúria das
+   Pinças), 2 Jutsus novos (`JUT_FERROADA_PARALISANTE_001` aplica
+   Paralisado, `JUT_INVESTIDA_DAS_PINCAS_001` aplica Vulnerável — ambos
+   Estados já catalogados desde o Marco 2, nenhum novo criado) e perfil
+   de IA bespoke `escorpiaoAction` (`ai.js`), no mesmo formato de
+   `zabuzaAction`/`serpenteAction`. Stats escalam um pouco acima da
+   Serpente (3º Ato > 2º Ato) mas foram calibrados para baixo depois de
+   um teste de integração solo (Naruto vs boss) mostrar que os números
+   iniciais matavam o Naruto rápido demais para o boss sequer entrar na
+   Fase 2 — ajuste automático, não uma regra nova.
+8. **Gerador de Missão completo do doc 04 (facção/complicação/
+   modificador/recompensa/flags por missão) continua fora de escopo** —
+   Facções agora existem e têm Reputação, mas isso não é o Gerador de
+   Missão inteiro; fica como pendência explícita para quando fizer
+   sentido aprofundar de novo o Protótipo 3 Atos.

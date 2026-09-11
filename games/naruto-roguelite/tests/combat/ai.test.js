@@ -186,3 +186,49 @@ test('Serpente prioriza Mordida Perfurante na Fase 3 (Fúria Feroz, <30% HP)', (
 test('BOSS_AI_PROFILES tem uma entrada para a Serpente da Floresta da Morte', () => {
   assert.ok(typeof BOSS_AI_PROFILES.BOSS_SERPENTE_FLORESTA_001 === 'function');
 });
+
+test('Escorpião do Deserto (perfil de boss) ataca normalmente na Fase 1 (HP > 60%)', () => {
+  const escorpiao = fighter('escorpiao', { hpMax: 450, chakraMax: 160 });
+  const state = newState([escorpiao], [fighter('alvo')]);
+
+  const action = chooseAction(state, escorpiao, { level: 'BOSS', bossId: 'BOSS_ESCORPIAO_DESERTO_001' });
+  assert.equal(action.type, ACTION_TYPES.ATAQUE_BASICO);
+});
+
+test('Escorpião usa Ferroada Paralisante num alvo ainda não Paralisado ao entrar na Fase 2 (30%-60% HP)', () => {
+  const escorpiao = fighter('escorpiao', { hpMax: 450, chakraMax: 160 });
+  applyDamage(escorpiao, 225); // 50% hp -> fase 2
+  const state = newState([escorpiao], [fighter('alvo')]);
+
+  const action = chooseAction(state, escorpiao, { level: 'BOSS', bossId: 'BOSS_ESCORPIAO_DESERTO_001' });
+  assert.equal(action.type, ACTION_TYPES.JUTSU);
+  assert.equal(action.jutsuId, 'JUT_FERROADA_PARALISANTE_001');
+  assert.equal(action.targetId, 'alvo');
+});
+
+test('Escorpião não repete Ferroada num alvo já Paralisado (ataca normalmente)', () => {
+  const escorpiao = fighter('escorpiao', { hpMax: 450, chakraMax: 160 });
+  applyDamage(escorpiao, 225);
+  const alvo = fighter('alvo');
+  alvo.states.push({
+    stateId: 'STATUS_PARALISADO_001', stacks: 1, duration: 1, sourceId: 'escorpiao',
+  });
+  const state = newState([escorpiao], [alvo]);
+
+  const action = chooseAction(state, escorpiao, { level: 'BOSS', bossId: 'BOSS_ESCORPIAO_DESERTO_001' });
+  assert.equal(action.type, ACTION_TYPES.ATAQUE_BASICO);
+});
+
+test('Escorpião prioriza Investida das Pinças na Fase 3 (Fúria das Pinças, <30% HP)', () => {
+  const escorpiao = fighter('escorpiao', { hpMax: 450, chakraMax: 160 });
+  applyDamage(escorpiao, 380); // ~15% hp -> fase 3
+  const state = newState([escorpiao], [fighter('alvo')]);
+
+  const action = chooseAction(state, escorpiao, { level: 'BOSS', bossId: 'BOSS_ESCORPIAO_DESERTO_001' });
+  assert.equal(action.type, ACTION_TYPES.JUTSU);
+  assert.equal(action.jutsuId, 'JUT_INVESTIDA_DAS_PINCAS_001');
+});
+
+test('BOSS_AI_PROFILES tem uma entrada para o Escorpião do Deserto', () => {
+  assert.ok(typeof BOSS_AI_PROFILES.BOSS_ESCORPIAO_DESERTO_001 === 'function');
+});

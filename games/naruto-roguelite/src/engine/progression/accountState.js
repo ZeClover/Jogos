@@ -4,11 +4,13 @@
 // da run"). Serializável em JSON puro.
 import { createArchive, discoverAll } from './archive.js';
 import { grantMastery, xpForMissionResult } from './mastery.js';
+import { createReputationState, applyChronicleToReputation } from './reputation.js';
 
 export function createAccountState() {
   return {
     mastery: {},
     archive: createArchive(),
+    reputation: createReputationState(),
     threatUnlocked: false,
     victories: 0,
     runsPlayed: 0,
@@ -26,10 +28,11 @@ export function createAccountState() {
  * @param {string[]} params.squadIds - Content IDs dos personagens que participaram.
  * @param {string[]} params.encounteredIds - enemyId/bossId encontrados durante a run.
  * @param {string} [params.regionId]
+ * @param {string} [params.factionId] - facção associada à Região da Run (Marco 9, D026); reputação só muda se presente.
  * @param {boolean} params.won
  */
 export function applyRunEnd(account, {
-  chronicle, squadIds, encounteredIds, regionId, won,
+  chronicle, squadIds, encounteredIds, regionId, factionId, won,
 }) {
   const missionXp = chronicle.reduce((sum, entry) => sum + xpForMissionResult(entry.result), 0);
   const leveledUp = [];
@@ -39,6 +42,7 @@ export function applyRunEnd(account, {
   }
 
   const discoveredCount = discoverAll(account.archive, [...encounteredIds, regionId].filter(Boolean));
+  const reputationDelta = applyChronicleToReputation(account.reputation, chronicle, factionId);
 
   account.runsPlayed += 1;
   if (won) {
@@ -46,5 +50,7 @@ export function applyRunEnd(account, {
     account.threatUnlocked = true;
   }
 
-  return { leveledUp, discoveredCount, missionXp };
+  return {
+    leveledUp, discoveredCount, missionXp, reputationDelta,
+  };
 }

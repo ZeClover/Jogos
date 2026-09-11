@@ -16,6 +16,13 @@ import { ACTION_TYPES, POSITIONS } from '../enums.js';
 import { isAlive } from './combatant.js';
 import { hasState, OCULTO_STATE_ID, IMOBILIZADO_STATE_ID } from './effects.js';
 
+// ID canônico do Estado Paralisado, só para a checagem de alvo de
+// escorpiaoAction abaixo (mesmo espírito de leitura já usado com
+// IMOBILIZADO_STATE_ID em serpenteAction — não é uma exceção "hardcoded"
+// do motor como as duas de effects.js/D015, só uma leitura de Estado
+// comum, sem mecânica especial associada).
+const PARALISADO_STATE_ID = 'STATUS_PARALISADO_001';
+
 const RETREAT_HP_THRESHOLD = 0.3;
 
 function aliveEnemyIds(state, actorId) {
@@ -125,9 +132,43 @@ function serpenteAction(state, actor, enemyIds) {
   return { type: ACTION_TYPES.ATAQUE_BASICO, targetId };
 }
 
+const ESCORPIAO_FERROADA_JUTSU_ID = 'JUT_FERROADA_PARALISANTE_001';
+const ESCORPIAO_INVESTIDA_JUTSU_ID = 'JUT_INVESTIDA_DAS_PINCAS_001';
+
+/**
+ * Escorpião do Deserto (Suna, Marco 9) — 3 fases por %HP (ver
+ * src/data/catalog/bosses.js): Fase 1 (100-60%) ataque direto; Fase 2
+ * (60-30%) usa Ferroada Paralisante (Paralisado) num alvo ainda não
+ * paralisado assim que possível; Fase 3 (<30%, "Fúria das Pinças")
+ * prioriza Investida das Pinças (Vulnerável), com Ataque Básico como
+ * reserva. Mesmo formato de serpenteAction (2º Ato) escalado para o 3º.
+ */
+function escorpiaoAction(state, actor, enemyIds) {
+  const pct = hpPercent(actor);
+  const targetId = lowestHpTarget(state, enemyIds);
+  const target = state.combatants.get(targetId);
+
+  const inStingPhase = pct > 0.3 && pct <= 0.6;
+  const canSting = !hasState(target, PARALISADO_STATE_ID)
+    && !actor.cooldowns.has(ESCORPIAO_FERROADA_JUTSU_ID)
+    && actor.chakra >= 20;
+  if (inStingPhase && canSting) {
+    return { type: ACTION_TYPES.JUTSU, jutsuId: ESCORPIAO_FERROADA_JUTSU_ID, targetId };
+  }
+
+  const inFuryPhase = pct <= 0.3;
+  const canCharge = !actor.cooldowns.has(ESCORPIAO_INVESTIDA_JUTSU_ID) && actor.chakra >= 16;
+  if (inFuryPhase && canCharge) {
+    return { type: ACTION_TYPES.JUTSU, jutsuId: ESCORPIAO_INVESTIDA_JUTSU_ID, targetId };
+  }
+
+  return { type: ACTION_TYPES.ATAQUE_BASICO, targetId };
+}
+
 export const BOSS_AI_PROFILES = {
   BOSS_ZABUZA_001: zabuzaAction,
   BOSS_SERPENTE_FLORESTA_001: serpenteAction,
+  BOSS_ESCORPIAO_DESERTO_001: escorpiaoAction,
 };
 
 /**

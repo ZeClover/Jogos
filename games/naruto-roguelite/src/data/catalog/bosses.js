@@ -1,16 +1,20 @@
 // Catálogo de Bosses — Zabuza Momochi (País das Ondas, Marco 5,
-// PROMPT MESTRE §54) e a Serpente da Floresta da Morte (Marco 9, Ato
-// Ascensão — "feras gigantes" já citadas na descrição da Região, não um
-// personagem canônico nomeado, ver DECISIONS.md D024). CANON_RULES.md
-// #30 exige identidade/mecânica/fases/telegraph/fraquezas, não "inimigo
-// comum com HP maior" — ver campos `phases`/`weaknesses` abaixo e os
-// perfis de IA correspondentes em `src/engine/combat/ai.js`
-// (`zabuzaAction`/`serpenteAction`).
+// PROMPT MESTRE §54), a Serpente da Floresta da Morte (Marco 9, Ato
+// Ascensão) e o Escorpião do Deserto (Marco 9, Ato Mundo Shinobi — Suna)
+// — as duas feras gigantes seguem o mesmo espírito: presença já citada
+// na descrição da Região, não um personagem canônico nomeado (ver
+// DECISIONS.md D024/D026). CANON_RULES.md #30 exige identidade/mecânica/
+// fases/telegraph/fraquezas, não "inimigo comum com HP maior" — ver
+// campos `phases`/`weaknesses` abaixo e os perfis de IA correspondentes
+// em `src/engine/combat/ai.js` (`zabuzaAction`/`serpenteAction`/
+// `escorpiaoAction`).
 //
 // Stats de Zabuza seguem a referência de Jōnin do doc 01 (HP 200-350 /
-// Chakra 150-280); a Serpente é mais HP/Taijutsu e menos Chakra/Ninjutsu
-// (fera, não ninja) — ambos provisórios (mesmo espírito de D012/D017),
-// revisáveis sem mudar a arquitetura.
+// Chakra 150-280); a Serpente e o Escorpião são mais HP/Taijutsu e menos
+// Chakra/Ninjutsu (feras, não ninjas) — o Escorpião (3º Ato, rank B/A)
+// escala um pouco acima da Serpente (2º Ato, rank C/B), mesmo espírito
+// de escala por Ato do doc 04 — todos provisórios (mesmo espírito de
+// D012/D017), revisáveis sem mudar a arquitetura.
 
 import { bosses } from '../index.js';
 
@@ -119,6 +123,59 @@ export const BOSS_DEFINITIONS = [
     weaknesses: [
       'Constrição Sufocante aplica Imobilizado com chance fixa (85%) — a resistência adaptativa (CANON_RULES #31) ainda favorece o esquadrão nas primeiras aplicações da luta.',
       'Sem alcance à distância: todo o loadout (Ataque Básico e os 2 Jutsus) é MELEE, que só mira a linha de Frente OCUPADA do esquadrão (positions.js) — espalhar o esquadrão entre Frente e Trás protege por completo quem ficar atrás, enquanto durar quem estiver na Frente.',
+    ],
+  },
+  {
+    id: 'BOSS_ESCORPIAO_DESERTO_001',
+    name: 'Escorpião do Deserto',
+    tier: 'BOSS',
+    aiLevel: 'BOSS',
+    aiProfile: 'BOSS_ESCORPIAO_DESERTO_001',
+    stats: {
+      hpMax: 410,
+      chakraMax: 150,
+      taijutsu: 50,
+      ninjutsu: 8,
+      defesaFisica: 33,
+      defesaChakra: 13,
+      velocidade: 18,
+      precisao: 15,
+      evasao: 6,
+      critChance: 0.05,
+      resistenciaEstado: 18,
+    },
+    loadout: {
+      ativas: ['JUT_FERROADA_PARALISANTE_001', 'JUT_INVESTIDA_DAS_PINCAS_001'],
+      reacao: null,
+      suprema: null,
+      passivas: [],
+    },
+    phases: [
+      {
+        id: 'FASE_1_TOCAIA_NA_AREIA',
+        name: 'Tocaia na Areia',
+        hpRange: [0.6, 1.0],
+        telegraph: 'O escorpião emerge da areia solta e ataca direto — pinças e ferrão ainda contidos.',
+        behaviorNote: 'Ataque Básico repetido no alvo com menos HP.',
+      },
+      {
+        id: 'FASE_2_FERROADA',
+        name: 'Ferroada',
+        hpRange: [0.3, 0.6],
+        telegraph: 'A cauda se ergue e trava no alvo — o ferrão está prestes a descer com veneno paralisante.',
+        behaviorNote: 'Assim que possível (Chakra/cooldown livres), usa Ferroada Paralisante (Paralisado) no alvo com menos HP que ainda não esteja Paralisado, antes de voltar a atacar.',
+      },
+      {
+        id: 'FASE_3_FURIA_DAS_PINCAS',
+        name: 'Fúria das Pinças',
+        hpRange: [0, 0.3],
+        telegraph: 'As pinças se abrem por completo — os golpes deixam de mirar carne e passam a mirar a guarda.',
+        behaviorNote: 'Prioriza Investida das Pinças (Vulnerável) sempre que possível; Ataque Básico como reserva.',
+      },
+    ],
+    weaknesses: [
+      'Ferroada Paralisante aplica Paralisado com chance fixa (80%) — a resistência adaptativa (CANON_RULES #31) ainda favorece o esquadrão nas primeiras aplicações da luta.',
+      'Sem alcance à distância: todo o loadout (Ataque Básico e os 2 Jutsus) é MELEE, que só mira a linha de Frente OCUPADA do esquadrão (positions.js) — espalhar o esquadrão entre Frente e Trás protege quem ficar atrás.',
     ],
   },
 ];

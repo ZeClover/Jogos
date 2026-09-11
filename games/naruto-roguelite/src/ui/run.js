@@ -10,7 +10,7 @@
 
 import '../data/catalog/index.js';
 import {
-  characters, enemies, bosses, jutsus, statuses, reactions, regions, items,
+  characters, enemies, bosses, jutsus, statuses, reactions, regions, items, factions,
 } from '../data/index.js';
 import { SeedManager, generateSeedString } from '../engine/seed.js';
 import { SaveManager } from '../engine/save.js';
@@ -30,6 +30,7 @@ import {
   createAccountState, applyRunEnd, archiveLabel,
   clampThreatLevel, effectiveAiLevel, effectiveReclassifyChance, THREAT_MIN, THREAT_MAX,
   xpToNextLevel, MASTERY_MAX_LEVEL,
+  getReputationValue, reputationLevel,
 } from '../engine/progression/index.js';
 
 const DEFAULT_REGION_ID = 'REG_PAIS_DAS_ONDAS_001';
@@ -261,6 +262,7 @@ function finalizeRunIfEnded() {
     squadIds: SQUAD_IDS,
     encounteredIds: [...R.encounteredIds],
     regionId: R.regionId,
+    factionId: regions.get(R.regionId)?.factionId ?? null,
     won: R.run.status === 'VICTORY',
   });
   saveManager.save('account', R.account);
@@ -532,6 +534,26 @@ function renderArchiveEntries() {
   return `<div class="vs-tag-row" style="margin:8px 0 4px">${items}</div>`;
 }
 
+/** Só mostra Facções cuja Região já foi visitada nesta conta (Neutra 0 pra todas seria ruído sem sentido — Marco 9, D026). */
+function renderReputationEntries() {
+  const knownFactionIds = [...new Set(
+    regions.all()
+      .filter((r) => r.factionId && R.account.archive.discoveredIds.includes(r.id))
+      .map((r) => r.factionId),
+  )];
+  if (!knownFactionIds.length) return '';
+  const rows = knownFactionIds.map((factionId) => {
+    const def = factions.get(factionId);
+    const value = getReputationValue(R.account.reputation, factionId);
+    const level = reputationLevel(value);
+    return `<span class="vs-tag">${escapeHtml(def.name)}: ${level} (${value >= 0 ? '+' : ''}${value})</span>`;
+  }).join('');
+  return `
+    <p class="vs-hint">Reputação de Facção (sobe/desce com o resultado das missões na Região dela):</p>
+    <div class="vs-tag-row" style="margin:8px 0 4px">${rows}</div>
+  `;
+}
+
 function renderAccountPanel() {
   const discovered = R.account.archive.discoveredIds.length;
   const total = archiveTotalCount();
@@ -545,6 +567,7 @@ function renderAccountPanel() {
     ${renderArchiveEntries()}
     <p class="vs-hint">Maestria (ganha jogando — nunca comprada, nunca vira bônus de status):</p>
     ${SQUAD_IDS.map(renderMasteryRow).join('')}
+    ${renderReputationEntries()}
   `;
 }
 
@@ -682,15 +705,20 @@ function renderChronicle() {
 
 function renderRunEndSummary() {
   if (!R.runEndSummary) return '';
-  const { leveledUp, discoveredCount, missionXp } = R.runEndSummary;
+  const {
+    leveledUp, discoveredCount, missionXp, reputationDelta,
+  } = R.runEndSummary;
   const levelUpTxt = leveledUp.length
     ? leveledUp.map((l) => `${escapeHtml(characters.get(l.characterId)?.name ?? l.characterId)} -> Nível ${l.level}`).join(', ')
     : 'nenhum';
+  const region = regions.get(R.regionId);
+  const factionName = region?.factionId ? factions.get(region.factionId)?.name : null;
   return `
     <p class="vs-hint">
       +${missionXp} XP de Maestria para cada membro do esquadrão · Subiu de nível: ${levelUpTxt} ·
       ${discoveredCount} nova(s) entrada(s) no Arquivo Ninja
       ${R.account.threatUnlocked ? '· Ameaça liberada!' : ''}
+      ${factionName && reputationDelta ? `· Reputação com ${escapeHtml(factionName)}: ${reputationDelta >= 0 ? '+' : ''}${reputationDelta}` : ''}
     </p>
   `;
 }

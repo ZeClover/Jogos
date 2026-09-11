@@ -15,10 +15,10 @@
 **MARCO 6 — VERTICAL SLICE: concluído e validado.**
 **MARCO 7 — RUN / MISSÕES / MAPA: concluído e validado.**
 **MARCO 8 — PROGRESSÃO: concluído e validado.**
-**MARCO 9 — PROTÓTIPO 3 ATOS: pausado por decisão do usuário (gerador procedural + 2ª Região + boss autorado da Floresta da Morte concluídos e validados; 3º Ato e Facções ficam para depois do Marco 10).**
+**MARCO 9 — PROTÓTIPO 3 ATOS: concluído e validado (gerador procedural + 3 Regiões/Atos com boss autorado cada + sistema de Facções/Reputação).**
 **MARCO 10 — EXPANSÃO: em andamento (1º lote: Itens consumíveis, ver abaixo).**
 
-Próximo: continuar o Marco 10 (mais lotes de conteúdo) — depois retomar as pendências do Marco 9 (3ª Região/Ato, Facções+Reputação) por pedido explícito do usuário.
+Próximo: continuar o Marco 10 com mais lotes de conteúdo (ver "Próximo passo").
 
 ## Visão geral do projeto
 
@@ -416,6 +416,45 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   novos reaproveitando Estados já catalogados, stats mais Taijutsu/menos
   Chakra que Zabuza, `bossId` real substituindo o Mini-Boss gerado).
 
+### Concluído (Marco 9, pendências finais: Facções/Reputação + 3ª Região)
+
+- **Catálogo de Facções** (`src/data/catalog/factions.js`): as 14
+  facções nomeadas no doc 06 (Konoha, Suna, Kiri, Kumo, Iwa, Ame, Oto,
+  Taki, Kusa, País do Ferro, Akatsuki, ANBU, Raiz, Nukenin), cada uma só
+  `{id, name, description}` — o doc não dá mais dado nenhum.
+- **Reputação de Facção** (`src/engine/progression/reputation.js`): um
+  valor por facção em `[-50, 50]`, mapeado para os 5 `REPUTATION_LEVELS`
+  já canonizados no Marco 0; ajusta com o resultado de cada missão da
+  Crônica de uma Run (+8/+5/+2/-3/-8 para Sucesso Perfeito/Sucesso/
+  Sucesso Parcial/Falha/Desastre, limiares provisórios). Persistida em
+  `accountState.js` (nível conta, como Maestria/Arquivo/Ameaça) — cada
+  Região agora tem um `factionId` opcional (a facção "dona"/anfitriã),
+  ver DECISIONS.md D026.
+- **UI**: painel "Progressão da Conta" (`run.js`) mostra a Reputação de
+  toda Facção já descoberta; telas de Vitória/Derrota mostram o delta de
+  reputação da run recém-terminada.
+- **3ª Região/Ato: Suna** (`REG_SUNA_001`, Ato Mundo Shinobi,
+  `useGenerator: true` para MISSAO/ELITE, mesmo padrão de D023) e um 3º
+  boss autorado, o **Escorpião do Deserto** (`BOSS_ESCORPIAO_DESERTO_001`)
+  — fera genérica do bioma, não personagem canônico nomeado (mesmo
+  espírito de D024): 3 fases (Tocaia na Areia/Ferroada/Fúria das Pinças),
+  2 Jutsus novos (`JUT_FERROADA_PARALISANTE_001` aplica Paralisado,
+  `JUT_INVESTIDA_DAS_PINCAS_001` aplica Vulnerável — Estados já
+  catalogados desde o Marco 2) e perfil de IA bespoke `escorpiaoAction`.
+- 20 novos testes (`tests/data/factions_catalog.test.js`,
+  `tests/progression/reputation.test.js`, novo
+  `tests/combat/escorpiao_fight_integration.test.js`, extensão de
+  `tests/combat/ai.test.js`, `tests/data/catalog.test.js`,
+  `tests/data/enemies_bosses_catalog.test.js`,
+  `tests/data/regions_missions_catalog.test.js` e
+  `tests/progression/accountState.test.js`) — total do projeto: 371
+  testes.
+- DECISIONS.md D026 (Facções como dado mínimo do doc, Reputação numérica
+  provisória com limiares documentados, Região->Facção 1:1, persistência
+  em accountState, Suna como 3º Ato/Região, Escorpião do Deserto como
+  3º boss autorado, Gerador de Missão completo do doc 04 continua fora
+  de escopo).
+
 ### Concluído (Marco 10 — Expansão, 1º lote: Itens consumíveis)
 
 - **Catálogo de Itens** (`src/data/catalog/items.js`): 6 itens
@@ -457,7 +496,7 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
 
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **353/353
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **371/371
   passando**.
 - Dev console verificado no Chromium headless (Playwright), Marcos 0-5:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
@@ -518,6 +557,19 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   aparece como opção de ação com quantidade, aplica dano corretamente
   (HP 55→41), consome 1 unidade do inventário, turno avança normalmente;
   sem nenhum erro de console.
+- **Facções/Reputação + Suna (Marco 9, pendências finais) verificado no
+  Chromium headless (Playwright)**: um bug real foi pego nesta validação
+  e corrigido antes do commit — `renderReputationEntries` (`run.js`)
+  usava uma variável fora de escopo (`r.id` dentro de um `.filter`
+  aninhado) e quebrava a tela de Introdução assim que havia alguma
+  Região descoberta; corrigido (filtro e map combinados no mesmo
+  `.filter`/`.map` sobre o mesmo array). Depois da correção: seletor de
+  Região lista Suna; Run jogada de ponta a ponta em Suna (seed fixa) até
+  a Vitória contra o Escorpião do Deserto real, sem erros de console;
+  tela de Vitória mostra "Reputação com Sunagakure: +13"; voltando à
+  Introdução, o painel "Progressão da Conta" mostra "Sunagakure: BOA
+  (+13)"; **persistência confirmada via reload completo da página**
+  (`localStorage` real, não só re-render em memória).
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
@@ -527,10 +579,11 @@ de conteúdo a definir.
 
 ## Pendente (próximos marcos/aprofundamentos, não começados)
 
-- Marco 9 — Protótipo 3 Atos (retomar após este lote do Marco 10, por
-  pedido explícito do usuário): 3º Ato/Região, Gerador de Missão
-  completo (facção/complicação/modificador/recompensa/flags do doc 04 —
-  depende de Facções, doc 06, ainda não implementado)
+- Marco 9 — Protótipo 3 Atos: Gerador de Missão completo (facção/
+  complicação/modificador/recompensa/flags do doc 04) — Facções já
+  existem (D026), mas isso ainda não é o Gerador de Missão inteiro; um
+  4º Ato/Região é sempre possível depois, sem pressa (CANON_RULES —
+  "qualidade > quantidade").
 - Marco 10 — Expansão: próximos lotes de conteúdo (Equipamento/Economia
   da Run, mais Personagens/Jutsus/Inimigos, etc.)
 
@@ -558,14 +611,15 @@ sem pedido explícito do usuário).
 | Tipo | Atual | Meta |
 |---|---|---|
 | Personagens/versões | 4 | 500–800+ |
-| Jutsus | 15 | 1.000–1.500+ |
+| Jutsus | 17 | 1.000–1.500+ |
 | Passivas | 1 | 400–600+ |
 | Itens | 6 | 500+ |
 | Inimigos comuns | 4 (+ gerados proceduralmente) | — |
-| Bosses/elites | 2 | 200–300+ |
+| Bosses/elites | 3 | 200–300+ |
 | Eventos | 0 | 300+ |
 | Templates de missão | 4 | 200+ |
-| Regiões | 2 | 50+ |
+| Regiões | 3 | 50+ |
+| Facções | 14 (vocabulário do doc 06) | — (vocabulário fechado) |
 | Conquistas | 0 | 500+ |
 | Tags | 21 | — (vocabulário fechado) |
 | Estados | 29 | — (vocabulário fechado) |
@@ -573,30 +627,36 @@ sem pedido explícito do usuário).
 
 (Itens/etc. esperados em 0 até um marco futuro, em lotes, conforme
 CANON_RULES.md "qualidade > quantidade". Personagens/Jutsus/Passivas
-começaram com o lote do Vertical Slice (4/13/1, Marco 9 soma 2 Jutsus do
-boss da Floresta da Morte); Inimigos/Bosses com o primeiro lote do País
-das Ondas (4/1, Marco 5), Marco 9 soma o 2º Boss (Serpente) e passa a
-gerar inimigos comuns/elite proceduralmente para a Floresta da Morte;
-Templates de Missão/Regiões com o primeiro lote do Marco 7 (4/1, Marco 9
-soma a 2ª Região); Itens com o primeiro lote do Marco 10 (6 consumíveis/
+começaram com o lote do Vertical Slice (4/13/1, Marco 9 soma 2+2 Jutsus
+dos bosses da Floresta da Morte e de Suna); Inimigos/Bosses com o
+primeiro lote do País das Ondas (4/1, Marco 5), Marco 9 soma o 2º e 3º
+Boss (Serpente, Escorpião do Deserto) e passa a gerar inimigos comuns/
+elite proceduralmente na Floresta da Morte e em Suna; Templates de
+Missão/Regiões com o primeiro lote do Marco 7 (4/1, Marco 9 soma a 2ª e
+3ª Região); Facções com o vocabulário completo do doc 06 de uma vez (14,
+Marco 9 — mesmo espírito de Tags/Estados: nomeado por inteiro no doc,
+não "em lote"); Itens com o primeiro lote do Marco 10 (6 consumíveis/
 ferramentas, reaproveitando os Content IDs do Marco 0) — próximos lotes
-maiores vêm em Konoha Genins/Suna/etc. (PROMPT MESTRE §78). Tags/Estados/
+maiores vêm em Konoha Genins/etc. (PROMPT MESTRE §78). Tags/Estados/
 Reações já são o vocabulário completo do doc 01 — não crescem "em lote"
 do mesmo jeito.)
 
 ## Próximo passo
 
-O Marco 10 — Expansão entregou seu 1º lote: Itens consumíveis/ferramenta
-(6 itens, `ACTION_TYPES.ITEM` funcional, fechando o stub D014 aberto
-desde o Marco 1) — ver D025. Duas frentes seguem em aberto, por decisão
-explícita do usuário:
+As duas pendências do Marco 9 (Protótipo 3 Atos) que o usuário pediu
+para fechar antes de continuar o Marco 10 estão feitas: sistema de
+Facções e Reputação (doc 06, D026) e uma 3ª Região/Ato — Suna, Ato Mundo
+Shinobi, com o Escorpião do Deserto como 3º boss autorado. O Marco 9
+está considerado concluído e validado por ora; o Gerador de Missão
+completo do doc 04 (facção/complicação/modificador/recompensa/flags) e
+um eventual 4º Ato ficam como aprofundamento futuro, sem bloquear nada.
 
-1. **Continuar o Marco 10** com mais lotes de conteúdo (Equipamento/
-   Economia da Run do doc 03, mais Personagens/Jutsus/Inimigos, etc.).
-2. **Retomar as pendências do Marco 9** — Protótipo 3 Atos — deixadas em
-   pausa antes deste lote: um 3º Ato/Região, e/ou o sistema de Facções e
-   Reputação (doc 06), que por sua vez destrava o Gerador de Missão
-   completo do doc 04 (facção/complicação/modificador/recompensa/flags).
+Marco 10 — Expansão segue: o 1º lote (Itens consumíveis/ferramenta, 6
+itens, `ACTION_TYPES.ITEM` funcional — D025) já foi entregue antes desta
+rodada de Marco 9. Próximo lote a definir — candidatos: Equipamento/
+Economia da Run do doc 03 (ARMA/CORPO/ACESSORIO, Ryō, lojas), mais
+Personagens/Jutsus/Inimigos, ou o Gerador de Missão completo agora que
+Facções existem.
 
 Pendências explícitas que continuam em aberto de marcos anteriores:
 salvar/carregar uma Run em andamento (D020 #9), "recuar" voltando uma
@@ -604,4 +664,5 @@ camada no mapa (D020 #9), persistência de cooldowns/Estados/inventário
 entre nós de uma mesma run (D019 #4/D020 #6/D025 #5), passivas
 alternativas/skins de Maestria com ficha real (D022 #1), Pós-game e
 Economia Permanente com Legado/Tickets/Fragmentos (D022 #7), Equipamento
-persistente e Economia da Run/Permanente (D025 #6/#7).
+persistente e Economia da Run/Permanente (D025 #6/#7), Gerador de
+Missão completo do doc 04 (D026 #8).

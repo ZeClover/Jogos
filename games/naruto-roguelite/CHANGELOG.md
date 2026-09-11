@@ -3,6 +3,63 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Marco 9 — Pendências finais (Facções/Reputação + 3ª Região: Suna)
+
+### Adicionado
+
+- `src/data/catalog/factions.js` — catálogo de Facções: as 14 nomeadas
+  no doc 06 (Konoha, Suna, Kiri, Kumo, Iwa, Ame, Oto, Taki, Kusa, País do
+  Ferro, Akatsuki, ANBU, Raiz, Nukenin), só `{id, name, description}`.
+- `src/engine/progression/reputation.js` — Reputação de Facção: valor
+  por facção em `[-50, 50]`, mapeado para os 5 `REPUTATION_LEVELS`
+  (Marco 0); ajusta com cada resultado de missão da Crônica de uma Run
+  (+8/+5/+2/-3/-8 para Sucesso Perfeito/Sucesso/Sucesso Parcial/Falha/
+  Desastre). Persistida em `accountState.js` (nível conta, como
+  Maestria/Arquivo/Ameaça) — `applyRunEnd` ganha um `factionId` opcional.
+- `src/data/catalog/regions.js` — toda Região ganha `factionId` opcional
+  (País das Ondas -> Nukenin, Floresta da Morte -> Konoha, Suna -> Suna).
+- `src/ui/run.js` — painel "Progressão da Conta" mostra a Reputação de
+  toda Facção já descoberta; telas de Vitória/Derrota mostram o delta da
+  run recém-terminada.
+- **3ª Região: Suna** (`REG_SUNA_001`, Ato Mundo Shinobi, mesmo padrão de
+  `useGenerator: true` da Floresta da Morte) e o 3º boss autorado,
+  **Escorpião do Deserto** (`BOSS_ESCORPIAO_DESERTO_001`) — fera
+  genérica do bioma, 3 fases (Tocaia na Areia/Ferroada/Fúria das
+  Pinças), 2 Jutsus novos (`JUT_FERROADA_PARALISANTE_001` aplica
+  Paralisado, `JUT_INVESTIDA_DAS_PINCAS_001` aplica Vulnerável) e perfil
+  de IA bespoke `escorpiaoAction` (`ai.js`).
+- 20 novos testes (`tests/data/factions_catalog.test.js`,
+  `tests/progression/reputation.test.js`,
+  `tests/combat/escorpiao_fight_integration.test.js`, extensão de
+  `tests/combat/ai.test.js`, `tests/data/catalog.test.js`,
+  `tests/data/enemies_bosses_catalog.test.js`,
+  `tests/data/regions_missions_catalog.test.js` e
+  `tests/progression/accountState.test.js`) — total do projeto: 371
+  testes.
+- DECISIONS.md D026 (Facções como dado mínimo do doc, Reputação
+  numérica provisória, Região->Facção 1:1, persistência em
+  accountState, Suna como 3º Ato/Região, Escorpião do Deserto como 3º
+  boss, Gerador de Missão completo do doc 04 continua fora de escopo).
+
+### Corrigido
+
+- `src/ui/run.js#renderReputationEntries` — bug pego na validação
+  Playwright desta rodada: usava uma variável fora de escopo (`r.id`
+  dentro de um `.filter` aninhado depois de um `.map`), quebrando a tela
+  de Introdução assim que havia alguma Região descoberta. Corrigido
+  combinando o filtro e o map no mesmo `.filter`/`.map` sobre o array de
+  Regiões.
+
+### Validado
+
+- `npm test`: 371/371 passando.
+- `run.html` testado em Chromium headless (Playwright): seletor de
+  Região lista Suna; Run jogada de ponta a ponta em Suna até a Vitória
+  contra o Escorpião do Deserto real, sem erros de console; tela de
+  Vitória mostra "Reputação com Sunagakure: +13"; painel "Progressão da
+  Conta" mostra "Sunagakure: BOA (+13)"; persistência confirmada via
+  reload completo da página (`localStorage` real).
+
 ## Marco 10 — Expansão (1º lote: Itens consumíveis)
 
 ### Adicionado

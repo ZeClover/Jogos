@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import '../../src/data/catalog/index.js';
 import {
-  regions, missions, enemies, bosses,
+  regions, missions, enemies, bosses, factions,
 } from '../../src/data/index.js';
 import { REGION_DEFINITIONS } from '../../src/data/catalog/regions.js';
 import { MISSION_TEMPLATES } from '../../src/data/catalog/missions.js';
@@ -11,7 +11,13 @@ import { MISSION_OBJECTIVE_TYPES, NODE_TYPES } from '../../src/engine/enums.js';
 
 test('o catálogo de Regiões foi registrado ao ser importado', () => {
   assert.equal(regions.size, REGION_DEFINITIONS.length);
-  assert.equal(REGION_DEFINITIONS.length, 2, 'País das Ondas (Marco 7) + Floresta da Morte (Marco 9)');
+  assert.equal(REGION_DEFINITIONS.length, 3, 'País das Ondas (Marco 7) + Floresta da Morte + Suna (Marco 9)');
+});
+
+test('toda Região com factionId declarado resolve para uma Facção real no catálogo', () => {
+  for (const region of REGION_DEFINITIONS.filter((r) => r.factionId)) {
+    assert.ok(factions.has(region.factionId), `${region.id}: factionId desconhecido "${region.factionId}"`);
+  }
 });
 
 test('o catálogo de Templates de Missão foi registrado ao ser importado', () => {

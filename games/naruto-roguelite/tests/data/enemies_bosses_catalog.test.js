@@ -18,7 +18,7 @@ test('o catálogo de Inimigos (País das Ondas) foi registrado ao ser importado'
 
 test('o catálogo de Bosses foi registrado ao ser importado', () => {
   assert.equal(bosses.size, BOSS_DEFINITIONS.length);
-  assert.equal(BOSS_DEFINITIONS.length, 2, 'Zabuza (Marco 5) + Serpente da Floresta da Morte (Marco 9)');
+  assert.equal(BOSS_DEFINITIONS.length, 3, 'Zabuza (Marco 5) + Serpente da Floresta da Morte + Escorpião do Deserto (Marco 9)');
 });
 
 test('todo Inimigo tem ID bem formado, tier/aiLevel válidos, sem duplicatas', () => {

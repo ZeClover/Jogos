@@ -1,11 +1,15 @@
 // Catálogo de Regiões — País das Ondas (Marco 7, PROMPT MESTRE §54, mesma
-// região do Vertical Slice/Marco 6) e Floresta da Morte (Marco 9, 2º Ato
-// — Ascensão). Ver CANON_RULES.md: "Regiões precisam ter identidade
-// mecânica e de loot, não só visual" — a identidade mecânica é o pool de
-// Inimigos por tier (fixo ou gerado, `useGenerator`) + o boss/capstone +
-// a distribuição de tipo de nó; identidade de LOOT fica pendente até
-// Itens/Economia existirem (doc 03, ainda não implementado) — ver
-// DECISIONS.md D020/D023.
+// região do Vertical Slice/Marco 6), Floresta da Morte (Marco 9, 2º Ato
+// — Ascensão) e Suna (Marco 9, 3º Ato — Mundo Shinobi). Ver CANON_RULES.md:
+// "Regiões precisam ter identidade mecânica e de loot, não só visual" — a
+// identidade mecânica é o pool de Inimigos por tier (fixo ou gerado,
+// `useGenerator`) + o boss/capstone + a distribuição de tipo de nó;
+// identidade de LOOT fica pendente até a Economia da Run existir (doc 03
+// — só os Itens consumíveis existem desde o Marco 10, ver DECISIONS.md
+// D025) — ver D020/D023. Todo `factionId` liga a Região a uma Facção do
+// catálogo (`factions.js`, Marco 9) — a Facção "dona"/anfitriã da Região,
+// usada para saber de quem a Reputação sobe/desce ao completar missões
+// nela (D026); nem toda Região precisa ter uma (`factionId` é opcional).
 import { regions } from '../index.js';
 
 export const REGION_DEFINITIONS = [
@@ -21,12 +25,13 @@ export const REGION_DEFINITIONS = [
       ELITE: ['ENEMY_KIRI_ELITE_001'],
     },
     bossId: 'BOSS_ZABUZA_001',
+    factionId: 'FACTION_NUKENIN_001',
     nodeTypeWeights: [
       { type: 'MISSAO', weight: 5 },
       { type: 'ELITE', weight: 2 },
       { type: 'DESCANSO', weight: 2 },
     ],
-    lootIdentityNote: 'Identidade de loot regional (drops/mercadores específicos do País das Ondas) adiada até o catálogo de Itens/Economia (doc 03) existir — ver DECISIONS.md D020.',
+    lootIdentityNote: 'Identidade de loot regional (drops/mercadores específicos do País das Ondas) adiada até a Economia da Run (doc 03) existir — ver DECISIONS.md D020.',
   },
   {
     id: 'REG_FLORESTA_DA_MORTE_001',
@@ -41,12 +46,33 @@ export const REGION_DEFINITIONS = [
     // verdade (fases/telegraph reais, CANON_RULES #30) — ver D024, que
     // fecha a pendência D023 #3 deixada em aberto.
     bossId: 'BOSS_SERPENTE_FLORESTA_001',
+    factionId: 'FACTION_KONOHA_001',
     nodeTypeWeights: [
       { type: 'MISSAO', weight: 5 },
       { type: 'ELITE', weight: 3 },
       { type: 'DESCANSO', weight: 1 },
     ],
-    lootIdentityNote: 'Identidade de loot regional adiada até Itens/Economia (doc 03) existir — ver DECISIONS.md D020/D023.',
+    lootIdentityNote: 'Identidade de loot regional adiada até a Economia da Run (doc 03) existir — ver DECISIONS.md D020/D023.',
+  },
+  {
+    id: 'REG_SUNA_001',
+    name: 'Suna',
+    act: 'MUNDO_SHINOBI',
+    description: 'Vilarejo e deserto ao redor de Sunagakure — dunas escaldantes, rochas erodidas pelo vento e ruínas onde feras do deserto se abrigam do sol.',
+    useGenerator: true,
+    // Mesmo padrão da Floresta da Morte (D023): sem enemyPoolByTier
+    // estático, MISSAO/ELITE vêm do gerador procedural; bossId abaixo é
+    // um boss autorado de verdade (fases/telegraph reais), não uma fera
+    // gerada — fecha a mesma pendência D023 #3 de novo, para o 3º Ato,
+    // ver DECISIONS.md D026.
+    bossId: 'BOSS_ESCORPIAO_DESERTO_001',
+    factionId: 'FACTION_SUNA_001',
+    nodeTypeWeights: [
+      { type: 'MISSAO', weight: 5 },
+      { type: 'ELITE', weight: 3 },
+      { type: 'DESCANSO', weight: 2 },
+    ],
+    lootIdentityNote: 'Identidade de loot regional adiada até a Economia da Run (doc 03) existir — ver DECISIONS.md D020/D023/D026.',
   },
 ];
 
