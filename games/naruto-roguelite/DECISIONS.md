@@ -1044,3 +1044,48 @@ Nenhum dos dois (loja/preço de item) tinha ficha nenhuma ainda.
 4. **Loja/nó LOJA, preço de Item, e "pra quem vai a compra" ficam como
    pendência explícita para o próximo lote do Marco 10** que quiser
    fechar o ciclo ganhar->gastar da Economia da Run.
+
+## D028 — Marco 10 (Expansão): 3º lote, nó LOJA fecha o ciclo do Ryō
+
+**Contexto:** D027 #3/#4 deixaram explícito o que faltava para o ciclo
+ganhar->gastar de Ryō existir de verdade: um `NODE_TYPES.LOJA`, preço
+por Item, e uma decisão de para qual membro do esquadrão vai uma compra
+(o inventário é por Combatente, resetado a cada combate a partir do
+`DEFAULT_STARTING_KIT`, D025 #4/#5). Pedido explícito do usuário: "vá
+para o nó LOJA, fecha o ciclo do Ryō".
+
+**Decisões:**
+
+1. **`NODE_TYPES.LOJA` novo** (`enums.js`) — mesmo tratamento genérico
+   de `DESCANSO` no `mapGenerator.js` (`buildLojaNode`, sem `enemyIds`);
+   peso pequeno (1) adicionado às 3 Regiões existentes
+   (`nodeTypeWeights`), sem mudar nada na estrutura do gerador em si —
+   ele já era genérico o bastante (D023).
+2. **Preço em Ryō em todo Item do catálogo** (`items.js#price`) —
+   números provisórios (10 a 32), mesmo espírito de D012/D017/D020/D022/
+   D025/D027. Só os Itens que já existem (CONSUMIVEL/FERRAMENTA, D025)
+   são vendíveis; Equipamento continua fora de escopo.
+3. **"Pra quem vai a compra" resolvido com um "bônus de inventário" por
+   Run, não um pool compartilhado** — `run.purchasedInventory` (novo
+   campo de `runState.js`, `{ [characterId]: { [itemId]: qty } }`),
+   escrito por `economy.js#buyItem` (deduz `run.ryo`, soma 1 unidade) e
+   lido por `createCombatantFromCharacter`'s novo parâmetro
+   `extraInventory`, somado por cima do `DEFAULT_STARTING_KIT` ao montar
+   o Combatente para cada combate seguinte da mesma Run. Diferente do
+   próprio kit fixo (que reseta a cada combate), o bônus comprado dura a
+   Run inteira — mais parecido com HP/Chakra via `campaign.js`
+   (D019 #4) do que com o inventário base.
+4. **UI de loja simples**: tela dedicada (`R.screen = 'SHOP'`) com um
+   seletor de "para quem comprar" (dropdown com os 4 do esquadrão) e um
+   botão "Comprar" por Item (desabilitado sem Ryō suficiente,
+   `economy.js#canAfford`) — nenhuma confirmação/carrinho, cada clique já
+   é uma compra. "Continuar viagem" resolve o nó (mesmo tratamento de
+   `resolveNode` que DESCANSO/MISSAO — avança o dia, registra a Crônica)
+   e volta ao Mapa.
+5. **Visitar o Mercador consome 1 dia de calendário**, igual a qualquer
+   outro nó (CANON_RULES — "calendário avança com missões, descanso e
+   viagem") — não é uma parada "de graça".
+6. **Equipamento persistente (ARMA/CORPO/ACESSORIO) continua inteiramente
+   fora de escopo** — este lote só fecha o ciclo de Ryō para os Itens
+   que já existem; nenhuma mudança de slot/loadout/recálculo de
+   atributos foi feita.

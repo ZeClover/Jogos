@@ -24,8 +24,14 @@ const DEFAULT_STARTING_KIT = Object.freeze({
  * @param {object} [options]
  * @param {string} [options.id] - id do combatente em combate (default: o próprio characterDef.id).
  * @param {string} [options.position] - POSITIONS.* (default CENTRO, ver combatant.js).
+ * @param {Record<string, number>} [options.extraInventory] - itens comprados no nó LOJA
+ *   desta Run (Marco 10, D028, `run.purchasedInventory[characterId]`), somados por cima do kit fixo.
  */
-export function createCombatantFromCharacter(characterDef, { id, position } = {}) {
+export function createCombatantFromCharacter(characterDef, { id, position, extraInventory } = {}) {
+  const inventory = { ...DEFAULT_STARTING_KIT };
+  for (const [itemId, qty] of Object.entries(extraInventory ?? {})) {
+    inventory[itemId] = (inventory[itemId] ?? 0) + qty;
+  }
   return createCombatant({
     id: id ?? characterDef.id,
     name: characterDef.name,
@@ -38,7 +44,7 @@ export function createCombatantFromCharacter(characterDef, { id, position } = {}
         max: characterDef.exclusiveResource.max,
       }
       : null,
-    inventory: { ...DEFAULT_STARTING_KIT },
+    inventory,
   });
 }
 

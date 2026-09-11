@@ -90,6 +90,17 @@ test('mesma seed produz o mesmo mapa (determinístico)', () => {
   assert.deepEqual(a, b);
 });
 
+test('nó LOJA (Marco 10, D028) não tem enemyIds e tem nome próprio, quando sorteado', () => {
+  const regionWithLoja = { ...FIXTURE_REGION, nodeTypeWeights: [{ type: 'LOJA', weight: 1 }] };
+  const map = generateRegionMap({ region: regionWithLoja, rng: createRngStream('loja-test') });
+  const lojaNodes = map.layers.flat().filter((n) => n.type === 'LOJA');
+  assert.ok(lojaNodes.length > 0, 'com peso 1 exclusivo, toda camada comum deveria sortear LOJA');
+  for (const node of lojaNodes) {
+    assert.equal(node.enemyIds, undefined);
+    assert.ok(node.name.length > 0);
+  }
+});
+
 test('seeds diferentes tendem a produzir mapas diferentes', () => {
   const a = buildMap('seed-a');
   const b = buildMap('seed-b');

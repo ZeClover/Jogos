@@ -24,6 +24,7 @@ test('createRun começa no dia 1, status IN_PROGRESS, sem nós visitados, Ryō z
   assert.deepEqual(run.chronicle, []);
   assert.deepEqual(run.currentNodeIds, run.map.startNodeIds);
   assert.equal(run.ryo, 0);
+  assert.deepEqual(run.purchasedInventory, {});
 });
 
 test('availableNodes devolve os objetos de nó correspondentes a currentNodeIds', () => {
@@ -48,6 +49,15 @@ test('resolveNode soma Ryō de acordo com o resultado (economy.js)', () => {
   const node = availableNodes(run)[0];
   resolveNode(run, node, 'SUCESSO_PERFEITO');
   assert.equal(run.ryo, 40);
+});
+
+test('resolveNode com resultado LOJA (nó LOJA, Marco 10) avança o dia e a Crônica normalmente, sem Ryō extra', () => {
+  const run = newRun();
+  const node = availableNodes(run)[0];
+  resolveNode(run, node, 'LOJA');
+  assert.equal(run.day, 2);
+  assert.equal(run.chronicle[0].result, 'LOJA');
+  assert.equal(run.ryo, 0);
 });
 
 test('resolveNode com resultado DESASTRE marca a run como DEFEAT e não avança currentNodeIds', () => {

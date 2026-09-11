@@ -7,9 +7,11 @@
 // progresso pelo mapa e a crônica. Serializável em JSON puro (nenhum
 // Map/Set/classe) para o SaveManager (Marco 0) salvar/carregar sem
 // adaptação. `run.ryo` (Marco 10, Economia da Run — doc 03) acumula a
-// cada nó resolvido (`economy.js#ryoForMissionResult`); ainda não tem
-// nenhum jeito de ser gasto (sem loja/nó LOJA ainda, ver DECISIONS.md
-// D027) — só o ganho existe por enquanto, mesmo padrão de D025 #6.
+// cada nó resolvido (`economy.js#ryoForMissionResult`) e pode ser gasto
+// no nó LOJA (`economy.js#buyItem`, D028) em troca de itens que ficam em
+// `run.purchasedInventory` (`{ [characterId]: { [itemId]: qty } }`) —
+// um bônus de inventário por cima do kit fixo (D025 #4), que dura a Run
+// inteira (diferente do próprio kit, que reseta a cada combate).
 import { generateRegionMap, findNode } from './mapGenerator.js';
 import { ryoForMissionResult } from './economy.js';
 import { RUN_STATUSES } from '../enums.js';
@@ -32,6 +34,7 @@ export function createRun({ region, seedManager }) {
     visitedNodeIds: [],
     chronicle: [],
     ryo: 0,
+    purchasedInventory: {},
     status: RUN_STATUSES.IN_PROGRESS,
   };
 }

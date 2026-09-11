@@ -80,3 +80,17 @@ test('createCombatantFromCharacter dá inventários independentes por combatente
   a.inventory.ITEM_KUNAI_BASIC_001 = 0;
   assert.notEqual(b.inventory.ITEM_KUNAI_BASIC_001, 0);
 });
+
+test('createCombatantFromCharacter soma extraInventory (compras do nó LOJA, Marco 10, D028) por cima do kit fixo', () => {
+  const c = createCombatantFromCharacter(NARUTO_FIXTURE, {
+    extraInventory: { ITEM_KUNAI_BASIC_001: 3, ITEM_EXPLOSIVE_TAG_001: 1 },
+  });
+  assert.equal(c.inventory.ITEM_KUNAI_BASIC_001, 2 + 3); // kit fixo já tem 2 Kunai
+  assert.equal(c.inventory.ITEM_EXPLOSIVE_TAG_001, 1); // não fazia parte do kit fixo
+});
+
+test('createCombatantFromCharacter sem extraInventory se comporta como antes (só o kit fixo)', () => {
+  const c = createCombatantFromCharacter(NARUTO_FIXTURE);
+  assert.equal(c.inventory.ITEM_KUNAI_BASIC_001, 2);
+  assert.equal(c.inventory.ITEM_EXPLOSIVE_TAG_001, undefined);
+});

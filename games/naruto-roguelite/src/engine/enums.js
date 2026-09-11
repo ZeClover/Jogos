@@ -122,13 +122,15 @@ export const ENEMY_TIERS = Object.freeze([
 
 // Tipos de nó de mapa (Marco 7, CANON_RULES.md — Run/Campanha: "múltiplos
 // tipos de nó"). Vocabulário completo do doc citado como meta; só MISSAO/
-// ELITE/BOSS/DESCANSO têm mecânica real implementada por ora — os demais
-// dependem de sistemas que ainda não existem (Itens/Economia para
-// LOJA/HOSPITAL, Eventos para EVENTO/SEGREDO, Progressão para
-// TREINO/RECRUTAMENTO) e ficam de fora do vocabulário até terem base real,
-// em vez de virar um tipo de nó "capenga" sem efeito (ver DECISIONS.md D020).
+// ELITE/BOSS/DESCANSO/LOJA têm mecânica real implementada por ora — os
+// demais dependem de sistemas que ainda não existem (HOSPITAL precisaria
+// de uma mecânica própria além do que DESCANSO já cobre, Eventos para
+// EVENTO/SEGREDO, Progressão para TREINO/RECRUTAMENTO) e ficam de fora do
+// vocabulário até terem base real, em vez de virar um tipo de nó "capenga"
+// sem efeito (ver DECISIONS.md D020). LOJA foi adicionado no Marco 10
+// junto com a Economia da Run (Ryō, D027/D028).
 export const NODE_TYPES = Object.freeze([
-  'MISSAO', 'ELITE', 'BOSS', 'DESCANSO',
+  'MISSAO', 'ELITE', 'BOSS', 'DESCANSO', 'LOJA',
 ]);
 
 // Tipos de objetivo de missão (docs/design/04_RUN_MAPA_MISSOES_REGIOES.md —

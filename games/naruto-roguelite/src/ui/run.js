@@ -26,6 +26,7 @@ import {
 } from '../engine/run/runState.js';
 import { maybeReclassifyNode, reinforceSquad } from '../engine/run/reclassify.js';
 import { resolveMissionResult } from '../engine/run/missionResult.js';
+import { buyItem, canAfford } from '../engine/run/economy.js';
 import {
   createAccountState, applyRunEnd, archiveLabel,
   clampThreatLevel, effectiveAiLevel, effectiveReclassifyChance, THREAT_MIN, THREAT_MAX,
@@ -38,8 +39,10 @@ const SQUAD_IDS = [
   'CHAR_NARUTO_GENIN_001', 'CHAR_SASUKE_GENIN_001', 'CHAR_SAKURA_GENIN_001', 'CHAR_SHIKAMARU_GENIN_001',
 ];
 const NODE_LABEL = {
-  MISSAO: 'Missão', ELITE: 'Elite', BOSS: 'Confronto Final', DESCANSO: 'Descanso',
+  MISSAO: 'Missão', ELITE: 'Elite', BOSS: 'Confronto Final', DESCANSO: 'Descanso', LOJA: 'Mercador',
 };
+// Itens vendíveis no nó LOJA (Marco 10, D028): qualquer Item do catálogo com `price` definido.
+const SHOP_ITEM_IDS = () => items.all().filter((def) => typeof def.price === 'number').map((def) => def.id);
 const RESULT_LABEL = {
   SUCESSO_PERFEITO: 'Sucesso Perfeito',
   SUCESSO: 'Sucesso',
@@ -47,6 +50,7 @@ const RESULT_LABEL = {
   FALHA: 'Falha',
   DESASTRE: 'Desastre',
   DESCANSO: 'Descanso',
+  LOJA: 'Compras feitas',
 };
 const POSITION_LABEL = { FRENTE: 'Frente', CENTRO: 'Centro', TRAS: 'Trás' };
 const ACTION_LABEL = { ATAQUE_BASICO: 'Ataque Básico', DEFENDER: 'Defender' };
@@ -74,6 +78,7 @@ const R = {
   encounteredIds: new Set(),
   runEndSummary: null,
   regionId: DEFAULT_REGION_ID,
+  shopBuyerId: null,
 };
 
 function escapeHtml(str) {
@@ -97,7 +102,9 @@ function barRow(label, current, max, cls) {
 
 function buildSquad(snapshot) {
   const ids = snapshot ? snapshot.map((s) => s.id) : SQUAD_IDS;
-  const combatants = ids.map((id) => createCombatantFromCharacter(characters.get(id)));
+  const combatants = ids.map((id) => createCombatantFromCharacter(characters.get(id), {
+    extraInventory: R.run?.purchasedInventory?.[id],
+  }));
   if (snapshot) applySquadSnapshot(combatants, snapshot);
   return combatants;
 }
@@ -245,6 +252,13 @@ function onSelectNode(nodeId) {
     resolveDescanso(node);
     return;
   }
+  if (node.type === 'LOJA') {
+    R.pendingNode = node;
+    R.shopBuyerId = SQUAD_IDS.find((id) => (R.squadSnapshot?.find((s) => s.id === id)?.hp ?? 1) > 0) ?? SQUAD_IDS[0];
+    R.screen = 'SHOP';
+    render();
+    return;
+  }
   if (node.reclassified) {
     R.pendingNode = node;
     R.screen = 'RECLASSIFY_CHOICE';
@@ -276,6 +290,24 @@ function resolveDescanso(node) {
   }
   R.squadSnapshot = snapshotSquad(squad);
   resolveNode(R.run, node, 'DESCANSO');
+  R.screen = R.run.status === 'IN_PROGRESS' ? 'MAP' : R.run.status;
+  finalizeRunIfEnded();
+  render();
+}
+
+function onBuyItem(itemId) {
+  const def = items.get(itemId);
+  if (!def || typeof def.price !== 'number' || !R.shopBuyerId) return;
+  buyItem(R.run, R.shopBuyerId, itemId, def.price);
+  render();
+}
+
+function leaveShop() {
+  const node = R.pendingNode;
+  if (!node) return;
+  resolveNode(R.run, node, 'LOJA');
+  R.pendingNode = null;
+  R.shopBuyerId = null;
   R.screen = R.run.status === 'IN_PROGRESS' ? 'MAP' : R.run.status;
   finalizeRunIfEnded();
   render();
@@ -410,6 +442,7 @@ function restart() {
   R.enemyMeta = new Map();
   R.pendingAction = null;
   R.lastResultMessage = null;
+  R.shopBuyerId = null;
 }
 
 // --- Renderização --------------------------------------------------------
@@ -643,6 +676,43 @@ function renderMapScreen() {
   `;
 }
 
+/** Nó LOJA (Marco 10, D028): compra itens consumíveis/ferramenta para um membro do esquadrão, gastando o Ryō da Run. */
+function renderShopScreen() {
+  const defs = SQUAD_IDS.map((id) => characters.get(id));
+  const buyerOptions = defs.map((def) => `
+    <option value="${def.id}" ${def.id === R.shopBuyerId ? 'selected' : ''}>${escapeHtml(def.name)}</option>
+  `).join('');
+
+  const buyerInventory = R.run.purchasedInventory[R.shopBuyerId] ?? {};
+  const rows = SHOP_ITEM_IDS().map((itemId) => {
+    const def = items.get(itemId);
+    const owned = buyerInventory[itemId] ?? 0;
+    const affordable = canAfford(R.run, def.price);
+    return `
+      <div class="vs-node-card">
+        <h4>${escapeHtml(def.name)}</h4>
+        <p class="vs-node-meta">${escapeHtml(def.category)} · ${escapeHtml(def.effect)} · ${def.price} Ryō${owned ? ` · comprado(s) nesta Run: ${owned}x` : ''}</p>
+        <button class="vs-btn" data-buy-item="${itemId}" ${affordable ? '' : 'disabled'}>Comprar</button>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="vs-scroll">
+      <h2>🏪 Mercador Itinerante</h2>
+      <p class="vs-hint">Ryō disponível: ${R.run.ryo}. Comprar entrega o item para o membro do esquadrão escolhido — ele carrega até o fim da Run (além do kit fixo de cada combate).</p>
+      <div style="display:flex;gap:8px;align-items:center;margin:10px 0 14px;flex-wrap:wrap">
+        <label for="shop-buyer-select" class="vs-hint">Comprar para:</label>
+        <select id="shop-buyer-select" style="background:#fff;border:1px solid var(--panel-border);color:var(--ink);border-radius:6px;padding:6px 8px;font-family:inherit">
+          ${buyerOptions}
+        </select>
+      </div>
+      <div class="vs-node-grid">${rows}</div>
+      <p><button class="vs-btn secondary" data-shop-continue>Continuar viagem</button></p>
+    </div>
+  `;
+}
+
 function renderReclassifyScreen() {
   const node = R.pendingNode;
   return `
@@ -719,7 +789,7 @@ function renderRunEndSummary() {
       ${discoveredCount} nova(s) entrada(s) no Arquivo Ninja
       ${R.account.threatUnlocked ? '· Ameaça liberada!' : ''}
       ${factionName && reputationDelta ? `· Reputação com ${escapeHtml(factionName)}: ${reputationDelta >= 0 ? '+' : ''}${reputationDelta}` : ''}
-      · Ryō acumulado nesta Run: ${R.run.ryo} (ainda sem loja pra gastar — ver DECISIONS.md D027)
+      · Ryō restante da Run (não persiste pra próxima): ${R.run.ryo}
     </p>
   `;
 }
@@ -753,6 +823,7 @@ function renderDefeatScreen() {
 function renderScreen() {
   if (R.screen === 'INTRO') return renderIntroScreen();
   if (R.screen === 'MAP') return renderMapScreen();
+  if (R.screen === 'SHOP') return renderShopScreen();
   if (R.screen === 'RECLASSIFY_CHOICE') return renderReclassifyScreen();
   if (R.screen === 'BATTLE') return renderBattleScreen();
   if (R.screen === 'VICTORY') return renderVictoryScreen();
@@ -788,6 +859,10 @@ function handleClick(event) {
   const reclassifyBtn = event.target.closest('[data-reclassify-choice]');
   if (reclassifyBtn) { onReclassifyChoice(reclassifyBtn.dataset.reclassifyChoice); return; }
 
+  const buyBtn = event.target.closest('[data-buy-item]');
+  if (buyBtn) { onBuyItem(buyBtn.dataset.buyItem); return; }
+  if (event.target.closest('[data-shop-continue]')) { leaveShop(); return; }
+
   const optBtn = event.target.closest('[data-option-index]');
   if (optBtn) { onSelectOption(Number(optBtn.dataset.optionIndex)); return; }
 
@@ -798,6 +873,10 @@ function handleClick(event) {
 function handleChange(event) {
   if (event.target.id === 'run-region-select') {
     R.regionId = event.target.value;
+    render();
+  }
+  if (event.target.id === 'shop-buyer-select') {
+    R.shopBuyerId = event.target.value;
     render();
   }
 }

@@ -4,7 +4,8 @@
 // produz o mesmo grafo para a mesma Região. Não conhece combate/UI — só
 // monta a estrutura de nós + arestas a partir da ficha de Região (dado,
 // src/data/catalog/regions.js). Ver DECISIONS.md D020 para o que fica de
-// fora (LOJA/HOSPITAL/TREINO/RECRUTAMENTO/DUNGEON/SEGREDO/EVENTO).
+// fora (HOSPITAL/TREINO/RECRUTAMENTO/DUNGEON/SEGREDO/EVENTO) — LOJA foi
+// adicionado no Marco 10 (D028), ver `buildLojaNode` abaixo.
 //
 // Marco 9: Região com `useGenerator: true` monta seus inimigos via
 // `enemyGenerator.js` em vez de `region.enemyPoolByTier` — as fichas
@@ -77,10 +78,18 @@ function buildDescansoNode({ layer, index }) {
   };
 }
 
+/** Nó LOJA (Marco 10, D028) — mercador itinerante, sem combate nem cura, só a tela de compra em `run.js`. */
+function buildLojaNode({ layer, index }) {
+  return {
+    id: `NODE_${layer}_${index}`, type: 'LOJA', layer, name: 'Mercador Itinerante',
+  };
+}
+
 function buildNode({
   region, type, layer, index, rng, generatedEnemies,
 }) {
   if (type === 'DESCANSO') return buildDescansoNode({ layer, index });
+  if (type === 'LOJA') return buildLojaNode({ layer, index });
   if (type === 'ELITE') {
     return buildEliteNode({
       region, layer, index, rng, generatedEnemies,

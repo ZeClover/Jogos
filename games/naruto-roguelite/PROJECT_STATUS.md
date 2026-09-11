@@ -515,9 +515,37 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   valores por resultado de missão, gasto/loja/preço/atribuição de item
   comprado explicitamente fora de escopo deste lote).
 
+### Concluído (Marco 10 — Expansão, 3º lote: nó LOJA fecha o ciclo do Ryō)
+
+- **`NODE_TYPES.LOJA`** (`enums.js` + `mapGenerator.js#buildLojaNode`):
+  mesmo tratamento genérico de DESCANSO, sem `enemyIds`; peso pequeno
+  adicionado às 3 Regiões existentes.
+- **Preço em Ryō em todo Item do catálogo** (`items.js#price`, 10-32,
+  provisório).
+- **`run.purchasedInventory`** (`runState.js`): bônus de inventário por
+  Run (`{ [characterId]: { [itemId]: qty } }`), escrito por
+  `economy.js#buyItem`/`canAfford` e somado por cima do
+  `DEFAULT_STARTING_KIT` via o novo parâmetro `extraInventory` de
+  `createCombatantFromCharacter` — dura a Run inteira (diferente do kit
+  fixo, que reseta a cada combate).
+- **UI de loja** (`run.js`, tela `SHOP`): seletor de "para quem
+  comprar" + botão "Comprar" por Item (desabilitado sem Ryō
+  suficiente); "Continuar viagem" resolve o nó (consome 1 dia, como
+  qualquer outro) e volta ao Mapa.
+- 13 novos testes (`tests/run/economy.test.js` extensão,
+  `tests/run/runState.test.js` extensão,
+  `tests/combat/characterBridge.test.js` extensão,
+  `tests/data/items_catalog.test.js` extensão,
+  `tests/run/mapGenerator.test.js` extensão) — total do projeto: 385
+  testes.
+- DECISIONS.md D028 (LOJA como nó genérico, preço provisório por Item,
+  compra como bônus de inventário por Run em vez de pool
+  compartilhado, UI simples sem carrinho/confirmação, visitar a loja
+  consome 1 dia, Equipamento persistente continua fora de escopo).
+
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **375/375
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **385/385
   passando**.
 - Dev console verificado no Chromium headless (Playwright), Marcos 0-5:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
@@ -596,12 +624,23 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   na tela de Mapa e sobe conforme os nós são resolvidos (0 -> 85 ao
   longo da run testada); total final aparece corretamente na tela de
   Vitória com a nota "ainda sem loja pra gastar"; sem erros de console.
+- **Nó LOJA (Marco 10, 3º lote) verificado no Chromium headless
+  (Playwright)**: Run jogada até ganhar Ryō (Sucesso Perfeito no
+  primeiro combate, 40 Ryō); nó Mercador acessado a partir do Mapa;
+  Kunai comprado para o Naruto (Ryō 40 -> 25, "comprado(s) nesta Run:
+  1x" exibido); "Continuar viagem" volta ao Mapa consumindo 1 dia;
+  entrando no próximo combate, esperado até o turno do Naruto
+  especificamente (turnos de IA/outros membros do esquadrão no meio)
+  para confirmar que SÓ ele mostra "Kunai (3x)" (2 do kit fixo + 1
+  comprado) — os outros 3 continuam com "Kunai (2x)"; sem erros de
+  console.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
-Marco 10 — Expansão: 1º e 2º lotes (Itens consumíveis, Economia da Run
-— só o ganho de Ryō) concluídos; próximo lote a definir.
+Marco 10 — Expansão: 1º, 2º e 3º lotes (Itens consumíveis, Economia da
+Run — Ryō com ganho e gasto completos via nó LOJA) concluídos; próximo
+lote a definir.
 
 ## Pendente (próximos marcos/aprofundamentos, não começados)
 
@@ -610,10 +649,9 @@ Marco 10 — Expansão: 1º e 2º lotes (Itens consumíveis, Economia da Run
   existem (D026), mas isso ainda não é o Gerador de Missão inteiro; um
   4º Ato/Região é sempre possível depois, sem pressa (CANON_RULES —
   "qualidade > quantidade").
-- Marco 10 — Expansão: próximos lotes de conteúdo — fechar o ciclo de
-  gasto da Economia da Run (nó LOJA, preço de Item, atribuição de
-  compra a um membro do esquadrão — D027 #3/#4), Equipamento persistente
-  (ARMA/CORPO/ACESSORIO), mais Personagens/Jutsus/Inimigos, etc.
+- Marco 10 — Expansão: próximos lotes de conteúdo — Equipamento
+  persistente (ARMA/CORPO/ACESSORIO recalculando atributos), Economia
+  Permanente pós-game (D022 #7), mais Personagens/Jutsus/Inimigos, etc.
 
 ## Bugs conhecidos
 
@@ -680,19 +718,21 @@ completo do doc 04 (facção/complicação/modificador/recompensa/flags) e
 um eventual 4º Ato ficam como aprofundamento futuro, sem bloquear nada.
 
 Marco 10 — Expansão segue: o 1º lote (Itens consumíveis/ferramenta, 6
-itens, `ACTION_TYPES.ITEM` funcional — D025) e o 2º lote (Economia da
-Run — Ryō ganho por resultado de missão, sem loja pra gastar ainda —
-D027) já foram entregues. Próximo lote a definir — candidatos: fechar o
-ciclo de gasto do Ryō (nó LOJA, preço de Item, atribuição de compra a um
-membro do esquadrão), Equipamento persistente do doc 03 (ARMA/CORPO/
-ACESSORIO recalculando atributos), mais Personagens/Jutsus/Inimigos, ou
-o Gerador de Missão completo agora que Facções existem.
+itens, `ACTION_TYPES.ITEM` funcional — D025), o 2º lote (Economia da Run
+— ganho de Ryō — D027) e o 3º lote (nó LOJA fechando o ciclo ganhar->
+gastar de Ryō — D028) já foram entregues; a Economia da Run está
+completa no escopo em que existe hoje (consumíveis/ferramenta, sem
+Equipamento). Próximo lote a definir — candidatos: Equipamento
+persistente do doc 03 (ARMA/CORPO/ACESSORIO recalculando atributos),
+mais Personagens/Jutsus/Inimigos, ou o Gerador de Missão completo agora
+que Facções existem.
 
 Pendências explícitas que continuam em aberto de marcos anteriores:
 salvar/carregar uma Run em andamento (D020 #9), "recuar" voltando uma
-camada no mapa (D020 #9), persistência de cooldowns/Estados/inventário
-entre nós de uma mesma run (D019 #4/D020 #6/D025 #5), passivas
-alternativas/skins de Maestria com ficha real (D022 #1), Pós-game e
-Economia Permanente com Legado/Tickets/Fragmentos (D022 #7), Equipamento
-persistente (D025 #6), nó LOJA/preço de Item/gasto de Ryō (D027 #3/#4),
-Gerador de Missão completo do doc 04 (D026 #8).
+camada no mapa (D020 #9), persistência de cooldowns/Estados entre nós de
+uma mesma run (D019 #4/D020 #6 — o inventário comprado já persiste
+durante a Run desde D028, só o kit fixo ainda reseta por combate, D025
+#5), passivas alternativas/skins de Maestria com ficha real (D022 #1),
+Pós-game e Economia Permanente com Legado/Tickets/Fragmentos (D022 #7),
+Equipamento persistente (D025 #6), Gerador de Missão completo do doc 04
+(D026 #8).

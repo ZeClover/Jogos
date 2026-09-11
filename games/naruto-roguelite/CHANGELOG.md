@@ -3,6 +3,46 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Marco 10 — Expansão (3º lote: nó LOJA fecha o ciclo do Ryō)
+
+### Adicionado
+
+- `src/engine/enums.js` — `NODE_TYPES.LOJA`.
+- `src/engine/run/mapGenerator.js` — `buildLojaNode`: mesmo tratamento
+  genérico de DESCANSO, sem `enemyIds`.
+- `src/data/catalog/regions.js` — peso LOJA adicionado às 3 Regiões
+  existentes.
+- `src/data/catalog/items.js` — campo `price` em todo Item (10-32 Ryō,
+  provisório).
+- `src/engine/run/economy.js` — `canAfford`/`buyItem`: deduz `run.ryo` e
+  soma 1 unidade em `run.purchasedInventory[characterId][itemId]` (novo
+  campo de `runState.js`).
+- `src/engine/combat/characterBridge.js` — `createCombatantFromCharacter`
+  ganha o parâmetro `extraInventory`, somado por cima do
+  `DEFAULT_STARTING_KIT` — é como o inventário comprado no LOJA chega ao
+  Combatente em cada combate seguinte da mesma Run.
+- `src/ui/run.js` — tela `SHOP`: seletor de "para quem comprar" + botão
+  "Comprar" por Item (desabilitado sem Ryō suficiente); "Continuar
+  viagem" resolve o nó (consome 1 dia) e volta ao Mapa.
+- 13 novos testes (extensão de `tests/run/economy.test.js`,
+  `tests/run/runState.test.js`, `tests/combat/characterBridge.test.js`,
+  `tests/data/items_catalog.test.js`, `tests/run/mapGenerator.test.js`)
+  — total do projeto: 385 testes.
+- DECISIONS.md D028 (LOJA como nó genérico, preço provisório por Item,
+  compra como bônus de inventário por Run — não pool compartilhado —,
+  UI simples sem carrinho, visitar a loja consome 1 dia, Equipamento
+  persistente continua fora de escopo).
+
+### Validado
+
+- `npm test`: 385/385 passando.
+- `run.html` testado em Chromium headless (Playwright): Run jogada até
+  ganhar Ryō, Kunai comprado para o Naruto no Mercador (Ryō 40 -> 25,
+  contador de compras exibido), "Continuar viagem" avança o dia; no
+  combate seguinte, confirmado que só o Naruto mostra "Kunai (3x)" (kit
+  fixo + comprado) enquanto os outros membros do esquadrão continuam com
+  "Kunai (2x)"; sem erros de console.
+
 ## Marco 10 — Expansão (2º lote: Economia da Run — Ryō)
 
 ### Adicionado

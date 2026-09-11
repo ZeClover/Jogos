@@ -46,3 +46,9 @@ test('Item DAMAGE declara combatCategory válida (TAIJUTSU ou NINJUTSU)', () => 
     assert.ok(['TAIJUTSU', 'NINJUTSU'].includes(def.combatCategory), `${def.id}: combatCategory inválida`);
   }
 });
+
+test('todo Item tem um price positivo (Marco 10, D028 — vendível no nó LOJA)', () => {
+  for (const def of ITEM_DEFINITIONS) {
+    assert.ok(typeof def.price === 'number' && def.price > 0, `${def.id}: price ausente ou inválido`);
+  }
+});
