@@ -1,0 +1,13 @@
+{
+  "name": "naruto-roguelite",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Engine e dados do Naruto Roguelite — parte de Jogos do Zé. Marco 0: Fundação.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

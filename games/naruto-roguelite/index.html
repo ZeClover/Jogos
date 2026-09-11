@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Naruto Roguelite — Dev Console</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="dev-header">
+  <h1>🍥 Naruto Roguelite</h1>
+  <span class="badge">Marco 0 — Fundação</span>
+  <span id="boot-status"><span class="pill warn">carregando engine…</span></span>
+  <p>
+    Console de diagnóstico da engine, não a UI final do jogo. Prova que RNG/Seed,
+    registries de conteúdo, validadores e save/load funcionam antes de o Marco 1
+    (combate mínimo) começar. Ver <code>PROJECT_STATUS.md</code> para o estado
+    completo do projeto e <code>docs/design/</code> para a documentação oficial.
+  </p>
+</header>
+
+<main>
+
+  <section class="panel" style="grid-column: 1 / -1">
+    <h2>🎲 RNG / Seed centralizada</h2>
+    <p class="hint">
+      Streams nomeadas e independentes (map/combat/loot/event) derivadas de uma seed
+      mestre via hash — a mesma seed sempre reproduz a mesma sequência.
+    </p>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <input id="seed-input" type="text" placeholder="seed mestre"
+             style="flex:1;min-width:200px;background:#12161c;border:1px solid var(--panel-border);
+                    color:var(--text);border-radius:6px;padding:8px 10px;font-family:monospace" />
+      <button id="seed-reroll"
+              style="background:var(--accent-2);color:#fff;border:none;border-radius:6px;
+                     padding:8px 14px;cursor:pointer;font-weight:600">Nova seed</button>
+    </div>
+    <div id="rng-output"></div>
+  </section>
+
+  <section class="panel">
+    <h2>📚 Registries de conteúdo</h2>
+    <p class="hint">Vazias no Marco 0 — populadas em lotes a partir do Marco 3/4.</p>
+    <div id="registries-output"></div>
+  </section>
+
+  <section class="panel">
+    <h2>🖼️ Asset Manifest</h2>
+    <p class="hint">Entradas P0 com prompt visual pronto (docs/design/15). Nenhuma imagem foi gerada ainda — placeholders abaixo.</p>
+    <div id="assets-output"></div>
+  </section>
+
+  <section class="panel" style="grid-column: 1 / -1">
+    <h2>✅ Validadores</h2>
+    <p class="hint">
+      Rodando contra um conjunto de dados de exemplo propositalmente quebrado (não é
+      conteúdo do jogo) para provar que ID duplicado, campo obrigatório ausente, tag
+      inválida e referência não resolvida são todos detectados.
+    </p>
+    <div id="validators-output"></div>
+  </section>
+
+  <section class="panel">
+    <h2>💾 Save / Load</h2>
+    <p class="hint">Round-trip de save com versionamento de schema (namespace de demonstração, não colide com saves reais).</p>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button id="save-write"
+              style="background:var(--ok);color:#fff;border:none;border-radius:6px;
+                     padding:8px 14px;cursor:pointer;font-weight:600">Salvar demo</button>
+      <button id="save-clear"
+              style="background:#3a4150;color:#fff;border:none;border-radius:6px;
+                     padding:8px 14px;cursor:pointer;font-weight:600">Limpar</button>
+    </div>
+    <div id="save-output"></div>
+  </section>
+
+</main>
+
+<script type="module">
+  import('./src/ui/devconsole.js').catch((err) => {
+    document.getElementById('boot-status').innerHTML =
+      '<span class="pill error">✗ engine falhou ao carregar — ver console</span>';
+    console.error(err);
+  });
+</script>
+
+</body>
+</html>
