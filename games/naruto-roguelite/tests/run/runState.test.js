@@ -4,6 +4,7 @@ import { SeedManager } from '../../src/engine/seed.js';
 import {
   createRun, availableNodes, resolveNode, spendReinforceDay, findNode,
 } from '../../src/engine/run/runState.js';
+import { SaveManager, createMemoryStorage } from '../../src/engine/save.js';
 
 const FIXTURE_REGION = {
   id: 'REG_FIXTURE_001',
@@ -100,4 +101,17 @@ test('createRun com a mesma seed produz a mesma run inicial (determinístico)', 
   const a = newRun('same');
   const b = newRun('same');
   assert.deepEqual(a, b);
+});
+
+test('uma Run em andamento sobrevive a um round-trip por SaveManager (Marco 10, D030 — pré-condição para salvar/carregar de verdade)', () => {
+  const run = newRun('save-roundtrip');
+  const node = availableNodes(run)[0];
+  resolveNode(run, node, 'SUCESSO_PERFEITO');
+
+  const manager = new SaveManager({ storage: createMemoryStorage(), namespace: 'test-run-save' });
+  manager.save('run', { run, regionId: FIXTURE_REGION.id });
+  const loaded = manager.load('run').data;
+
+  assert.deepEqual(loaded.run, run);
+  assert.equal(loaded.regionId, FIXTURE_REGION.id);
 });

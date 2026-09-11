@@ -282,6 +282,49 @@ function finalizeRunIfEnded() {
     won: R.run.status === 'VICTORY',
   });
   saveManager.save('account', R.account);
+  // Run terminada (Vitória/Derrota) não é mais "retomável" — limpa o save de Run (Marco 10, D030).
+  saveManager.delete('run');
+}
+
+/**
+ * Salva o progresso da Run em andamento (Marco 10, D030 — pendência D020
+ * #9 fechada). Só faz sentido salvar quando o jogador está no Mapa entre
+ * nós — nunca no meio de uma Batalha (`CombatState` não é serializável
+ * de forma simples, teria Maps/cooldowns/etc; ver D030 #2), então
+ * `render()` chama isso só quando `R.screen === 'MAP'`.
+ */
+function saveRunProgress() {
+  if (!R.run || R.run.status !== 'IN_PROGRESS') return;
+  saveManager.save('run', {
+    run: R.run,
+    regionId: R.regionId,
+    threatLevel: R.threatLevel,
+    squadSnapshot: R.squadSnapshot,
+    equipment: R.equipment,
+    encounteredIds: [...R.encounteredIds],
+  });
+}
+
+/** Carrega a Run salva (se houver uma válida) e retoma na tela de Mapa. */
+function continueSavedRun() {
+  const saved = saveManager.load('run')?.data;
+  if (!saved || !regions.has(saved.regionId)) return;
+  R.run = saved.run;
+  R.regionId = saved.regionId;
+  R.threatLevel = saved.threatLevel ?? THREAT_MIN;
+  R.squadSnapshot = saved.squadSnapshot ?? null;
+  R.equipment = saved.equipment ?? {};
+  R.encounteredIds = new Set(saved.encounteredIds ?? []);
+  // Reconstrói o SeedManager a partir da mesma seed mestre — o Mapa já
+  // gerado (`run.map`) não é regenerado, só reaproveitado; RNG futura
+  // (reclassificação/combate) recomeça do início das streams derivadas
+  // em vez de continuar de onde parou (D030 #3) — provisório, mesmo
+  // espírito de D012/D017/etc.
+  R.seedManager = new SeedManager(R.run.seed);
+  R.pendingNode = null;
+  R.runEndSummary = null;
+  R.screen = R.run.status === 'IN_PROGRESS' ? 'MAP' : 'INTRO';
+  render();
 }
 
 function resolveDescanso(node) {
@@ -631,6 +674,20 @@ function renderEquipmentPanel(defs) {
   `;
 }
 
+/** Painel "Continuar Run salva" (Marco 10, D030) — só aparece com um save válido de uma Run ainda IN_PROGRESS. */
+function renderContinueRunPanel() {
+  const saved = saveManager.load('run')?.data;
+  if (!saved || !regions.has(saved.regionId)) return '';
+  const savedRegion = regions.get(saved.regionId);
+  return `
+    <div class="vs-node-card" style="margin-bottom:14px">
+      <h4>Run em andamento encontrada</h4>
+      <p class="vs-node-meta">${escapeHtml(savedRegion.name)} — Dia ${saved.run.day} · Ryō: ${saved.run.ryo}</p>
+      <button class="vs-btn" data-continue-run>Continuar Run salva</button>
+    </div>
+  `;
+}
+
 function renderIntroScreen() {
   const region = regions.get(R.regionId);
   const defs = SQUAD_IDS.map((id) => characters.get(id));
@@ -650,6 +707,7 @@ function renderIntroScreen() {
   return `
     <div class="vs-scroll">
       <h2>${escapeHtml(region.name)} — Modo Run</h2>
+      ${renderContinueRunPanel()}
       <p class="vs-hint">${escapeHtml(region.description)}</p>
       <p class="vs-hint">
         Esquadrão: Naruto, Sasuke, Sakura e Shikamaru (Custo ${computeSquadCost(defs)}/12).
@@ -698,6 +756,7 @@ function renderMapScreen() {
     <div class="vs-scroll">
       <h2>Dia ${R.run.day} — Escolha o próximo passo</h2>
       <p class="vs-hint">${nodes.length} rota(s) disponível(is) a partir daqui. · Ryō acumulado nesta Run: ${R.run.ryo}</p>
+      <p class="vs-hint">💾 Progresso salvo automaticamente aqui no Mapa — fechar a aba durante uma Batalha perde só aquele combate, não a Run inteira.</p>
       <div class="vs-node-grid">${cards}</div>
       ${renderChronicle()}
     </div>
@@ -865,6 +924,9 @@ function render() {
   app.innerHTML = renderScreen();
   const log = app.querySelector('.vs-log');
   if (log) log.scrollTop = log.scrollHeight;
+  // Autosave (Marco 10, D030): único checkpoint seguro é a tela de Mapa
+  // (entre nós, nunca no meio de uma Batalha).
+  if (R.screen === 'MAP') saveRunProgress();
 }
 
 // --- Eventos ---------------------------------------------------------------
@@ -879,6 +941,7 @@ function handleClick(event) {
     return;
   }
   if (event.target.closest('[data-restart]')) { restart(); render(); return; }
+  if (event.target.closest('[data-continue-run]')) { continueSavedRun(); return; }
   if (event.target.closest('[data-cancel-action]')) { R.pendingAction = null; render(); return; }
 
   const nodeBtn = event.target.closest('[data-node-id]');

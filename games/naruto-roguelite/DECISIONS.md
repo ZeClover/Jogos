@@ -1141,3 +1141,50 @@ NÃO tem nenhum Content ID de Item de equipamento pré-declarado.
 6. **CORPO/ACESSORIO, Economia de Armas (compra/loot/raridade), e
    "mudar estilo" de verdade (jutsu/mecânica nova por arma) continuam
    fora de escopo** — pendências explícitas para lotes futuros.
+
+## D030 — Salvar/carregar uma Run em andamento (fecha a pendência D020 #9)
+
+**Contexto:** desde o Marco 7 (D020 #9), "salvar/carregar uma Run em
+andamento" ficava em aberto — só o save de Conta (`accountState`,
+Marco 8) existia de verdade. `save.js` (Marco 0) já previa isso desde o
+início ("Dois slots lógicos: 'account'... e 'run'... Autosave é apenas
+uma escrita no slot 'run' chamada com frequência pela camada de
+apresentação"), só faltava a UI usar o slot `'run'`.
+
+**Decisões:**
+
+1. **Autosave, não save manual** — `render()` (`run.js`) chama
+   `saveRunProgress()` sempre que `R.screen === 'MAP'`. É o único
+   checkpoint: cobre depois de toda Missão/Elite/Descanso/Loja/
+   Reclassificação resolvida, e logo na criação da Run. Sem botão
+   "Salvar", sem risco de esquecer.
+2. **Só entre nós — nunca no meio de uma Batalha.** `CombatState` (Map de
+   combatentes, cooldowns, log) não é serializável em JSON puro sem
+   trabalho extra de (de)serialização que não se justifica agora; fechar
+   a aba no meio de um combate perde só aquele combate (o esquadrão
+   volta pro estado do último checkpoint no Mapa), não a Run inteira —
+   UI deixa isso explícito no Mapa. Runs com uma Batalha em andamento
+   nunca ficam "presas" num estado quebrado ao recarregar.
+3. **RNG não é perfeitamente contínua entre save e load** — ao retomar
+   (`continueSavedRun`), um novo `SeedManager` é criado a partir da mesma
+   seed mestre (`run.seed`); o Mapa já gerado (`run.map`, serializado por
+   inteiro) não é regenerado, mas streams de RNG futuras (reclassificação
+   de novos nós, combate) recomeçam do início de sua sequência derivada
+   em vez de continuar de onde pararam antes de salvar. Mesmo espírito
+   provisório de D012/D017/etc — não muda resultado nenhum já decidido
+   (o Mapa é o mesmo), só a sequência de sorteios futuros dentro da
+   mesma sessão de jogo.
+4. **O que é salvo**: `run` (o objeto inteiro de `runState.js`, já JSON
+   puro), `regionId`, `threatLevel`, `squadSnapshot`, `equipment`
+   (Marco 10, D029) e `encounteredIds` (convertido de `Set` pra array).
+   Suficiente pra reconstruir toda a tela de Mapa e o próximo combate
+   exatamente como estavam.
+5. **O save de Run é apagado quando a Run termina** (Vitória ou Derrota,
+   em `finalizeRunIfEnded`) — uma Run terminada não é mais "retomável";
+   o jogador só vê o botão "Continuar Run salva" na Introdução enquanto
+   existir uma Run de verdade IN_PROGRESS salva.
+6. **Sem confirmação de "abandonar Run salva"** — se o jogador ignora o
+   botão "Continuar" e começa uma Run nova, o save antigo é sobrescrito
+   assim que a nova Run chega no Mapa (primeiro autosave). Simplicidade
+   deliberada: só existe 1 Run "ativa" por vez, mesmo espírito de só
+   existir 1 slot `'run'` no `SaveManager`.

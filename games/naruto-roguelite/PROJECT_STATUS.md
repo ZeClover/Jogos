@@ -572,9 +572,35 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   não vendível no nó LOJA, CORPO/ACESSORIO/Economia de
   Armas/mecânica-por-arma de verdade fora de escopo).
 
+### Concluído (Salvar/carregar uma Run em andamento — fecha D020 #9)
+
+- **Autosave no slot `'run'`** (`SaveManager`, já previsto desde o
+  Marco 0): `render()` (`run.js`) salva sempre que a tela de Mapa é
+  exibida — cobre todo checkpoint real (após Missão/Elite/Descanso/
+  Loja/Reclassificação resolvida, e na criação da Run). Só entre nós,
+  nunca no meio de uma Batalha (`CombatState` não é serializável sem
+  trabalho extra) — fechar a aba durante um combate perde só aquele
+  combate, não a Run inteira (UI avisa isso no Mapa).
+- **Botão "Continuar Run salva"** na Introdução do Modo Run, mostrando
+  Região/Dia/Ryō da Run salva — reconstrói `R.run`, `R.regionId`,
+  `R.threatLevel`, `R.squadSnapshot`, `R.equipment` e
+  `R.encounteredIds`, e recria o `SeedManager` a partir da mesma seed
+  mestre (o Mapa já gerado não é regenerado; RNG futura recomeça do
+  início da stream em vez de continuar de onde parou — provisório).
+- **Save de Run apagado ao terminar** (Vitória ou Derrota) — uma Run
+  encerrada não aparece mais como "retomável".
+- 1 novo teste (`tests/run/runState.test.js` — round-trip de uma Run
+  real por `SaveManager`) — total do projeto: 395 testes. O resto da
+  lógica é DOM (`run.js`, sem exports) — validada só via Playwright,
+  mesmo padrão do resto da UI.
+- DECISIONS.md D030 (autosave automático no Mapa, escopo só entre nós,
+  RNG não perfeitamente contínua entre save/load, o que exatamente é
+  salvo, save apagado ao terminar a Run, sem confirmação de "abandonar"
+  — sobrescrita simples ao começar uma Run nova).
+
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **394/394
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **395/395
   passando**.
 - Dev console verificado no Chromium headless (Playwright), Marcos 0-5:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
@@ -670,13 +696,22 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   equipando Kubikiribōchō e repetindo a mesma seed, o mesmo combate
   mostra Taijutsu 44 (32+12, exatamente o `statBonus` da arma) no turno
   do Naruto; sem erros de console.
+- **Salvar/carregar Run em andamento verificado no Chromium headless
+  (Playwright)**: sem save, o botão "Continuar" não aparece; Run
+  iniciada e uma recarga completa da página confirma que o save existe
+  em `localStorage`; "Continuar Run salva" retoma exatamente no Mapa;
+  jogado até o Dia 2, recarregado de novo e retomado — o progresso do
+  Dia 2 se mantém; Run jogada até a Vitória confirma que o save de Run é
+  apagado (`localStorage` sem a chave) e "Continuar" some mesmo depois
+  de "Jogar outra Run"; sem erros de console.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
 Marco 10 — Expansão: 1º a 4º lotes (Itens consumíveis, Economia da Run
 — Ryō com ganho e gasto via nó LOJA, Equipamento persistente slot ARMA)
-concluídos; próximo lote a definir.
+concluídos; salvar/carregar Run em andamento também concluído (fecha
+D020 #9); próximo lote a definir.
 
 ## Pendente (próximos marcos/aprofundamentos, não começados)
 
@@ -760,6 +795,8 @@ itens, `ACTION_TYPES.ITEM` funcional — D025), o 2º lote (Economia da Run
 — ganho de Ryō — D027), o 3º lote (nó LOJA fechando o ciclo ganhar->
 gastar de Ryō — D028) e o 4º lote (Equipamento persistente, slot ARMA
 com as 4 primeiras Armas Lendárias do doc — D029) já foram entregues.
+Fora do Marco 10, **salvar/carregar uma Run em andamento também foi
+entregue** (D030), fechando a pendência D020 #9 aberta desde o Marco 7.
 Próximo lote a definir — candidatos: slots CORPO/ACESSORIO de
 Equipamento (sem nome citado no doc ainda, precisa de mais base ou de
 uma decisão de nomear algo genérico), Economia de Armas (comprar/achar
@@ -769,11 +806,15 @@ Jutsus/Inimigos, ou o Gerador de Missão completo agora que Facções
 existem.
 
 Pendências explícitas que continuam em aberto de marcos anteriores:
-salvar/carregar uma Run em andamento (D020 #9), "recuar" voltando uma
-camada no mapa (D020 #9), persistência de cooldowns/Estados entre nós de
-uma mesma run (D019 #4/D020 #6 — o inventário comprado e o Equipamento
-já persistem durante a Run desde D028/D029, só o kit fixo ainda reseta
-por combate, D025 #5), passivas alternativas/skins de Maestria com
-ficha real (D022 #1), Pós-game e Economia Permanente com Legado/
-Tickets/Fragmentos (D022 #7), slots CORPO/ACESSORIO e Economia de Armas
-(D029 #6), Gerador de Missão completo do doc 04 (D026 #8).
+"recuar" voltando uma camada no mapa (D020 #9), persistência de
+cooldowns/Estados entre nós de uma mesma run (D019 #4/D020 #6 — o
+inventário comprado e o Equipamento já persistem durante a Run desde
+D028/D029, só o kit fixo ainda reseta por combate, D025 #5), RNG não
+perfeitamente contínua entre save/load de Run (D030 #3), passivas
+alternativas/skins de Maestria com ficha real (D022 #1), Pós-game e
+Economia Permanente com Legado/Tickets/Fragmentos (D022 #7), slots
+CORPO/ACESSORIO e Economia de Armas (D029 #6), Gerador de Missão
+completo do doc 04 (D026 #8). Nenhuma imagem real foi gerada — os
+placeholders SVG continuam em uso (PROMPT MESTRE §63: só gerar arte sob
+pedido explícito, e nenhuma ferramenta de geração de imagem está
+disponível nesta sessão).

@@ -3,6 +3,29 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Salvar/carregar uma Run em andamento (fecha D020 #9)
+
+### Adicionado
+
+- `src/ui/run.js` — `saveRunProgress`/`continueSavedRun`: autosave no
+  slot `'run'` do `SaveManager` (Marco 0) sempre que a tela de Mapa é
+  exibida; botão "Continuar Run salva" na Introdução (Região/Dia/Ryō);
+  save apagado quando a Run termina (Vitória/Derrota).
+- 1 novo teste (`tests/run/runState.test.js` — round-trip de uma Run
+  real por `SaveManager`) — total do projeto: 395 testes.
+- DECISIONS.md D030 (autosave automático só no Mapa — nunca no meio de
+  uma Batalha, RNG não perfeitamente contínua entre save/load, o que é
+  salvo, save apagado ao terminar, sobrescrita simples sem confirmação
+  de "abandonar").
+
+### Validado
+
+- `npm test`: 395/395 passando.
+- `run.html` testado em Chromium headless (Playwright): recarga
+  completa da página confirma o save em `localStorage`; "Continuar"
+  retoma exatamente no Mapa; progresso do Dia 2 se mantém após um 2º
+  reload+continue; save é apagado após a Vitória; sem erros de console.
+
 ## Marco 10 — Expansão (4º lote: Equipamento persistente — slot ARMA)
 
 ### Adicionado
