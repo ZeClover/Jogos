@@ -29,6 +29,14 @@ export const ACTION_SLOTS = Object.freeze({
   REACAO: 'REACAO',
 });
 
+// Orçamento de ações por rodada (CANON_RULES.md — Combate): 1 Principal,
+// até 1 Rápida, até 1 Reação. Resetado no início de cada rodada.
+export const ACTION_BUDGET_PER_ROUND = Object.freeze({
+  [ACTION_SLOTS.PRINCIPAL]: 1,
+  [ACTION_SLOTS.RAPIDA]: 1,
+  [ACTION_SLOTS.REACAO]: 1,
+});
+
 export const MISSION_RESULTS = Object.freeze({
   SUCESSO_PERFEITO: 'SUCESSO_PERFEITO',
   SUCESSO: 'SUCESSO',

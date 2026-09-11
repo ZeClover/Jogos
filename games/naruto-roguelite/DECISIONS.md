@@ -143,3 +143,73 @@ Style Bible e chega com o Vertical Slice (Marco 6).
 não só "está implementado" — uma página que exercita a engine ao vivo no
 browser é a forma mais direta de validar isso visualmente, sem inventar
 telas de jogo que ainda não têm conteúdo real por trás.
+
+## D012 — Fórmulas provisórias de combate do Marco 1
+
+**Contexto:** `docs/design/01_COMBATE_TAGS_ESTADOS_REACOES.md` dá fórmulas
+exatas para mitigação de defesa (`Defesa/(Defesa+100)`), faixa de acerto
+(base ~90%, 20–100%) e crítico (5% base, 150% de dano), mas não especifica
+como o "Power" de um jutsu (ex: Rasengan Power 65) se combina com os
+atributos Taijutsu/Ninjutsu/Genjutsu do atacante — esse número de
+balanceamento real só existe quando o Jutsu Engine (Marco 3) e o
+balanceamento (Marco 9) tiverem dados reais para calibrar.
+
+**Decisões (todas revisáveis no Marco 3/9, sem impacto em save/API pública):**
+
+1. **Ataque Básico não tem jutsu por trás**, então seu "power" é
+   diretamente o atributo Taijutsu do atacante — é a única fonte de dano
+   disponível para essa ação, não uma escolha arbitrária.
+2. **Jutsu genérico (Marco 1) usa `action.power` como dano pré-mitigação
+   tal como fornecido pelo chamador**, sem multiplicar por
+   Ninjutsu/Genjutsu do atacante. Motivo: qualquer fator de escala
+   inventado agora (ex: `power * atributo/10`) seria um número de
+   balanceamento fabricado sem base no doc, e o Marco 3 vai precisar
+   recalibrar de qualquer forma com jutsus reais — melhor não fingir
+   precisão que não existe ainda.
+3. **Mapeamento categoria → defesa**: Taijutsu mitiga por Defesa Física,
+   Ninjutsu por Defesa de Chakra, **Genjutsu por Resistência Mental** (não
+   por Defesa de Chakra) — inferido da própria lista de atributos do doc
+   01, que separa as duas stats; do contrário não haveria razão para
+   Resistência Mental existir como atributo independente.
+4. **Guarda de `DEFENDER`** = 30% da Defesa Física do ator, resetada no
+   início da rodada seguinte — número provisório (o doc não especifica),
+   escolhido para tornar Defender uma escolha tática relevante sem ser
+   dominante.
+5. **Eficiência** (atributo secundário) reduz o custo de Chakra de um
+   Jutsu proporcionalmente (`custo * (1 - eficiencia)`), consistente com a
+   descrição do doc ("eficiência" nas stats secundárias).
+
+Nenhuma dessas fórmulas trava a arquitetura: `computeDamage`,
+`computeAccuracy` etc. são funções puras e isoladas (`src/engine/combat/
+damage.js`) — ajustar constantes ou a relação power/atributo no Marco 9 não
+exige mexer no resto do motor de combate.
+
+## D013 — Reações (Marco 2) não existem ainda; Ação Rápida/Reação são só orçamento
+
+**Contexto:** o Combate Mínimo (Marco 1) precisa respeitar o orçamento de
+1 Ação Principal + até 1 Ação Rápida + até 1 Reação por rodada (CANON_RULES
+#Combate), mas o conteúdo que normalmente ocupa o slot de Reação (ex:
+Kawarimi) é um Jutsu real com Tags/Estados — isso é Marco 2/3.
+
+**Decisão:** `CombatState`/`resolveAction` fazem cumprir o orçamento por
+slot (`ACTION_SLOTS.PRINCIPAL/RAPIDA/REACAO`) de forma genérica — qualquer
+tipo de ação pode ser jogado em qualquer slot que o chamador especificar —
+sem restringir ainda qual tipo de ação "pertence" a qual slot. Essa
+restrição de conteúdo (ex: "só jutsus com `isReaction: true` podem usar o
+slot REACAO") é responsabilidade de quem monta a ação a partir de dados
+reais de Jutsu, não da engine genérica.
+
+## D014 — `ITEM`/`PREPARAR`/`INTERAGIR` ficam como stub explícito
+
+**Contexto:** esses três tipos de ação (doc 01) dependem de sistemas que
+ainda não existem: Itens (Marco 3+), prep-time real de jutsu (precisa de
+dados de Jutsu, Marco 3) e Missões/interação com cenário (Marco 7).
+
+**Decisão:** em vez de simular um comportamento parcial para esses tipos,
+`resolveAction` devolve `{ applied: false, reason: 'NOT_IMPLEMENTED_YET' }`
+de forma explícita e testada. O enum `ACTION_TYPES` já os lista (contrato
+estável desde o Marco 0), só o handler chega depois.
+
+**Motivo:** uma implementação "pela metade" desses handlers seria pior do
+que não ter nenhuma — daria a impressão de que funcionam. Um stub
+explícito e testado é honesto sobre o que o Marco 1 cobre.

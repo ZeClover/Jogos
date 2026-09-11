@@ -7,9 +7,10 @@
 ## Marco atual
 
 **MARCO 0 — FUNDAÇÃO: concluído e validado.**
+**MARCO 1 — COMBATE MÍNIMO: concluído e validado.**
 
-Próximo: **MARCO 1 — Combate Mínimo** (turnos, atributos, dano, defesa,
-Chakra, ações, posições Frente/Centro/Trás).
+Próximo: **MARCO 2 — Effect Engine** (Tags, Estados, Buffs/Debuffs, Reações,
+duração).
 
 ## Visão geral do projeto
 
@@ -59,28 +60,67 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
 - **Dev console** (`index.html` + `src/ui/devconsole.js`): página de
   diagnóstico que carrega a engine via ES Modules no browser e exercita
   ao vivo RNG/Seed, registries, Asset Manifest, validadores e save/load.
-- **Testes automatizados**: 69 casos (`node --test`, zero dependências)
-  cobrindo ids, rng, seed, registry, validators, save (incl. migração de
-  schema), asset manifest e data registries.
+- **Testes automatizados**: 123 casos (`node --test`, zero dependências)
+  cobrindo Marco 0 (ids, rng, seed, registry, validators, save, asset
+  manifest, data registries) e Marco 1 (atributos, dano/defesa/acerto,
+  posições/alcance, ordem de turno, ações, CombatState ponta a ponta).
+
+### Concluído (Marco 1 — Combate Mínimo)
+
+- **Atributos** (`src/engine/combat/attributes.js`): os 12 primários do
+  doc 01 (HP, Chakra, Taijutsu, Ninjutsu, Genjutsu, Defesa Física, Defesa
+  de Chakra, Controle de Chakra, Velocidade, Precisão, Evasão, Resistência
+  Mental) + secundários (crítico, dano crítico, penetração física/chakra,
+  regen de Chakra, eficiência, resistências).
+- **Combatente** (`src/engine/combat/combatant.js`): instância de combate
+  com HP/Chakra atuais, posição, guarda e orçamento de ação por rodada.
+- **Dano/defesa/acerto** (`src/engine/combat/damage.js`): mitigação por
+  diminishing returns (`Defesa/(Defesa+100)`), acerto limitado a
+  20–100%, crítico (5% base, ×1.5), penetração, guarda — fórmulas
+  transcritas do doc 01. Mapeamento categoria→defesa (Taijutsu→Defesa
+  Física, Ninjutsu→Defesa de Chakra, Genjutsu→Resistência Mental) e a
+  relação entre Power de jutsu e atributos do atacante ficam registradas
+  como decisão provisória em DECISIONS.md D012.
+- **Posições/alcance** (`src/engine/combat/positions.js`): Frente/Centro/
+  Trás, alcance MELEE só mira a linha de frente ocupada do time inimigo
+  (recalculada dinamicamente conforme personagens caem), RANGED mira
+  qualquer linha, SELF só o próprio ator.
+- **Ordem de turno** (`src/engine/combat/turnOrder.js`): Velocidade +
+  pequena variação RNG (stream de combate), recalculada a cada rodada.
+- **Ações** (`src/engine/combat/actions.js`): ATAQUE_BASICO, JUTSU
+  (genérico, sem Tags/Estados — isso é Marco 2), DEFENDER, MOVER, TROCAR
+  implementados; orçamento por slot (Principal/Rápida/Reação) reforçado
+  pelo dispatcher; ITEM/PREPARAR/INTERAGIR são stubs explícitos
+  `NOT_IMPLEMENTED_YET` (ver DECISIONS.md D013/D014 — dependem de sistemas
+  de marcos futuros).
+- **CombatState** (`src/engine/combat/state.js`): laço de rodadas
+  pull-based (quem controla chama `applyAction`), Chakra persiste e
+  regenera só no fim da rodada (não reseta por batalha), guarda/orçamento
+  resetam a cada rodada nova, log estruturado de eventos, detecção de fim
+  de combate e vencedor.
+- **Dev console**: novo painel "Combate" roda um 1v1 de demonstração
+  ponta a ponta (Ataque Básico + Jutsu genérico) com seed ajustável e log
+  legível.
 
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **69/69
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **123/123
   passando**.
-- Dev console verificado no Chromium headless (Playwright): engine carrega
-  sem erros de página, todos os módulos ES retornam HTTP 200 (único 404 é
-  o `favicon.ico` padrão do navegador), botões "Salvar demo"/"Limpar"
-  fazem round-trip de save corretamente, seção de validadores detecta as 4
-  classes de problema esperadas contra um fixture propositalmente quebrado.
+- Dev console verificado no Chromium headless (Playwright), Marco 0 e
+  Marco 1: engine carrega sem erros de página, todos os módulos ES
+  retornam HTTP 200 (único 404 é o `favicon.ico` padrão do navegador),
+  botões "Salvar demo"/"Limpar" fazem round-trip de save corretamente,
+  seção de validadores detecta as 4 classes de problema esperadas, painel
+  de Combate roda um 1v1 completo até decidir vencedor e reproduz o mesmo
+  resultado ao reexecutar com a mesma seed.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
-Nenhum item em andamento — Marco 0 fechado.
+Nenhum item em andamento — Marcos 0 e 1 fechados.
 
 ## Pendente (próximos marcos, não começados)
 
-- Marco 1 — Combate Mínimo
 - Marco 2 — Effect Engine (Tags/Estados/Reações)
 - Marco 3 — Jutsus (engine data-driven completa)
 - Marco 4 — Personagens (recursos, passivas, loadouts)
@@ -126,14 +166,16 @@ sem pedido explícito do usuário).
 | Regiões | 0 | 50+ |
 | Conquistas | 0 | 500+ |
 
-(Esperado no Marco 0 — conteúdo real chega a partir do Marco 3/4, em lotes,
-conforme CANON_RULES.md "qualidade > quantidade".)
+(Esperado nos Marcos 0-1 — conteúdo real chega a partir do Marco 3/4, em
+lotes, conforme CANON_RULES.md "qualidade > quantidade".)
 
 ## Próximo passo
 
-Iniciar **Marco 1 — Combate Mínimo**: turnos, atributos, cálculo de
-dano/defesa, gasto/persistência de Chakra dentro da missão, ações
-(jutsu/ataque básico/defender/item/preparar/mover/trocar/interagir),
-posições Frente/Centro/Trás e ordem de turno visível — usando a engine core
-deste marco (RNG de combate via `SeedManager.combat`, Registry/validators
-para as entidades novas).
+Iniciar **Marco 2 — Effect Engine**: catálogo de Tags e Estados
+data-driven (duração, stacks, categoria, remoção, resistência), sistema de
+Buffs/Debuffs genérico sobre `CombatState`, e Reações (Molhado+Raiton=
+Eletrificação etc.) resolvidas a partir de combinações de Tag/Estado, com
+o limite de 4 reações automáticas por ação (CANON_RULES.md). É também
+quando o slot de Reação do combate ganha um uso real (ex: Kawarimi), e o
+mapeamento categoria→defesa/Power de jutsu de D012 pode ser revisitado com
+dados reais.

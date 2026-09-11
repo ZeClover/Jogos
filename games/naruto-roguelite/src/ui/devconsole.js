@@ -1,10 +1,11 @@
-// Dev console do Marco 0 — Fundação.
+// Dev console dos Marcos 0 (Fundação) e 1 (Combate Mínimo).
 //
 // Isto NÃO é a UI final do jogo (essa vem em marcos futuros, guiada pela
 // Style Bible Visual). É uma página de diagnóstico que prova, no navegador,
 // que a engine core funciona: RNG/Seed determinística, registries de
-// conteúdo, validadores e save/load. Nenhum dado aqui é conteúdo real do
-// jogo — os personagens/jutsus da run chegam a partir do Marco 3/4.
+// conteúdo, validadores, save/load e agora um combate de exemplo rodando
+// de ponta a ponta. Nenhum dado aqui é conteúdo real do jogo — os
+// personagens/jutsus da run chegam a partir do Marco 3/4.
 
 import { SeedManager, generateSeedString } from '../engine/seed.js';
 import {
@@ -16,6 +17,10 @@ import { summarizeRegistries, registries } from '../data/index.js';
 import {
   assetManifest, assetBacklogP1, summarizeManifestByStatus, resolveAssetSrc,
 } from '../content/asset_manifest.js';
+import { createAttributes } from '../engine/combat/attributes.js';
+import { createCombatant } from '../engine/combat/combatant.js';
+import { CombatState } from '../engine/combat/state.js';
+import { ACTION_TYPES, POSITIONS } from '../engine/enums.js';
 
 const TARGET_SCALE = {
   characters: '500–800+', jutsus: '1.000–1.500+', passives: '400–600+',
@@ -194,6 +199,86 @@ data: ${escapeHtml(JSON.stringify(loaded.data))}</pre>
   renderSaveStatus();
 }
 
+// --- Combate (Marco 1) ------------------------------------------------
+
+function makeDemoFighter(id, name, overrides, position) {
+  return createCombatant({
+    id, name, position, attributes: createAttributes(overrides),
+  });
+}
+
+/**
+ * Combate 1v1 de demonstração — não é conteúdo real do jogo (isso é Marco 4),
+ * só prova que CombatState/ações/dano funcionam de ponta a ponta.
+ */
+function runDemoCombat(seed) {
+  const naruto = makeDemoFighter('demo-naruto', 'Naruto (demo)', {
+    taijutsu: 32, ninjutsu: 38, defesaFisica: 18, defesaChakra: 16,
+    velocidade: 22, precisao: 8, chakraMax: 118, regenChakra: 6,
+  }, POSITIONS.FRENTE);
+  const bandido = makeDemoFighter('demo-bandido', 'Bandido (demo)', {
+    taijutsu: 20, defesaFisica: 12, velocidade: 14, hpMax: 90,
+  }, POSITIONS.FRENTE);
+
+  const state = new CombatState({
+    teamA: [naruto],
+    teamB: [bandido],
+    seedManager: new SeedManager(seed),
+  });
+
+  let guard = 0;
+  while (!state.isCombatOver() && guard < 100) {
+    const actorId = state.currentActorId();
+    const actor = state.combatants.get(actorId);
+    const targetId = actorId === naruto.id ? bandido.id : naruto.id;
+
+    const action = (actorId === naruto.id && actor.chakra >= 18)
+      ? {
+        type: ACTION_TYPES.JUTSU, targetId, category: 'NINJUTSU', power: 30, cost: 18, range: 'RANGED',
+      }
+      : { type: ACTION_TYPES.ATAQUE_BASICO, targetId };
+
+    state.applyAction(actorId, action);
+    guard += 1;
+  }
+
+  return { state, naruto, bandido };
+}
+
+function renderCombat() {
+  const seedInput = document.getElementById('combat-seed-input');
+  const seed = seedInput.value.trim() || generateSeedString();
+  seedInput.value = seed;
+
+  const { state, naruto, bandido } = runDemoCombat(seed);
+
+  const lines = state.log.map((event) => {
+    if (event.type === 'ROUND_START') return `— Rodada ${event.round} — ordem: ${event.order.join(', ')}`;
+    if (event.type === 'ROUND_END') return `  (fim da rodada ${event.round}, Chakra regenera)`;
+    if (event.type === 'COMBAT_END') return `>>> Combate encerrado — vencedor: time ${event.winner}`;
+    if (event.type === 'ACTION') {
+      const { actorId, action, result } = event;
+      if (!result.applied) return `  ${actorId} tenta ${action.type} -> recusado (${result.reason})`;
+      if (result.hit === false) return `  ${actorId} usa ${action.type} em ${action.targetId} -> errou`;
+      if (result.damage !== undefined) {
+        return `  ${actorId} usa ${action.type} em ${action.targetId} -> ${result.damage} de dano`
+          + `${result.isCrit ? ' (crítico!)' : ''} (alvo em ${result.targetHp} HP)`;
+      }
+      return `  ${actorId} usa ${action.type}`;
+    }
+    return `  ${event.type}`;
+  });
+
+  mount('combat-output', `
+    <p>
+      <span class="pill ok">✓ ${naruto.name} (HP ${naruto.hp}/${naruto.attributes.hpMax}, Chakra ${naruto.chakra}/${naruto.attributes.chakraMax})</span>
+      <span class="pill ${state.winner() === 'B' ? 'ok' : 'warn'}">${bandido.name} (HP ${bandido.hp}/${bandido.attributes.hpMax})</span>
+      <span class="pill ok">vencedor: time ${state.winner()} · ${state.round} rodada(s)</span>
+    </p>
+    <pre class="log-line">${escapeHtml(lines.join('\n'))}</pre>
+  `);
+}
+
 // --- Init ----------------------------------------------------------------
 
 document.getElementById('seed-reroll').addEventListener('click', () => {
@@ -201,11 +286,14 @@ document.getElementById('seed-reroll').addEventListener('click', () => {
   renderRng();
 });
 document.getElementById('seed-input').addEventListener('change', renderRng);
+document.getElementById('combat-run').addEventListener('click', renderCombat);
+document.getElementById('combat-seed-input').addEventListener('change', renderCombat);
 
 renderRng();
 renderRegistries();
 renderAssets();
 renderValidators();
 renderSave();
+renderCombat();
 
 mount('boot-status', '<span class="pill ok">✓ engine carregada sem erros</span>');

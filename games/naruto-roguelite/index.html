@@ -10,13 +10,13 @@
 
 <header class="dev-header">
   <h1>🍥 Naruto Roguelite</h1>
-  <span class="badge">Marco 0 — Fundação</span>
+  <span class="badge">Marco 1 — Combate Mínimo</span>
   <span id="boot-status"><span class="pill warn">carregando engine…</span></span>
   <p>
     Console de diagnóstico da engine, não a UI final do jogo. Prova que RNG/Seed,
-    registries de conteúdo, validadores e save/load funcionam antes de o Marco 1
-    (combate mínimo) começar. Ver <code>PROJECT_STATUS.md</code> para o estado
-    completo do projeto e <code>docs/design/</code> para a documentação oficial.
+    registries de conteúdo, validadores, save/load e agora o combate por turnos
+    funcionam. Ver <code>PROJECT_STATUS.md</code> para o estado completo do
+    projeto e <code>docs/design/</code> para a documentação oficial.
   </p>
 </header>
 
@@ -37,6 +37,25 @@
                      padding:8px 14px;cursor:pointer;font-weight:600">Nova seed</button>
     </div>
     <div id="rng-output"></div>
+  </section>
+
+  <section class="panel" style="grid-column: 1 / -1">
+    <h2>⚔️ Combate (Marco 1)</h2>
+    <p class="hint">
+      Combate 1v1 de demonstração (não é conteúdo real — personagens de verdade
+      chegam no Marco 4) rodando via <code>CombatState</code>: turnos ordenados
+      por Velocidade, ações Ataque Básico/Jutsu, dano com mitigação por Defesa,
+      Chakra que persiste e regenera entre rodadas.
+    </p>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <input id="combat-seed-input" type="text" placeholder="seed do combate"
+             style="flex:1;min-width:200px;background:#12161c;border:1px solid var(--panel-border);
+                    color:var(--text);border-radius:6px;padding:8px 10px;font-family:monospace" />
+      <button id="combat-run"
+              style="background:var(--accent);color:#1a1305;border:none;border-radius:6px;
+                     padding:8px 14px;cursor:pointer;font-weight:600">Rodar combate</button>
+    </div>
+    <div id="combat-output"></div>
   </section>
 
   <section class="panel">

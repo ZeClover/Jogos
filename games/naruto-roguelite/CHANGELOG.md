@@ -3,6 +3,44 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Marco 1 — Combate Mínimo
+
+### Adicionado
+
+- `src/engine/combat/attributes.js` — os 12 atributos primários do doc 01
+  + secundários (crítico, penetração, regen, eficiência, resistências).
+- `src/engine/combat/combatant.js` — combatente de runtime (HP/Chakra
+  atuais, posição, guarda, orçamento de ação).
+- `src/engine/combat/damage.js` — mitigação por diminishing returns,
+  acerto (20–100%), crítico, mapeamento categoria→defesa (ver DECISIONS.md
+  D012).
+- `src/engine/combat/positions.js` — Frente/Centro/Trás e gating de
+  alcance MELEE/RANGED/SELF.
+- `src/engine/combat/turnOrder.js` — ordem de turno por Velocidade +
+  variação RNG, via `SeedManager.combat`.
+- `src/engine/combat/actions.js` — handlers de ATAQUE_BASICO, JUTSU
+  (genérico), DEFENDER, MOVER, TROCAR; orçamento por slot
+  (Principal/Rápida/Reação); stubs explícitos para ITEM/PREPARAR/
+  INTERAGIR.
+- `src/engine/combat/state.js` — `CombatState`: laço de rodadas
+  pull-based, persistência/regen de Chakra, fim de combate, log
+  estruturado.
+- `ACTION_BUDGET_PER_ROUND` em `src/engine/enums.js`.
+- Painel "Combate" no dev console, com um 1v1 de demonstração ponta a
+  ponta e seed ajustável.
+- 54 novos testes automatizados (`tests/combat/`) cobrindo atributos,
+  dano, posições, ordem de turno, ações e um combate completo
+  determinístico — total do projeto: 123 testes.
+- DECISIONS.md D012–D014 registrando as decisões de fórmula/escopo do
+  Combate Mínimo.
+
+### Validado
+
+- `npm test`: 123/123 passando.
+- Dev console (painel de Combate) testado em Chromium headless
+  (Playwright): roda um 1v1 até o fim, reproduz o mesmo resultado com a
+  mesma seed, sem erros de página.
+
 ## Marco 0 — Fundação
 
 ### Adicionado
