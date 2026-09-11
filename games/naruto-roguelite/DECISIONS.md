@@ -1006,3 +1006,41 @@ para aprofundar o protótipo, seguindo o mesmo padrão de D023/D024
    Facções agora existem e têm Reputação, mas isso não é o Gerador de
    Missão inteiro; fica como pendência explícita para quando fizer
    sentido aprofundar de novo o Protótipo 3 Atos.
+
+## D027 — Marco 10 (Expansão): 2º lote, Economia da Run (Ryō) só com ganho, sem gasto ainda
+
+**Contexto:** `docs/design/03_ITENS_EQUIPAMENTOS_ECONOMIA.md` separa
+"economia da Run (Ryō)" de "Economia Permanente (Legado/Tickets/
+Fragmentos)" — a última já documentada como fora de escopo (D022 #7).
+O doc 04 também cita um nó LOJA (`NODE_TYPES`, ainda sem essa entrada) e
+o Gerador de missão citando "recompensa" como uma de suas etapas.
+Nenhum dos dois (loja/preço de item) tinha ficha nenhuma ainda.
+
+**Decisões:**
+
+1. **Ryō vira um campo simples de `runState.js` (`run.ryo`), não um
+   sistema de conta** — diferente de Reputação (D026, persistida na
+   conta), Ryō é da Run: some quando a run acaba (mesmo espírito de
+   D019 #4 pra HP/Chakra — nada de novo herdado entre runs, só o que já
+   existe: Maestria/Arquivo/Ameaça/Reputação na conta).
+2. **`economy.js#ryoForMissionResult`** — mesmo padrão exato de
+   `mastery.js#xpForMissionResult`/`reputation.js#deltaForMissionResult`
+   (D022/D026): tabela fixa por `MISSION_RESULTS`, números provisórios
+   (40/25/12/5/0), sem entrada para `'DESCANSO'` (fica em 0). Somado a
+   cada `resolveNode` na Crônica.
+3. **Só o GANHO existe neste lote — nenhum jeito de gastar Ryō ainda.**
+   Isso é deliberado, não um esquecimento: implementar uma loja de
+   verdade exigiria (a) um novo `NODE_TYPES.LOJA` com peso no mapa, (b)
+   preço por Item no catálogo (`items.js` ainda não tem campo `price`),
+   e (c) decidir PRA QUEM VAI o item comprado — o inventário hoje é por
+   Combatente, resetado a cada combate a partir do kit fixo
+   (`DEFAULT_STARTING_KIT`, D025 #4/#5), não um pool compartilhado da
+   Run; uma compra precisaria de uma tela de "atribuir a qual membro do
+   esquadrão" que não existe. Cada uma dessas é decisão de UI/dado
+   própria, não uma linha a mais — mesmo raciocínio de D025 #1 (Itens
+   sem abrir Equipamento junto). UI mostra o total acumulado (Mapa e
+   telas de fim de Run) com uma nota explícita "ainda sem loja pra
+   gastar", para não parecer bug.
+4. **Loja/nó LOJA, preço de Item, e "pra quem vai a compra" ficam como
+   pendência explícita para o próximo lote do Marco 10** que quiser
+   fechar o ciclo ganhar->gastar da Economia da Run.

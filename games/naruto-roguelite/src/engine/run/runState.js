@@ -6,8 +6,12 @@
 // (UI) monta os combatentes e devolve o resultado; runState só guarda o
 // progresso pelo mapa e a crônica. Serializável em JSON puro (nenhum
 // Map/Set/classe) para o SaveManager (Marco 0) salvar/carregar sem
-// adaptação.
+// adaptação. `run.ryo` (Marco 10, Economia da Run — doc 03) acumula a
+// cada nó resolvido (`economy.js#ryoForMissionResult`); ainda não tem
+// nenhum jeito de ser gasto (sem loja/nó LOJA ainda, ver DECISIONS.md
+// D027) — só o ganho existe por enquanto, mesmo padrão de D025 #6.
 import { generateRegionMap, findNode } from './mapGenerator.js';
+import { ryoForMissionResult } from './economy.js';
 import { RUN_STATUSES } from '../enums.js';
 
 export { findNode };
@@ -27,6 +31,7 @@ export function createRun({ region, seedManager }) {
     currentNodeIds: map.startNodeIds,
     visitedNodeIds: [],
     chronicle: [],
+    ryo: 0,
     status: RUN_STATUSES.IN_PROGRESS,
   };
 }
@@ -53,6 +58,7 @@ export function addChronicleEntry(run, entry) {
 export function resolveNode(run, node, result) {
   run.day += 1;
   run.visitedNodeIds.push(node.id);
+  run.ryo += ryoForMissionResult(result);
   addChronicleEntry(run, {
     nodeId: node.id, nodeName: node.name, nodeType: node.type, result,
   });

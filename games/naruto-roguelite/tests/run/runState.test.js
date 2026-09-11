@@ -16,13 +16,14 @@ function newRun(seed = 'run-test') {
   return createRun({ region: FIXTURE_REGION, seedManager: new SeedManager(seed) });
 }
 
-test('createRun começa no dia 1, status IN_PROGRESS, sem nós visitados', () => {
+test('createRun começa no dia 1, status IN_PROGRESS, sem nós visitados, Ryō zerado', () => {
   const run = newRun();
   assert.equal(run.day, 1);
   assert.equal(run.status, 'IN_PROGRESS');
   assert.deepEqual(run.visitedNodeIds, []);
   assert.deepEqual(run.chronicle, []);
   assert.deepEqual(run.currentNodeIds, run.map.startNodeIds);
+  assert.equal(run.ryo, 0);
 });
 
 test('availableNodes devolve os objetos de nó correspondentes a currentNodeIds', () => {
@@ -40,6 +41,13 @@ test('resolveNode avança o dia e registra a Crônica', () => {
   assert.equal(run.chronicle.length, 1);
   assert.equal(run.chronicle[0].day, 2);
   assert.equal(run.chronicle[0].result, 'SUCESSO');
+});
+
+test('resolveNode soma Ryō de acordo com o resultado (economy.js)', () => {
+  const run = newRun();
+  const node = availableNodes(run)[0];
+  resolveNode(run, node, 'SUCESSO_PERFEITO');
+  assert.equal(run.ryo, 40);
 });
 
 test('resolveNode com resultado DESASTRE marca a run como DEFEAT e não avança currentNodeIds', () => {

@@ -3,6 +3,31 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Marco 10 — Expansão (2º lote: Economia da Run — Ryō)
+
+### Adicionado
+
+- `src/engine/run/economy.js` — `ryoForMissionResult`/`ryoForChronicle`:
+  mesmo padrão de `mastery.js`/`reputation.js` (tabela fixa de valores
+  por `MISSION_RESULTS`, provisória).
+- `src/engine/run/runState.js` — campo `run.ryo`, somado a cada
+  `resolveNode` de acordo com o resultado.
+- `src/ui/run.js` — total de Ryō acumulado visível na tela de Mapa e
+  nas telas de Vitória/Derrota.
+- 4 novos testes (`tests/run/economy.test.js`, extensão de
+  `tests/run/runState.test.js`) — total do projeto: 375 testes.
+- DECISIONS.md D027 (Ryō como campo de Run, não de conta; só o ganho
+  existe neste lote — loja/preço de item/atribuição de compra a um
+  membro do esquadrão ficam para o próximo lote, mesmo espírito de
+  D025 #1).
+
+### Validado
+
+- `npm test`: 375/375 passando.
+- `run.html` testado em Chromium headless (Playwright): Ryō sobe de 0 a
+  85 ao longo de uma Run completa, exibido corretamente no Mapa e na
+  tela de Vitória; sem erros de console.
+
 ## Marco 9 — Pendências finais (Facções/Reputação + 3ª Região: Suna)
 
 ### Adicionado

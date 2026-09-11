@@ -494,9 +494,30 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   combates, Equipamento/Economia da Run/Economia Permanente/Armas Lendárias
   explicitamente fora de escopo deste lote).
 
+### Concluído (Marco 10 — Expansão, 2º lote: Economia da Run — Ryō)
+
+- **Ryō** (`src/engine/run/economy.js` + `run.ryo` em `runState.js`):
+  um valor simples por Run (não persiste entre runs, diferente de
+  Reputação/Maestria/Arquivo/Ameaça, que são da conta) que soma a cada
+  nó resolvido, por resultado de missão (`ryoForMissionResult`, mesmo
+  padrão de `xpForMissionResult`/`deltaForMissionResult` dos lotes
+  anteriores).
+- **UI** (`run.js`): total de Ryō acumulado visível na tela de Mapa e
+  nas telas de Vitória/Derrota.
+- **Só o ganho existe neste lote — nenhum jeito de gastar Ryō ainda**
+  (sem nó LOJA, sem preço em Item, sem UI de "atribuir a qual membro do
+  esquadrão") — deliberado e documentado, mesmo espírito de D025 (Itens
+  sem abrir Equipamento junto); a UI deixa isso explícito para não
+  parecer bug.
+- 4 novos testes (`tests/run/economy.test.js`, extensão de
+  `tests/run/runState.test.js`) — total do projeto: 375 testes.
+- DECISIONS.md D027 (Ryō como campo de Run não de conta, tabela fixa de
+  valores por resultado de missão, gasto/loja/preço/atribuição de item
+  comprado explicitamente fora de escopo deste lote).
+
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **371/371
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **375/375
   passando**.
 - Dev console verificado no Chromium headless (Playwright), Marcos 0-5:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
@@ -570,12 +591,17 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   Introdução, o painel "Progressão da Conta" mostra "Sunagakure: BOA
   (+13)"; **persistência confirmada via reload completo da página**
   (`localStorage` real, não só re-render em memória).
+- **Economia da Run — Ryō (Marco 10, 2º lote) verificado no Chromium
+  headless (Playwright)**: Run jogada de ponta a ponta; Ryō começa em 0
+  na tela de Mapa e sobe conforme os nós são resolvidos (0 -> 85 ao
+  longo da run testada); total final aparece corretamente na tela de
+  Vitória com a nota "ainda sem loja pra gastar"; sem erros de console.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
-Marco 10 — Expansão: 1º lote (Itens consumíveis) concluído; mais lotes
-de conteúdo a definir.
+Marco 10 — Expansão: 1º e 2º lotes (Itens consumíveis, Economia da Run
+— só o ganho de Ryō) concluídos; próximo lote a definir.
 
 ## Pendente (próximos marcos/aprofundamentos, não começados)
 
@@ -584,8 +610,10 @@ de conteúdo a definir.
   existem (D026), mas isso ainda não é o Gerador de Missão inteiro; um
   4º Ato/Região é sempre possível depois, sem pressa (CANON_RULES —
   "qualidade > quantidade").
-- Marco 10 — Expansão: próximos lotes de conteúdo (Equipamento/Economia
-  da Run, mais Personagens/Jutsus/Inimigos, etc.)
+- Marco 10 — Expansão: próximos lotes de conteúdo — fechar o ciclo de
+  gasto da Economia da Run (nó LOJA, preço de Item, atribuição de
+  compra a um membro do esquadrão — D027 #3/#4), Equipamento persistente
+  (ARMA/CORPO/ACESSORIO), mais Personagens/Jutsus/Inimigos, etc.
 
 ## Bugs conhecidos
 
@@ -652,11 +680,13 @@ completo do doc 04 (facção/complicação/modificador/recompensa/flags) e
 um eventual 4º Ato ficam como aprofundamento futuro, sem bloquear nada.
 
 Marco 10 — Expansão segue: o 1º lote (Itens consumíveis/ferramenta, 6
-itens, `ACTION_TYPES.ITEM` funcional — D025) já foi entregue antes desta
-rodada de Marco 9. Próximo lote a definir — candidatos: Equipamento/
-Economia da Run do doc 03 (ARMA/CORPO/ACESSORIO, Ryō, lojas), mais
-Personagens/Jutsus/Inimigos, ou o Gerador de Missão completo agora que
-Facções existem.
+itens, `ACTION_TYPES.ITEM` funcional — D025) e o 2º lote (Economia da
+Run — Ryō ganho por resultado de missão, sem loja pra gastar ainda —
+D027) já foram entregues. Próximo lote a definir — candidatos: fechar o
+ciclo de gasto do Ryō (nó LOJA, preço de Item, atribuição de compra a um
+membro do esquadrão), Equipamento persistente do doc 03 (ARMA/CORPO/
+ACESSORIO recalculando atributos), mais Personagens/Jutsus/Inimigos, ou
+o Gerador de Missão completo agora que Facções existem.
 
 Pendências explícitas que continuam em aberto de marcos anteriores:
 salvar/carregar uma Run em andamento (D020 #9), "recuar" voltando uma
@@ -664,5 +694,5 @@ camada no mapa (D020 #9), persistência de cooldowns/Estados/inventário
 entre nós de uma mesma run (D019 #4/D020 #6/D025 #5), passivas
 alternativas/skins de Maestria com ficha real (D022 #1), Pós-game e
 Economia Permanente com Legado/Tickets/Fragmentos (D022 #7), Equipamento
-persistente e Economia da Run/Permanente (D025 #6/#7), Gerador de
-Missão completo do doc 04 (D026 #8).
+persistente (D025 #6), nó LOJA/preço de Item/gasto de Ryō (D027 #3/#4),
+Gerador de Missão completo do doc 04 (D026 #8).

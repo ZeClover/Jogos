@@ -636,7 +636,7 @@ function renderMapScreen() {
   return `
     <div class="vs-scroll">
       <h2>Dia ${R.run.day} — Escolha o próximo passo</h2>
-      <p class="vs-hint">${nodes.length} rota(s) disponível(is) a partir daqui.</p>
+      <p class="vs-hint">${nodes.length} rota(s) disponível(is) a partir daqui. · Ryō acumulado nesta Run: ${R.run.ryo}</p>
       <div class="vs-node-grid">${cards}</div>
       ${renderChronicle()}
     </div>
@@ -719,6 +719,7 @@ function renderRunEndSummary() {
       ${discoveredCount} nova(s) entrada(s) no Arquivo Ninja
       ${R.account.threatUnlocked ? '· Ameaça liberada!' : ''}
       ${factionName && reputationDelta ? `· Reputação com ${escapeHtml(factionName)}: ${reputationDelta >= 0 ? '+' : ''}${reputationDelta}` : ''}
+      · Ryō acumulado nesta Run: ${R.run.ryo} (ainda sem loja pra gastar — ver DECISIONS.md D027)
     </p>
   `;
 }
