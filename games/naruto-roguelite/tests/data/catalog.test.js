@@ -90,7 +90,7 @@ test('não há Reação com ID duplicado', () => {
 
 test('o catálogo de Jutsus (Vertical Slice + Kirigakure de Zabuza) foi registrado na Registry ao ser importado', () => {
   assert.equal(jutsus.size, JUTSU_DEFINITIONS.length);
-  assert.equal(JUTSU_DEFINITIONS.length, 13, '12 jutsus do doc 13 + Kirigakure no Jutsu (Marco 5, Zabuza)');
+  assert.equal(JUTSU_DEFINITIONS.length, 15, '12 jutsus do doc 13 + Kirigakure no Jutsu (Marco 5, Zabuza) + Constrição Sufocante/Mordida Perfurante (Marco 9, Serpente)');
 });
 
 test('todo Jutsu tem ID bem formado, rank/categoria/efeito/alcance válidos, sem duplicatas', () => {

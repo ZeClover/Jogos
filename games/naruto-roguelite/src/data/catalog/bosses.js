@@ -1,12 +1,16 @@
-// Catálogo de Bosses — primeiro boss do Vertical Slice: Zabuza Momochi
-// (País das Ondas, PROMPT MESTRE §54). CANON_RULES.md #30 exige
-// identidade/mecânica/fases/telegraph/fraquezas, não "inimigo comum com
-// HP maior" — ver campos `phases`/`weaknesses` abaixo e o perfil de IA
-// correspondente em `src/engine/combat/ai.js` (`zabuzaAction`).
+// Catálogo de Bosses — Zabuza Momochi (País das Ondas, Marco 5,
+// PROMPT MESTRE §54) e a Serpente da Floresta da Morte (Marco 9, Ato
+// Ascensão — "feras gigantes" já citadas na descrição da Região, não um
+// personagem canônico nomeado, ver DECISIONS.md D024). CANON_RULES.md
+// #30 exige identidade/mecânica/fases/telegraph/fraquezas, não "inimigo
+// comum com HP maior" — ver campos `phases`/`weaknesses` abaixo e os
+// perfis de IA correspondentes em `src/engine/combat/ai.js`
+// (`zabuzaAction`/`serpenteAction`).
 //
-// Stats seguem a referência de Jōnin do doc 01 (HP 200-350 / Chakra
-// 150-280) como âncora, mas são uma distribuição provisória (mesmo
-// espírito de D012/D017) — revisável no Marco 9 sem mudar a arquitetura.
+// Stats de Zabuza seguem a referência de Jōnin do doc 01 (HP 200-350 /
+// Chakra 150-280); a Serpente é mais HP/Taijutsu e menos Chakra/Ninjutsu
+// (fera, não ninja) — ambos provisórios (mesmo espírito de D012/D017),
+// revisáveis sem mudar a arquitetura.
 
 import { bosses } from '../index.js';
 
@@ -62,6 +66,59 @@ export const BOSS_DEFINITIONS = [
     weaknesses: [
       'Estados de Controle (Imobilizado, Atordoado...) ainda não sofreram a resistência adaptativa nas primeiras aplicações da luta (CANON_RULES #31) — controlar cedo é mais confiável que tarde.',
       'Ataques com a tag Sensorial ignoram a penalidade de acerto da Névoa/Oculto na Fase 2 (D018) — nenhum jutsu do Vertical Slice tem essa tag ainda, então a Fase 2 é genuinamente mais difícil de acertar por enquanto, como pretendido.',
+    ],
+  },
+  {
+    id: 'BOSS_SERPENTE_FLORESTA_001',
+    name: 'Serpente da Floresta da Morte',
+    tier: 'BOSS',
+    aiLevel: 'BOSS',
+    aiProfile: 'BOSS_SERPENTE_FLORESTA_001',
+    stats: {
+      hpMax: 380,
+      chakraMax: 140,
+      taijutsu: 55,
+      ninjutsu: 8,
+      defesaFisica: 30,
+      defesaChakra: 12,
+      velocidade: 20,
+      precisao: 14,
+      evasao: 8,
+      critChance: 0.05,
+      resistenciaEstado: 16,
+    },
+    loadout: {
+      ativas: ['JUT_CONSTRICAO_SUFOCANTE_001', 'JUT_MORDIDA_PERFURANTE_001'],
+      reacao: null,
+      suprema: null,
+      passivas: [],
+    },
+    phases: [
+      {
+        id: 'FASE_1_EMBOSCADA',
+        name: 'Emboscada',
+        hpRange: [0.6, 1.0],
+        telegraph: 'A serpente ataca do meio da vegetação densa — mordidas diretas, sem padrão especial ainda.',
+        behaviorNote: 'Ataque Básico repetido no alvo com menos HP.',
+      },
+      {
+        id: 'FASE_2_CONSTRICAO',
+        name: 'Constrição',
+        hpRange: [0.3, 0.6],
+        telegraph: 'O corpo da serpente se enrosca — ela está prestes a prender alguém no lugar.',
+        behaviorNote: 'Assim que possível (Chakra/cooldown livres), usa Constrição Sufocante (Imobilizado) no alvo com menos HP antes de voltar a atacar.',
+      },
+      {
+        id: 'FASE_3_FURIA_FEROZ',
+        name: 'Fúria Feroz',
+        hpRange: [0, 0.3],
+        telegraph: 'As presas ficam visíveis a cada bote — os ataques passam a rasgar, não só golpear.',
+        behaviorNote: 'Prioriza Mordida Perfurante (Sangrando) sempre que possível; Ataque Básico como reserva.',
+      },
+    ],
+    weaknesses: [
+      'Constrição Sufocante aplica Imobilizado com chance fixa (85%) — a resistência adaptativa (CANON_RULES #31) ainda favorece o esquadrão nas primeiras aplicações da luta.',
+      'Sem alcance à distância: todo o loadout (Ataque Básico e os 2 Jutsus) é MELEE, que só mira a linha de Frente OCUPADA do esquadrão (positions.js) — espalhar o esquadrão entre Frente e Trás protege por completo quem ficar atrás, enquanto durar quem estiver na Frente.',
     ],
   },
 ];

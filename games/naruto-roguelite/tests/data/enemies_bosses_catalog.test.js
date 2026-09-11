@@ -18,7 +18,7 @@ test('o catálogo de Inimigos (País das Ondas) foi registrado ao ser importado'
 
 test('o catálogo de Bosses foi registrado ao ser importado', () => {
   assert.equal(bosses.size, BOSS_DEFINITIONS.length);
-  assert.equal(BOSS_DEFINITIONS.length, 1, 'primeiro boss do Vertical Slice: Zabuza');
+  assert.equal(BOSS_DEFINITIONS.length, 2, 'Zabuza (Marco 5) + Serpente da Floresta da Morte (Marco 9)');
 });
 
 test('todo Inimigo tem ID bem formado, tier/aiLevel válidos, sem duplicatas', () => {
@@ -40,40 +40,46 @@ test('Bandido/Mercenário (não-ninja) têm chakraMax baixo/zero', () => {
   assert.equal(bandido.stats.chakraMax, 0);
 });
 
-test('Zabuza tem ID bem formado, tier BOSS, aiLevel BOSS e um aiProfile cadastrado', () => {
-  const zabuza = BOSS_DEFINITIONS[0];
-  assert.ok(isWellFormedId(zabuza.id));
-  assert.equal(zabuza.tier, 'BOSS');
-  assert.equal(zabuza.aiLevel, 'BOSS');
-  assert.ok(typeof BOSS_AI_PROFILES[zabuza.aiProfile] === 'function', 'aiProfile precisa apontar para uma função real em ai.js');
-});
-
-test('Zabuza tem ao menos 3 fases com hpRange cobrindo 0-100% sem furos nem sobreposição', () => {
-  const zabuza = BOSS_DEFINITIONS[0];
-  assert.ok(zabuza.phases.length >= 3);
-
-  const sorted = [...zabuza.phases].sort((a, b) => a.hpRange[0] - b.hpRange[0]);
-  assert.equal(sorted[0].hpRange[0], 0, 'a fase mais baixa precisa começar em 0% HP');
-  assert.equal(sorted.at(-1).hpRange[1], 1, 'a fase mais alta precisa ir até 100% HP');
-  for (let i = 1; i < sorted.length; i += 1) {
-    assert.equal(sorted[i - 1].hpRange[1], sorted[i].hpRange[0], `furo/sobreposição entre fases ${i - 1} e ${i}`);
+test('todo Boss tem ID bem formado, tier BOSS, aiLevel BOSS e um aiProfile cadastrado', () => {
+  for (const boss of BOSS_DEFINITIONS) {
+    assert.ok(isWellFormedId(boss.id));
+    assert.equal(boss.tier, 'BOSS');
+    assert.equal(boss.aiLevel, 'BOSS');
+    assert.ok(typeof BOSS_AI_PROFILES[boss.aiProfile] === 'function', `${boss.id}: aiProfile precisa apontar para uma função real em ai.js`);
   }
 });
 
-test('toda fase de Zabuza tem telegraph (CANON_RULES #83 — leitura antes do comportamento)', () => {
-  for (const phase of BOSS_DEFINITIONS[0].phases) {
-    assert.ok(typeof phase.telegraph === 'string' && phase.telegraph.length > 10, `fase ${phase.id} sem telegraph`);
+test('todo Boss tem ao menos 3 fases com hpRange cobrindo 0-100% sem furos nem sobreposição', () => {
+  for (const boss of BOSS_DEFINITIONS) {
+    assert.ok(boss.phases.length >= 3, `${boss.id}: menos de 3 fases`);
+
+    const sorted = [...boss.phases].sort((a, b) => a.hpRange[0] - b.hpRange[0]);
+    assert.equal(sorted[0].hpRange[0], 0, `${boss.id}: a fase mais baixa precisa começar em 0% HP`);
+    assert.equal(sorted.at(-1).hpRange[1], 1, `${boss.id}: a fase mais alta precisa ir até 100% HP`);
+    for (let i = 1; i < sorted.length; i += 1) {
+      assert.equal(sorted[i - 1].hpRange[1], sorted[i].hpRange[0], `${boss.id}: furo/sobreposição entre fases ${i - 1} e ${i}`);
+    }
   }
 });
 
-test('Zabuza declara fraquezas mecânicas, não só flavor text', () => {
-  const zabuza = BOSS_DEFINITIONS[0];
-  assert.ok(zabuza.weaknesses.length >= 1);
+test('toda fase de todo Boss tem telegraph (CANON_RULES #83 — leitura antes do comportamento)', () => {
+  for (const boss of BOSS_DEFINITIONS) {
+    for (const phase of boss.phases) {
+      assert.ok(typeof phase.telegraph === 'string' && phase.telegraph.length > 10, `${boss.id}/${phase.id} sem telegraph`);
+    }
+  }
 });
 
-test('o jutsu do loadout de Zabuza (Kirigakure) existe no catálogo de Jutsus', () => {
-  const zabuza = BOSS_DEFINITIONS[0];
-  for (const jutsuId of zabuza.loadout.ativas) {
-    assert.ok(jutsus.has(jutsuId), `jutsu desconhecido no loadout de Zabuza: ${jutsuId}`);
+test('todo Boss declara fraquezas mecânicas, não só flavor text', () => {
+  for (const boss of BOSS_DEFINITIONS) {
+    assert.ok(boss.weaknesses.length >= 1, `${boss.id} sem fraquezas`);
+  }
+});
+
+test('todo jutsu do loadout de todo Boss existe no catálogo de Jutsus', () => {
+  for (const boss of BOSS_DEFINITIONS) {
+    for (const jutsuId of boss.loadout.ativas) {
+      assert.ok(jutsus.has(jutsuId), `${boss.id}: jutsu desconhecido no loadout: ${jutsuId}`);
+    }
   }
 });

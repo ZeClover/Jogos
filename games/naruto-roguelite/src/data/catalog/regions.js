@@ -34,12 +34,13 @@ export const REGION_DEFINITIONS = [
     act: 'ASCENSAO',
     description: 'Mata fechada e hostil que cerca a etapa de sobrevivência do Exame Chūnin — trilhas emaranhadas, feras gigantes e outros times de genin competindo pelos mesmos pergaminhos.',
     useGenerator: true,
-    // Sem enemyPoolByTier/bossId de propósito: mapGenerator.js gera as
-    // fichas de inimigo (e o Mini-Boss capstone) via
-    // src/engine/generator/enemyGenerator.js — "Gerador combina peças
-    // validadas, não inventa tudo do zero" (doc 09) — ver DECISIONS.md
-    // D023. Nenhum boss autorado (fases/telegraph reais) existe ainda
-    // para esta Região; o capstone é um Mini-Boss gerado (D023 #3).
+    // Sem enemyPoolByTier de propósito: mapGenerator.js gera as fichas de
+    // inimigo comum/elite via src/engine/generator/enemyGenerator.js —
+    // "Gerador combina peças validadas, não inventa tudo do zero" (doc
+    // 09) — ver DECISIONS.md D023. `bossId` abaixo é um boss autorado de
+    // verdade (fases/telegraph reais, CANON_RULES #30) — ver D024, que
+    // fecha a pendência D023 #3 deixada em aberto.
+    bossId: 'BOSS_SERPENTE_FLORESTA_001',
     nodeTypeWeights: [
       { type: 'MISSAO', weight: 5 },
       { type: 'ELITE', weight: 3 },

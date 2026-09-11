@@ -14,7 +14,7 @@
 
 import { ACTION_TYPES, POSITIONS } from '../enums.js';
 import { isAlive } from './combatant.js';
-import { hasState, OCULTO_STATE_ID } from './effects.js';
+import { hasState, OCULTO_STATE_ID, IMOBILIZADO_STATE_ID } from './effects.js';
 
 const RETREAT_HP_THRESHOLD = 0.3;
 
@@ -93,8 +93,41 @@ function zabuzaAction(state, actor, enemyIds) {
   return { type: ACTION_TYPES.ATAQUE_BASICO, targetId };
 }
 
+const SERPENTE_CONSTRICAO_JUTSU_ID = 'JUT_CONSTRICAO_SUFOCANTE_001';
+const SERPENTE_MORDIDA_JUTSU_ID = 'JUT_MORDIDA_PERFURANTE_001';
+
+/**
+ * Serpente da Floresta da Morte — 3 fases por %HP (ver
+ * src/data/catalog/bosses.js): Fase 1 (100-60%) ataque direto; Fase 2
+ * (60-30%) usa Constrição Sufocante (Imobilizado) num alvo ainda não
+ * imobilizado assim que possível; Fase 3 (<30%, "Fúria Feroz") prioriza
+ * Mordida Perfurante (Sangrando), com Ataque Básico como reserva.
+ */
+function serpenteAction(state, actor, enemyIds) {
+  const pct = hpPercent(actor);
+  const targetId = lowestHpTarget(state, enemyIds);
+  const target = state.combatants.get(targetId);
+
+  const inConstrictPhase = pct > 0.3 && pct <= 0.6;
+  const canConstrict = !hasState(target, IMOBILIZADO_STATE_ID)
+    && !actor.cooldowns.has(SERPENTE_CONSTRICAO_JUTSU_ID)
+    && actor.chakra >= 22;
+  if (inConstrictPhase && canConstrict) {
+    return { type: ACTION_TYPES.JUTSU, jutsuId: SERPENTE_CONSTRICAO_JUTSU_ID, targetId };
+  }
+
+  const inFuryPhase = pct <= 0.3;
+  const canBite = !actor.cooldowns.has(SERPENTE_MORDIDA_JUTSU_ID) && actor.chakra >= 15;
+  if (inFuryPhase && canBite) {
+    return { type: ACTION_TYPES.JUTSU, jutsuId: SERPENTE_MORDIDA_JUTSU_ID, targetId };
+  }
+
+  return { type: ACTION_TYPES.ATAQUE_BASICO, targetId };
+}
+
 export const BOSS_AI_PROFILES = {
   BOSS_ZABUZA_001: zabuzaAction,
+  BOSS_SERPENTE_FLORESTA_001: serpenteAction,
 };
 
 /**

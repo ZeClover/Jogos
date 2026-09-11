@@ -826,3 +826,44 @@ prontas para autorar sem base real de números/fases.
    inventar calibração sem base, o oposto do que CANON_RULES pede.
    Nenhuma fórmula foi alterada neste marco; revisar de novo quando
    houver mais Atos/Regiões para comparar.
+
+## D024 — Boss autorado para a Floresta da Morte: Serpente da Floresta da Morte
+
+**Contexto:** D023 #3 deixou a Floresta da Morte com um Mini-Boss gerado
+como capstone, honesto sobre não cumprir CANON_RULES #30 de verdade
+(identidade, fases, telegraph, fraquezas mecânicas — não só "inimigo
+comum com HP maior"). Este é o passo que fecha essa pendência.
+
+**Decisões:**
+
+1. **"Serpente da Floresta da Morte" — fera genérica, não personagem
+   canônico nomeado.** A própria descrição da Região (D023 #5) já cita
+   "feras gigantes" como parte do cenário do Exame Chūnin; um boss-fera
+   é mais seguro de autorar do que um ninja nomeado específico (ex:
+   um vilão canônico daquele arco), que exigiria fidelidade a uma ficha
+   de poder que os docs não fornecem — mesma cautela de D023 #2 contra
+   citar nomes canônicos sem base.
+2. **3 fases por %HP, mesmo formato de Zabuza** (D018): Emboscada
+   (100-60%, ataque direto), Constrição (60-30%, usa Constrição
+   Sufocante para Imobilizar assim que Chakra/cooldown permitem),
+   Fúria Feroz (<30%, prioriza Mordida Perfurante/Sangrando). Perfil de
+   IA bespoke (`serpenteAction`, `ai.js`) seguindo o mesmo padrão de
+   `zabuzaAction` — CANON_RULES #30 continua pedindo perfil próprio, não
+   um "Boss genérico" data-driven (ainda sem um 3º caso de uso para
+   justificar abstrair o formato, mesma leitura de D018 #3).
+3. **2 Jutsus novos, só para este boss** (`JUT_CONSTRICAO_SUFOCANTE_001`,
+   `JUT_MORDIDA_PERFURANTE_001`) — mesmo padrão do Kirigakure no Jutsu de
+   Zabuza (D018 #5): registrados no catálogo geral de Jutsus, fora do
+   loadout de qualquer Personagem jogável. Nenhum Estado novo foi
+   criado — Constrição usa Imobilizado e Mordida usa Sangrando, ambos já
+   catalogados desde o Marco 2 (D015), reforçando "combina peças
+   validadas" (D023 #2) mesmo para conteúdo autorado, não só gerado.
+4. **Stats: mais HP/Taijutsu, menos Chakra/Ninjutsu que Zabuza** — uma
+   fera não é uma usuária de jutsu tão versada quanto um ninja
+   desertor; ambos os bosses seguem provisórios (D012/D017/D020).
+5. **`region.bossId` passa a apontar pra este boss** — `Região.
+   useGenerator: true` continua controlando só MISSAO/ELITE (D023 #4);
+   `mapGenerator.js#buildBossNode` já suportava essa combinação híbrida
+   sem qualquer mudança de código (só o dado da Região mudou) — o
+   Mini-Boss gerado (D023 #3) permanece disponível para qualquer Região
+   futura sem boss autorado ainda.

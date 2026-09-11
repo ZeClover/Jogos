@@ -140,3 +140,49 @@ test('Zabuza entra em Desespero (ataque constante) abaixo de 25% HP', () => {
 test('BOSS_AI_PROFILES tem uma entrada para Zabuza', () => {
   assert.ok(typeof BOSS_AI_PROFILES.BOSS_ZABUZA_001 === 'function');
 });
+
+test('Serpente (perfil de boss) ataca normalmente na Fase 1 (HP > 60%)', () => {
+  const serpente = fighter('serpente', { hpMax: 380, chakraMax: 140 });
+  const state = newState([serpente], [fighter('alvo')]);
+
+  const action = chooseAction(state, serpente, { level: 'BOSS', bossId: 'BOSS_SERPENTE_FLORESTA_001' });
+  assert.equal(action.type, ACTION_TYPES.ATAQUE_BASICO);
+});
+
+test('Serpente usa Constrição Sufocante num alvo ainda não Imobilizado ao entrar na Fase 2 (30%-60% HP)', () => {
+  const serpente = fighter('serpente', { hpMax: 380, chakraMax: 140 });
+  applyDamage(serpente, 190); // 50% hp -> fase 2
+  const state = newState([serpente], [fighter('alvo')]);
+
+  const action = chooseAction(state, serpente, { level: 'BOSS', bossId: 'BOSS_SERPENTE_FLORESTA_001' });
+  assert.equal(action.type, ACTION_TYPES.JUTSU);
+  assert.equal(action.jutsuId, 'JUT_CONSTRICAO_SUFOCANTE_001');
+  assert.equal(action.targetId, 'alvo');
+});
+
+test('Serpente não repete Constrição num alvo já Imobilizado (ataca normalmente)', () => {
+  const serpente = fighter('serpente', { hpMax: 380, chakraMax: 140 });
+  applyDamage(serpente, 190);
+  const alvo = fighter('alvo');
+  alvo.states.push({
+    stateId: 'STATUS_IMOBILIZADO_001', stacks: 1, duration: 2, sourceId: 'serpente',
+  });
+  const state = newState([serpente], [alvo]);
+
+  const action = chooseAction(state, serpente, { level: 'BOSS', bossId: 'BOSS_SERPENTE_FLORESTA_001' });
+  assert.equal(action.type, ACTION_TYPES.ATAQUE_BASICO);
+});
+
+test('Serpente prioriza Mordida Perfurante na Fase 3 (Fúria Feroz, <30% HP)', () => {
+  const serpente = fighter('serpente', { hpMax: 380, chakraMax: 140 });
+  applyDamage(serpente, 320); // ~16% hp -> fase 3
+  const state = newState([serpente], [fighter('alvo')]);
+
+  const action = chooseAction(state, serpente, { level: 'BOSS', bossId: 'BOSS_SERPENTE_FLORESTA_001' });
+  assert.equal(action.type, ACTION_TYPES.JUTSU);
+  assert.equal(action.jutsuId, 'JUT_MORDIDA_PERFURANTE_001');
+});
+
+test('BOSS_AI_PROFILES tem uma entrada para a Serpente da Floresta da Morte', () => {
+  assert.ok(typeof BOSS_AI_PROFILES.BOSS_SERPENTE_FLORESTA_001 === 'function');
+});

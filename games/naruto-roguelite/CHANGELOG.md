@@ -3,7 +3,7 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
-## Marco 9 — Protótipo 3 Atos (primeiro passo: Gerador + 2ª Região)
+## Marco 9 — Protótipo 3 Atos (Gerador + 2ª Região + Boss autorado)
 
 ### Adicionado
 
@@ -44,6 +44,31 @@ changelog é interno ao subprojeto `games/naruto-roguelite/`.
   crítico/movimento) funciona normalmente; Run completa até vencer o
   Mini-Boss capstone, com a tela de Vitória mostrando o nome certo da
   Região/inimigo após a correção do bug acima; sem erros de página.
+
+### Adicionado (continuação — Boss autorado da Floresta da Morte)
+
+- `src/data/catalog/bosses.js` — 2º Boss: Serpente da Floresta da Morte
+  (fera genérica, não personagem canônico nomeado), 3 fases por %HP
+  (Emboscada/Constrição/Fúria Feroz), fecha a pendência D023 #3.
+- `src/data/catalog/jutsus.js` — 2 Jutsus novos só para este boss:
+  `JUT_CONSTRICAO_SUFOCANTE_001` (aplica Imobilizado) e
+  `JUT_MORDIDA_PERFURANTE_001` (aplica Sangrando) — ambos Estados já
+  catalogados desde o Marco 2, nenhum novo criado.
+- `src/engine/combat/ai.js` — `serpenteAction`: perfil de IA bespoke,
+  mesmo formato de `zabuzaAction`.
+- `src/data/catalog/regions.js` — Floresta da Morte ganha `bossId` real;
+  `useGenerator: true` continua só para MISSAO/ELITE.
+- 9 novos testes (extensão de `enemies_bosses_catalog.test.js` e
+  `ai.test.js`, novo `serpente_fight_integration.test.js`) — total do
+  projeto: 334 testes.
+- DECISIONS.md D024.
+
+### Validado (continuação)
+
+- `npm test`: 334/334 passando.
+- `run.html` testado em Chromium headless (Playwright): Run até o
+  "Confronto Final" derrota a Serpente real (não mais o Mini-Boss
+  gerado), tela de Vitória com o nome certo; sem erros de página.
 
 ## Marco 8 — Progressão
 

@@ -15,7 +15,7 @@
 **MARCO 6 — VERTICAL SLICE: concluído e validado.**
 **MARCO 7 — RUN / MISSÕES / MAPA: concluído e validado.**
 **MARCO 8 — PROGRESSÃO: concluído e validado.**
-**MARCO 9 — PROTÓTIPO 3 ATOS: primeiro passo concluído e validado (gerador procedural + 2ª Região).**
+**MARCO 9 — PROTÓTIPO 3 ATOS: em aprofundamento (gerador procedural + 2ª Região + boss autorado da Floresta da Morte concluídos e validados).**
 
 Próximo: **MARCO 10 — Expansão** (ou continuar aprofundando o Marco 9 com mais Atos/Regiões antes de avançar — ver "Próximo passo").
 
@@ -396,10 +396,28 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   honesto em vez de Boss fabricado, `generatedEnemies` separado de
   `enemyIds`, Floresta da Morte como 2ª Região, "calibrar" interpretado
   como validar com mais conteúdo em vez de mudar fórmulas sem dado novo).
+- **Boss autorado para a Floresta da Morte: Serpente da Floresta da
+  Morte** (`src/data/catalog/bosses.js`) — fecha a pendência D023 #3.
+  3 fases por %HP (Emboscada/Constrição/Fúria Feroz), perfil de IA
+  bespoke `serpenteAction` (`ai.js`), 2 Jutsus novos só para este boss
+  (`JUT_CONSTRICAO_SUFOCANTE_001` aplica Imobilizado,
+  `JUT_MORDIDA_PERFURANTE_001` aplica Sangrando — ambos Estados já
+  catalogados desde o Marco 2, nenhum novo criado). `region.bossId`
+  agora aponta pra este boss (a Região continua `useGenerator: true`
+  só para MISSAO/ELITE) — `mapGenerator.js` já suportava essa
+  combinação híbrida sem nenhuma mudança de código.
+- 9 novos testes (extensão de `tests/data/enemies_bosses_catalog.test.js`
+  e `tests/combat/ai.test.js`, novo
+  `tests/combat/serpente_fight_integration.test.js`) — total do
+  projeto: 334 testes.
+- DECISIONS.md D024 (Serpente como fera genérica em vez de personagem
+  canônico nomeado, 3 fases seguindo o formato de Zabuza, 2 Jutsus
+  novos reaproveitando Estados já catalogados, stats mais Taijutsu/menos
+  Chakra que Zabuza, `bossId` real substituindo o Mini-Boss gerado).
 
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **325/325
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **334/334
   passando**.
 - Dev console verificado no Chromium headless (Playwright), Marcos 0-5:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
@@ -450,19 +468,23 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   nome certo da Região/inimigo (bug de texto fixo "País das Ondas/
   Zabuza" encontrado e corrigido durante esta validação); sem nenhum
   erro de página em nenhuma das execuções.
+- **Boss autorado da Floresta da Morte (Marco 9) verificado no Chromium
+  headless (Playwright)**: Run jogada até o nó "Confronto Final" contra
+  a Serpente da Floresta da Morte real (não mais o Mini-Boss gerado);
+  vitória confirmada com o nome certo do boss na tela final; sem erros
+  de página.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
-Nenhum item em andamento — Marcos 0-9 (primeiro passo) fechados.
+Nenhum item em andamento — Marcos 0-9 (passos concluídos até agora)
+fechados.
 
 ## Pendente (próximos marcos/aprofundamentos, não começados)
 
-- Marco 9 — Protótipo 3 Atos: mais Atos/Regiões, Boss autorado de
-  verdade para a Floresta da Morte (fases/telegraph reais, não só
-  Mini-Boss gerado), Gerador de Missão completo (facção/complicação/
-  modificador/recompensa/flags do doc 04 — depende de Facções, doc 06,
-  ainda não implementado)
+- Marco 9 — Protótipo 3 Atos: mais Atos/Regiões, Gerador de Missão
+  completo (facção/complicação/modificador/recompensa/flags do doc 04 —
+  depende de Facções, doc 06, ainda não implementado)
 - Marco 10 — Expansão
 
 ## Bugs conhecidos
@@ -489,11 +511,11 @@ sem pedido explícito do usuário).
 | Tipo | Atual | Meta |
 |---|---|---|
 | Personagens/versões | 4 | 500–800+ |
-| Jutsus | 13 | 1.000–1.500+ |
+| Jutsus | 15 | 1.000–1.500+ |
 | Passivas | 1 | 400–600+ |
 | Itens | 0 | 500+ |
-| Inimigos comuns | 4 | — |
-| Bosses/elites | 1 | 200–300+ |
+| Inimigos comuns | 4 (+ gerados proceduralmente) | — |
+| Bosses/elites | 2 | 200–300+ |
 | Eventos | 0 | 300+ |
 | Templates de missão | 4 | 200+ |
 | Regiões | 2 | 50+ |
@@ -504,27 +526,28 @@ sem pedido explícito do usuário).
 
 (Itens/etc. esperados em 0 até um marco futuro, em lotes, conforme
 CANON_RULES.md "qualidade > quantidade". Personagens/Jutsus/Passivas
-começaram com o lote do Vertical Slice (4/13/1); Inimigos/Bosses com o
-primeiro lote do País das Ondas (4/1, Marco 5); Templates de Missão/
-Regiões com o primeiro lote do Marco 7 (4/1, Marco 9 soma a 2ª Região
-via Gerador em vez de lote autorado) — próximos lotes maiores vêm em
-Konoha Genins/Suna/etc. (PROMPT MESTRE §78). Tags/Estados/Reações já são
-o vocabulário completo do doc 01 — não crescem "em lote" do mesmo jeito.)
+começaram com o lote do Vertical Slice (4/13/1, Marco 9 soma 2 Jutsus do
+boss da Floresta da Morte); Inimigos/Bosses com o primeiro lote do País
+das Ondas (4/1, Marco 5), Marco 9 soma o 2º Boss (Serpente) e passa a
+gerar inimigos comuns/elite proceduralmente para a Floresta da Morte;
+Templates de Missão/Regiões com o primeiro lote do Marco 7 (4/1, Marco 9
+soma a 2ª Região) — próximos lotes maiores vêm em Konoha Genins/Suna/etc.
+(PROMPT MESTRE §78). Tags/Estados/Reações já são o vocabulário completo
+do doc 01 — não crescem "em lote" do mesmo jeito.)
 
 ## Próximo passo
 
-O Marco 9 deu o primeiro passo (Gerador procedural de Inimigo + Floresta
-da Morte como 2ª Região/Ato Ascensão, D023) mas o "Protótipo 3 Atos"
-completo pede mais: um Boss de verdade para a Floresta da Morte (fases/
-telegraph reais, CANON_RULES #30 — hoje é só um Mini-Boss gerado, D023
-#3), possivelmente um 3º Ato, e o Gerador de Missão completo do doc 04
-(facção/complicação/modificador/recompensa/flags — precisa do sistema de
-Facções, doc 06, ainda não implementado). Continuar aprofundando o
-Marco 9 nessa direção antes de ir para o **Marco 10 — Expansão**
-(CANON_RULES — "não expandir antes de validar"). Pendências explícitas
-que continuam em aberto de marcos anteriores: salvar/carregar uma Run em
-andamento (D020 #9), "recuar" voltando uma camada no mapa (D020 #9),
-persistência de cooldowns/Estados entre nós de uma mesma run (D019 #4/
-D020 #6), passivas alternativas/skins de Maestria com ficha real
-(D022 #1), Pós-game e Economia Permanente com Legado/Tickets/Fragmentos
-(D022 #7).
+O Marco 9 já cobriu o Gerador procedural de Inimigo, a Floresta da Morte
+como 2ª Região/Ato Ascensão (D023) e um Boss autorado de verdade para
+ela — a Serpente da Floresta da Morte, fechando a pendência D023 #3
+(D024). O "Protótipo 3 Atos" completo ainda pede mais: possivelmente um
+3º Ato, e o Gerador de Missão completo do doc 04 (facção/complicação/
+modificador/recompensa/flags — precisa do sistema de Facções, doc 06,
+ainda não implementado). Continuar aprofundando o Marco 9 nessa direção
+antes de ir para o **Marco 10 — Expansão** (CANON_RULES — "não expandir
+antes de validar"). Pendências explícitas que continuam em aberto de
+marcos anteriores: salvar/carregar uma Run em andamento (D020 #9),
+"recuar" voltando uma camada no mapa (D020 #9), persistência de
+cooldowns/Estados entre nós de uma mesma run (D019 #4/D020 #6), passivas
+alternativas/skins de Maestria com ficha real (D022 #1), Pós-game e
+Economia Permanente com Legado/Tickets/Fragmentos (D022 #7).

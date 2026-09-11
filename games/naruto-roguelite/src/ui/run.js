@@ -551,7 +551,7 @@ function renderIntroScreen() {
         Esquadrão: Naruto, Sasuke, Sakura e Shikamaru (Custo ${computeSquadCost(defs)}/12).
         O mapa (missões, elites, descanso e o confronto final) é gerado a partir
         de uma seed — a mesma seed sempre produz o mesmo mapa.
-        ${region.useGenerator ? 'Os inimigos desta Região são gerados proceduralmente (Marco 9), não vêm de uma ficha fixa.' : ''}
+        ${region.useGenerator ? 'Os inimigos comuns/elite desta Região são gerados proceduralmente (Marco 9); o confronto final usa um boss autorado de verdade.' : ''}
       </p>
       <div style="display:flex;gap:8px;align-items:center;margin:14px 0;flex-wrap:wrap">
         <label for="run-region-select" class="vs-hint">Região:</label>

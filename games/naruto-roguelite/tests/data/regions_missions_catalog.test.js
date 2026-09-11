@@ -18,10 +18,9 @@ test('o catálogo de Templates de Missão foi registrado ao ser importado', () =
   assert.equal(missions.size, MISSION_TEMPLATES.length);
 });
 
-test('Região com pool fixo (sem useGenerator) tem boss/inimigos do pool resolvidos nos catálogos reais', () => {
+test('Região com pool fixo (sem useGenerator) tem inimigos do pool resolvidos no catálogo real', () => {
   for (const region of REGION_DEFINITIONS.filter((r) => !r.useGenerator)) {
     assert.ok(isWellFormedId(region.id));
-    assert.ok(bosses.has(region.bossId), `${region.id}: bossId desconhecido "${region.bossId}"`);
     for (const [tier, ids] of Object.entries(region.enemyPoolByTier)) {
       for (const enemyId of ids) {
         assert.ok(enemies.has(enemyId), `${region.id}: enemyId desconhecido "${enemyId}" no tier ${tier}`);
@@ -30,7 +29,13 @@ test('Região com pool fixo (sem useGenerator) tem boss/inimigos do pool resolvi
   }
 });
 
-test('Região com useGenerator:true tem ID bem formado e NÃO declara enemyPoolByTier/bossId estático', () => {
+test('toda Região com bossId declarado (autorado ou não) resolve para um Boss real no catálogo', () => {
+  for (const region of REGION_DEFINITIONS.filter((r) => r.bossId)) {
+    assert.ok(bosses.has(region.bossId), `${region.id}: bossId desconhecido "${region.bossId}"`);
+  }
+});
+
+test('Região com useGenerator:true tem ID bem formado e NÃO declara enemyPoolByTier estático', () => {
   for (const region of REGION_DEFINITIONS.filter((r) => r.useGenerator)) {
     assert.ok(isWellFormedId(region.id));
     assert.equal(region.enemyPoolByTier, undefined);
