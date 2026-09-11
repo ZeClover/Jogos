@@ -43,7 +43,7 @@ import {
 import { isOnCooldown, setCooldown, resolveJutsuFields } from './jutsu.js';
 
 function resolveAttack({
-  state, actor, target, range, category, power, guard, baseAccuracy = 0.9, inevitable = false,
+  state, actor, target, range, category, power, guard, baseAccuracy = 0.9, inevitable = false, tags = [],
 }) {
   const sideMembers = state.sideIds(target.id).map((id) => state.combatants.get(id));
   if (!isValidRangeTarget({
@@ -58,7 +58,7 @@ function resolveAttack({
     };
   }
 
-  const { accuracyBonus, critBonus } = attackerBonusFromTargetStates(target);
+  const { accuracyBonus, critBonus } = attackerBonusFromTargetStates(target, tags);
   const accuracy = computeAccuracy({
     baseAccuracy: baseAccuracy + accuracyBonus,
     precisao: actor.attributes.precisao,
@@ -191,6 +191,7 @@ function handleJutsu(state, actor, action) {
       guard: effective.ignoresGuard ? 0 : target.guard,
       baseAccuracy: effective.accuracy ?? 0.9,
       inevitable: effective.inevitable ?? false,
+      tags: effective.tags ?? [],
     });
     let appliedStates = [];
     let reactions = [];

@@ -83,12 +83,35 @@
  */
 
 /**
+ * @typedef {object} BossPhase
+ * @property {string} id
+ * @property {string} name
+ * @property {[number, number]} hpRange - fração de HP máximo [min, max) em que a fase está ativa
+ * @property {string} telegraph - o que o jogador vê/lê antes do comportamento da fase (CANON_RULES #83)
+ * @property {string} [behaviorNote] - resumo do padrão de IA da fase (a lógica real mora em ai.js)
+ */
+
+/**
  * @typedef {object} Boss
  * @property {string} id - ex: "BOSS_ZABUZA_001"
  * @property {string} name
- * @property {string} tier
- * @property {object[]} phases
- * @property {string[]} [weaknesses]
+ * @property {string} tier - ver ENEMY_TIERS em enums.js
+ * @property {string} aiLevel - sempre "BOSS" (ver AI_LEVELS)
+ * @property {string} aiProfile - chave em `BOSS_AI_PROFILES` (ai.js)
+ * @property {object} stats - overrides parciais de createAttributes()
+ * @property {{ ativas: string[], reacao: string|null, suprema: string|null, passivas: string[] }} [loadout]
+ * @property {BossPhase[]} phases
+ * @property {string[]} [weaknesses] - fraquezas MECÂNICAS (CANON_RULES #30), não só flavor text
+ */
+
+/**
+ * @typedef {object} Enemy
+ * @property {string} id - ex: "ENEMY_WAVES_BANDIT_001"
+ * @property {string} name
+ * @property {string} tier - ver ENEMY_TIERS em enums.js
+ * @property {string} aiLevel - ver AI_LEVELS em enums.js
+ * @property {object} stats - overrides parciais de createAttributes()
+ * @property {{ ativas: string[], reacao: string|null, suprema: string|null, passivas: string[] }} [loadout]
  */
 
 /**

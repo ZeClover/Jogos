@@ -1,8 +1,9 @@
 // Effect Engine (Marco 2): aplica/tica/remove Estados de forma genérica a
 // partir dos dados do catálogo (src/data/catalog/statuses.js) — nenhuma
-// lógica aqui conhece "Queimando" ou "Imobilizado" por nome, exceto a
-// única exceção documentada em DECISIONS.md D015 (bônus de acerto/crítico
-// contra Imobilizado, citado explicitamente no doc de design).
+// lógica aqui conhece "Queimando" por nome. Duas exceções documentadas
+// (D015, D018): bônus de acerto/crítico contra Imobilizado e penalidade de
+// acerto contra Oculto (negada por ataques com a tag Sensorial) — ambas
+// citadas literalmente no doc de design, não inventadas.
 //
 // Um combatente (ver combatant.js) carrega:
 //   states               ActiveState[] — instâncias em curso
@@ -12,11 +13,18 @@
 //
 // @typedef {{ stateId: string, stacks: number, duration: number, sourceId: string|null }} ActiveState
 
-/** ID canônico do Estado Imobilizado — única exceção "hardcoded" do motor (ver D015). */
+/** ID canônico do Estado Imobilizado — uma das exceções "hardcoded" do motor (ver D015/D018). */
 export const IMOBILIZADO_STATE_ID = 'STATUS_IMOBILIZADO_001';
 
 /** Bônus de acerto/crítico ao atacar um alvo Imobilizado (doc 01, citado literalmente). */
 export const IMOBILIZADO_ATTACK_BONUS = Object.freeze({ accuracyBonus: 0.15, critBonus: 0.15 });
+
+/** ID canônico do Estado Oculto e da Tag Sensorial (ver D018 — "Sensorial contra Oculto", doc 01). */
+export const OCULTO_STATE_ID = 'STATUS_OCULTO_001';
+export const SENSORIAL_TAG_ID = 'TAG_SENSORIAL_001';
+
+/** Penalidade de acerto ao atirar contra um alvo Oculto sem uma técnica Sensorial. */
+export const OCULTO_EVASION_PENALTY = 0.2;
 
 /** Curva de resistência adaptativa a controle: 100% / 70% / 40% / imune (CANON_RULES #31). */
 const CONTROL_RESISTANCE_CURVE = [1, 0.7, 0.4, 0];
@@ -164,8 +172,11 @@ export function resolveReactions({
 }
 
 /** Modificadores de acerto/crítico que os Estados ativos do alvo concedem ao atacante. */
-export function attackerBonusFromTargetStates(target) {
+export function attackerBonusFromTargetStates(target, incomingTags = []) {
   if (hasState(target, IMOBILIZADO_STATE_ID)) return IMOBILIZADO_ATTACK_BONUS;
+  if (hasState(target, OCULTO_STATE_ID) && !incomingTags.includes(SENSORIAL_TAG_ID)) {
+    return { accuracyBonus: -OCULTO_EVASION_PENALTY, critBonus: 0 };
+  }
   return { accuracyBonus: 0, critBonus: 0 };
 }
 

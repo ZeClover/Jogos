@@ -3,6 +3,52 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Marco 5 — Inimigos e IA
+
+### Adicionado
+
+- `effects.js`: `attackerBonusFromTargetStates` passa a receber as `tags`
+  do ataque recebido; penaliza acerto contra Oculto (`-20%`) exceto com a
+  Tag Sensorial — fecha o item deferido D015 #8.
+- `src/engine/combat/ai.js` — `chooseAction(state, actor, {level,
+  bossId})`: estratégias genéricas `BASICA`/`INTERMEDIARIA`/`ELITE` +
+  `BOSS_AI_PROFILES` (perfil bespoke por boss); `zabuzaAction` (ataca na
+  Fase 1, lança Kirigakure/Oculto ao entrar na Fase 2, intensifica na
+  Fase 3).
+- `src/engine/combat/enemyBridge.js` — `createCombatantFromEnemy`/
+  `createCombatantFromBoss`.
+- `src/data/catalog/enemies.js` — 4 arquétipos do País das Ondas
+  (Bandido, Mercenário, Ninja de Kiri, Elite de Kiri).
+- `src/data/catalog/bosses.js` — Zabuza Momochi: HP 320/Chakra 200, 3
+  fases por %HP com telegraphs, fraquezas mecânicas, loadout.
+- `src/data/catalog/jutsus.js` — 13ª ficha: `JUT_KIRIGAKURE_NO_JUTSU_001`
+  (Kirigakure no Jutsu, autorada para o boss — não existia no doc 13).
+- `enums.js`: `AI_LEVELS`, `ENEMY_TIERS`. `types.js`: `Boss` estendido
+  (`aiLevel`/`aiProfile`/`loadout`/`phases`, novo typedef `BossPhase`),
+  novo typedef `Enemy`.
+- `state.js`: `enemySideIds` tornado público (usado pela IA para listar
+  alvos vivos do lado oposto).
+- Dev console: novo painel "Inimigos e Boss" (tabela de arquétipos +
+  fases/telegraphs/fraquezas de Zabuza) e novo painel "Boss Fight"
+  (combate real Naruto-vs-Zabuza controlado por IA, seed ajustável).
+- 28 novos testes (`tests/combat/ai.test.js`,
+  `tests/data/enemies_bosses_catalog.test.js`,
+  `tests/combat/boss_fight_integration.test.js`, extensão de
+  `tests/combat/effects.test.js` e `tests/combat/positions.test.js`) —
+  total do projeto: 239 testes.
+- DECISIONS.md D018 (Oculto/Sensorial, IA genérica vs. perfil de boss
+  bespoke, fases por %HP, Kirigakure autorado, stats provisórios,
+  fraquezas mecânicas).
+
+### Validado
+
+- `npm test`: 239/239 passando.
+- Dev console testado em Chromium headless (Playwright): painel
+  "Inimigos e Boss" lista os 4 arquétipos e as 3 fases de Zabuza, painel
+  "Boss Fight" roda um combate completo Naruto-real vs Zabuza-real até um
+  vencedor, com o log mostrando a transição de Fase 1 (Ataque Básico)
+  para Fase 2 (Kirigakure no Jutsu), sem erros de página.
+
 ## Marco 4 — Personagens
 
 ### Adicionado

@@ -11,8 +11,9 @@
 **MARCO 2 — EFFECT ENGINE: concluído e validado.**
 **MARCO 3 — JUTSUS: concluído e validado.**
 **MARCO 4 — PERSONAGENS: concluído e validado.**
+**MARCO 5 — INIMIGOS E IA: concluído e validado.**
 
-Próximo: **MARCO 5 — Inimigos e IA**.
+Próximo: **MARCO 6 — Vertical Slice**.
 
 ## Visão geral do projeto
 
@@ -62,12 +63,12 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
 - **Dev console** (`index.html` + `src/ui/devconsole.js`): página de
   diagnóstico que carrega a engine via ES Modules no browser e exercita
   ao vivo RNG/Seed, registries, Asset Manifest, validadores e save/load.
-- **Testes automatizados**: 211 casos (`node --test`, zero dependências)
+- **Testes automatizados**: 239 casos (`node --test`, zero dependências)
   cobrindo Marco 0 (ids, rng, seed, registry, validators, save, asset
   manifest, data registries), Marco 1 (atributos, dano/defesa/acerto,
   posições/alcance, ordem de turno, ações, CombatState ponta a ponta),
-  Marco 2 (Effect Engine), Marco 3 (Jutsus) e Marco 4 (Personagens — ver
-  abaixo).
+  Marco 2 (Effect Engine), Marco 3 (Jutsus), Marco 4 (Personagens) e
+  Marco 5 (Inimigos e IA — ver abaixo).
 
 ### Concluído (Marco 1 — Combate Mínimo)
 
@@ -200,27 +201,70 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   (`CHAR_NARUTO_GENIN_001`) com seu loadout de verdade (Rasengan/Kage
   Bunshin/Kawarimi) em vez de um fixture ad-hoc.
 
+### Concluído (Marco 5 — Inimigos e IA)
+
+- **Oculto x Sensorial** (`src/engine/combat/effects.js`):
+  `attackerBonusFromTargetStates` agora recebe as `tags` do ataque
+  recebido; contra um alvo Oculto, todo ataque sofre `-20%` de acerto
+  (`OCULTO_EVASION_PENALTY`), exceto ataques com a Tag Sensorial — fecha
+  o item deferido D015 #8, ver DECISIONS.md D018 #1.
+- **Módulo de IA** (`src/engine/combat/ai.js`): `chooseAction(state,
+  actor, {level, bossId})` — estratégias genéricas `BASICA` (ataca o
+  primeiro alvo vivo), `INTERMEDIARIA` (foca o alvo com menos HP, se
+  defende com HP crítico) e `ELITE` (foca o alvo mais fraco, recua para
+  Trás e depois se defende com HP crítico); nível `BOSS` delega a um
+  perfil bespoke em `BOSS_AI_PROFILES` (D018 #2/#3).
+- **Catálogo de Inimigos** (`src/data/catalog/enemies.js`): 4 arquétipos
+  do País das Ondas — Bandido (COMMON/BASICA), Mercenário (VETERAN/
+  INTERMEDIARIA), Ninja de Kiri (SPECIALIST/INTERMEDIARIA), Elite de Kiri
+  (ELITE/ELITE) — stats provisórios (D018 #6).
+- **Boss Zabuza Momochi** (`src/data/catalog/bosses.js`): HP 320/Chakra
+  200, `aiLevel: 'BOSS'`, 3 fases por %HP (Ataque Direto 60-100%, Névoa
+  Cerrada 25-60%, Desespero 0-25%) cada uma com telegraph (CANON_RULES
+  #83) e `behaviorNote`; `weaknesses` mecânicas (não só flavor, D018 #8);
+  loadout com o novo jutsu `JUT_KIRIGAKURE_NO_JUTSU_001` (Kirigakure no
+  Jutsu — Rank B, Ninjutsu+Suiton, aplica Oculto garantido por 3 rodadas,
+  autorado agora por não existir no doc 13, ver D018 #5).
+- **Perfil de IA de Zabuza** (`zabuzaAction` em `ai.js`): ataca
+  normalmente na Fase 1; lança Kirigakure (fica Oculto) ao entrar na Fase
+  2, se ainda não estiver Oculto e tiver Chakra/cooldown livres;
+  intensifica o ataque básico na Fase 3.
+- **Ponte inimigo/boss->combatente** (`src/engine/combat/enemyBridge.js`):
+  `createCombatantFromEnemy`/`createCombatantFromBoss` (alias, D018 #7).
+- **Dev console**: novo painel "Inimigos e Boss" (tabela de arquétipos +
+  fases/telegraphs/fraquezas de Zabuza) e novo painel "Boss Fight" —
+  combate real e completo via `CombatState` entre o Naruto Genin real
+  (plano fixo: Rasengan quando o Chakra alcança) e o Zabuza real
+  controlado por `chooseAction`, com seed ajustável.
+- **Testes de integração ponta a ponta** (`boss_fight_integration.test.js`):
+  combate Naruto-real vs Zabuza-real controlado por IA sempre termina em
+  tempo finito, Zabuza entra em Oculto ao alcançar a Fase 2 dentro de um
+  combate real, mesma seed produz o mesmo desfecho.
+
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **211/211
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **239/239
   passando**.
-- Dev console verificado no Chromium headless (Playwright), Marcos 0-4:
+- Dev console verificado no Chromium headless (Playwright), Marcos 0-5:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
   200 (único 404 é o `favicon.ico` padrão do navegador), botões "Salvar
   demo"/"Limpar" fazem round-trip de save corretamente, seção de
   validadores detecta as 4 classes de problema esperadas, painel de
   Combate roda um 1v1 completo com o Naruto Genin real (Rasengan/Kage
   Bunshin/Clones aparecendo no HUD e no log), painel de Personagens
-  mostra os 4 Genin com Custo de Esquadrão total 8/12.
+  mostra os 4 Genin com Custo de Esquadrão total 8/12, painel "Inimigos e
+  Boss" lista os 4 arquétipos + as 3 fases de Zabuza, painel "Boss Fight"
+  roda um combate completo Naruto-real vs Zabuza-real controlado por IA
+  até um vencedor, com o log mostrando Zabuza usando Ataque Básico na
+  Fase 1 e Kirigakure no Jutsu ao entrar na Fase 2.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
-Nenhum item em andamento — Marcos 0-4 fechados.
+Nenhum item em andamento — Marcos 0-5 fechados.
 
 ## Pendente (próximos marcos, não começados)
 
-- Marco 5 — Inimigos e IA
 - Marco 6 — Vertical Slice (Naruto/Sasuke/Sakura/Shikamaru Genin, País das
   Ondas, Zabuza) — é quando o hub principal (`/index.html`) deve passar a
   linkar para este jogo (ver DECISIONS.md D007)
@@ -253,10 +297,11 @@ sem pedido explícito do usuário).
 | Tipo | Atual | Meta |
 |---|---|---|
 | Personagens/versões | 4 | 500–800+ |
-| Jutsus | 12 | 1.000–1.500+ |
+| Jutsus | 13 | 1.000–1.500+ |
 | Passivas | 1 | 400–600+ |
 | Itens | 0 | 500+ |
-| Bosses/elites | 0 | 200–300+ |
+| Inimigos comuns | 4 | — |
+| Bosses/elites | 1 | 200–300+ |
 | Eventos | 0 | 300+ |
 | Templates de missão | 0 | 200+ |
 | Regiões | 0 | 50+ |
@@ -265,23 +310,19 @@ sem pedido explícito do usuário).
 | Estados | 29 | — (vocabulário fechado) |
 | Reações | 5 | — (cresce conforme combinações fizerem sentido) |
 
-(Itens/Bosses/Inimigos/etc. esperados em 0 até o Marco 5+, em lotes,
-conforme CANON_RULES.md "qualidade > quantidade". Personagens/Jutsus/
-Passivas começaram com o lote do Vertical Slice (4/12/1) — próximos lotes
-maiores vêm em Konoha Genins/Suna/etc. (PROMPT MESTRE §78). Tags/Estados/
-Reações já são o vocabulário completo do doc 01 — não crescem "em lote"
-do mesmo jeito.)
+(Itens/etc. esperados em 0 até um marco futuro, em lotes, conforme
+CANON_RULES.md "qualidade > quantidade". Personagens/Jutsus/Passivas
+começaram com o lote do Vertical Slice (4/13/1); Inimigos/Bosses com o
+primeiro lote do País das Ondas (4/1, Marco 5) — próximos lotes maiores
+vêm em Konoha Genins/Suna/etc. (PROMPT MESTRE §78). Tags/Estados/Reações
+já são o vocabulário completo do doc 01 — não crescem "em lote" do mesmo
+jeito.)
 
 ## Próximo passo
 
-Iniciar **Marco 5 — Inimigos e IA**: arquétipos de inimigo do País das
-Ondas (bandidos/mercenários genéricos, ver `docs/design/15` P0 —
-COMBAT_ENEMY_WAVES_BANDIT_001/MERCENARY_001 já têm prompt visual pronto)
-e o primeiro boss, Zabuza Momochi (`docs/design/05`), com fases,
-telegraphs e resistência adaptativa a controle (já suportada desde o
-Marco 2). IA em níveis (básica/intermediária/elite/boss) que decide
-ações via `resolveAction`/`CombatState` — a mesma interface que humano/
-teste já usam, sem duplicar o loop de combate. Bom momento também para
-rodar os primeiros combates 4v1 (esquadrão completo dos 4 Genin, Custo
-8/12, contra um inimigo) para começar a validar o Combate Mínimo além de
-1v1.
+Iniciar **Marco 6 — Vertical Slice**: juntar tudo o que os Marcos 1-5
+construíram (Combate, Effect Engine, Jutsus, Personagens, Inimigos/IA) em
+uma experiência jogável de ponta a ponta — os 4 Genin, o cenário do País
+das Ondas, o boss Zabuza — com UI real seguindo a Style Bible (não mais o
+dev console de diagnóstico, ver DECISIONS.md D011). É também quando o hub
+principal (`/index.html`) deve passar a linkar para este jogo (D007).

@@ -6,6 +6,7 @@ import { createCombatant } from '../../src/engine/combat/combatant.js';
 import {
   tryApplyState, removeState, hasState, getActiveState, tickStates,
   resolveReactions, attackerBonusFromTargetStates, IMOBILIZADO_STATE_ID,
+  OCULTO_STATE_ID, SENSORIAL_TAG_ID, OCULTO_EVASION_PENALTY,
 } from '../../src/engine/combat/effects.js';
 
 function combatant(overrides = {}) {
@@ -224,4 +225,25 @@ test('attackerBonusFromTargetStates só concede bônus contra Imobilizado', () =
   const bonus = attackerBonusFromTargetStates(target);
   assert.ok(bonus.accuracyBonus > 0);
   assert.ok(bonus.critBonus > 0);
+});
+
+test('attackerBonusFromTargetStates penaliza acerto contra Oculto, sem tag Sensorial', () => {
+  const target = combatant();
+  target.states.push({
+    stateId: OCULTO_STATE_ID, stacks: 1, duration: 2, sourceId: null,
+  });
+
+  const semSensorial = attackerBonusFromTargetStates(target, []);
+  assert.equal(semSensorial.accuracyBonus, -OCULTO_EVASION_PENALTY);
+  assert.equal(semSensorial.critBonus, 0);
+});
+
+test('attackerBonusFromTargetStates ignora a penalidade de Oculto quando o ataque tem a tag Sensorial', () => {
+  const target = combatant();
+  target.states.push({
+    stateId: OCULTO_STATE_ID, stacks: 1, duration: 2, sourceId: null,
+  });
+
+  const comSensorial = attackerBonusFromTargetStates(target, [SENSORIAL_TAG_ID]);
+  assert.deepEqual(comSensorial, { accuracyBonus: 0, critBonus: 0 });
 });

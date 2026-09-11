@@ -10,13 +10,14 @@
 
 <header class="dev-header">
   <h1>🍥 Naruto Roguelite</h1>
-  <span class="badge">Marco 4 — Personagens</span>
+  <span class="badge">Marco 5 — Inimigos e IA</span>
   <span id="boot-status"><span class="pill warn">carregando engine…</span></span>
   <p>
     Console de diagnóstico da engine, não a UI final do jogo. Prova que RNG/Seed,
     registries de conteúdo, validadores, save/load, combate por turnos, Tags/
-    Estados/Reações, fichas reais de Jutsu e agora os 4 Genin do Vertical Slice
-    (com recurso exclusivo, loadout e Custo de Esquadrão) funcionam.
+    Estados/Reações, fichas reais de Jutsu, os 4 Genin do Vertical Slice
+    (com recurso exclusivo, loadout e Custo de Esquadrão) e agora os inimigos
+    do País das Ondas + o boss Zabuza (IA por fases, Oculto/Kirigakure) funcionam.
     Ver <code>PROJECT_STATUS.md</code> para o estado completo do projeto e
     <code>docs/design/</code> para a documentação oficial.
   </p>
@@ -78,9 +79,39 @@
     <div id="characters-output"></div>
   </section>
 
+  <section class="panel" style="grid-column: 1 / -1">
+    <h2>🩸 Inimigos e Boss (País das Ondas)</h2>
+    <p class="hint">
+      Os 4 arquétipos de inimigo comum (docs/design/15 P0) e o boss
+      <code>BOSS_ZABUZA_001</code> com suas 3 fases por % de HP, telegraphs
+      (CANON_RULES #83) e fraquezas mecânicas.
+    </p>
+    <div id="enemies-output"></div>
+  </section>
+
+  <section class="panel" style="grid-column: 1 / -1">
+    <h2>🗡️ Boss Fight: Naruto vs Zabuza (Marco 5 — IA)</h2>
+    <p class="hint">
+      Combate real via <code>CombatState</code>: Naruto Genin (plano fixo —
+      Rasengan quando o Chakra alcança, senão Ataque Básico) contra Zabuza
+      controlado por <code>chooseAction</code> — ataca na Fase 1, usa
+      Kirigakure no Jutsu (fica Oculto) ao entrar na Fase 2, e intensifica o
+      ataque na Fase 3 (Desespero).
+    </p>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <input id="boss-seed-input" type="text" placeholder="seed do combate"
+             style="flex:1;min-width:200px;background:#12161c;border:1px solid var(--panel-border);
+                    color:var(--text);border-radius:6px;padding:8px 10px;font-family:monospace" />
+      <button id="boss-run"
+              style="background:var(--accent);color:#1a1305;border:none;border-radius:6px;
+                     padding:8px 14px;cursor:pointer;font-weight:600">Rodar combate</button>
+    </div>
+    <div id="boss-fight-output"></div>
+  </section>
+
   <section class="panel">
     <h2>📚 Registries de conteúdo</h2>
-    <p class="hint">Jutsus (Marco 3) e Personagens/Passivas (Marco 4) populados; itens/inimigos/etc. ainda vazios.</p>
+    <p class="hint">Jutsus (Marco 3), Personagens/Passivas (Marco 4) e Inimigos/Bosses (Marco 5) populados; itens/etc. ainda vazios.</p>
     <div id="registries-output"></div>
   </section>
 

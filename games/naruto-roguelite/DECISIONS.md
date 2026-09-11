@@ -423,3 +423,71 @@ nomeados no loadout dos 4 Genin).
    utilidade pura, mesmo sem uma tela de montagem de equipe ainda
    (isso é Marco 7) — é barato de fazer certo desde já e evita
    reinventar a soma depois.
+
+## D018 — Inimigos e IA (Marco 5): Oculto/Sensorial, IA genérica vs. perfil de boss, fases por %HP
+
+**Contexto:** `docs/design/15_BIBLIOTECA_PROMPTS_VISUAIS_P0_P1.md`/doc 12
+listam os arquétipos de inimigo comum do País das Ondas e o primeiro boss
+do Vertical Slice (Zabuza), mas nenhum doc dá números de atributo exatos
+para eles nem especifica uma máquina de fases formal — só descreve o
+comportamento em prosa (névoa, tática de emboscada, etc.).
+
+**Decisões:**
+
+1. **Interação Oculto x Sensorial fecha o item deferido D015#8.**
+   `attackerBonusFromTargetStates` agora recebe as `incomingTags` do
+   ataque; contra um alvo com o Estado Oculto, todo ataque sofre
+   `-20%` de acerto (`OCULTO_EVASION_PENALTY`), **exceto** se carregar a
+   Tag Sensorial (`TAG_SENSORIAL_001`) — regra citada literalmente no doc
+   ("Sensorial ignora bônus/penalidade de Oculto"). Nenhum jutsu do
+   Vertical Slice tem essa tag ainda, então na prática a Fase 2 de Zabuza
+   é genuinamente mais difícil de acertar por enquanto — isso é o
+   comportamento pretendido, não uma lacuna.
+2. **IA genérica por nível (`BASICA`/`INTERMEDIARIA`/`ELITE`) é
+   estratégia pura de dado→ação**, sem estado próprio: lê `state`/`actor`
+   a cada chamada de `chooseAction` e decide (alvo mais fraco, recuar
+   quando o HP está crítico, etc.) — nenhuma dessas estratégias conhece
+   personagens específicos, só os campos genéricos do combatente.
+3. **Perfil de boss é uma função bespoke hardcoded (`BOSS_AI_PROFILES`),
+   não um "sistema de fases" data-driven genérico.** Com um único boss no
+   projeto até agora, inventar um formato abstrato de fases orientado a
+   dado (condições, prioridades, etc.) seria superarquitetar sem um
+   segundo caso de uso para validar o formato (CANON_RULES #76). A ficha
+   de dado do boss (`bosses.js`) já declara `phases` (id/hpRange/
+   telegraph/behaviorNote) como **documentação estrutural e validável**
+   (testada para cobertura 0–100% sem furos/sobreposição, e todo phase
+   tem telegraph — CANON_RULES #83), mas quem decide a ação de fato é
+   `zabuzaAction`, lendo o HP% do combatente ao vivo. Revisitar esta
+   decisão (extrair um motor de fases genérico) quando um segundo boss
+   precisar do mesmo padrão.
+4. **Fases por %HP, não por gatilho de evento.** Fase 1 (Ataque Direto,
+   60–100%), Fase 2 (Névoa Cerrada / Oculto via Kirigakure, 25–60%), Fase
+   3 (Desespero, 0–25%) — consistente com a descrição do doc 12/13
+   ("perde a paciência conforme o combate avança") e mais simples de
+   testar deterministicamente do que um gatilho de N rodadas.
+5. **`JUT_KIRIGAKURE_NO_JUTSU_001` (Kirigakure no Jutsu) é uma ficha nova,
+   não pré-existente no doc 13** — o doc 13 só cobriu os 12 jutsus dos 4
+   Genin jogáveis, nunca os de Zabuza. Como CANON_RULES #30 exige que todo
+   boss tenha mecânica real (não só flavor text), a ficha foi autorada
+   agora seguindo o mesmo template das demais (Rank B, Ninjutsu+Suiton,
+   custo 15, Cooldown 3, `effect: UTILITY`, aplica Oculto garantido por 3
+   rodadas) e registrada no catálogo geral de Jutsus — não em um catálogo
+   "só de boss" separado, para não duplicar o motor de resolução de
+   jutsu.
+6. **Stats de inimigo comum (`enemies.js`) são números provisórios**,
+   seguindo o mesmo espírito da D012/D017: tier crescente
+   (COMMON→VETERAN→SPECIALIST→ELITE) mapeado para HP/atributos
+   crescentes, não-ninjas (Bandido) com `chakraMax: 0` (não usam jutsu).
+   Revisável no Marco 9 sem tocar na arquitetura — `createCombatantFromEnemy`
+   só lê `stats` do catálogo.
+7. **`createCombatantFromEnemy`/`createCombatantFromBoss` são o mesmo
+   bridge** (a segunda é um alias da primeira) — bosses não têm nenhum
+   campo mecânico adicional que o combatente genérico precise conhecer
+   (fases/IA são lidas direto da ficha pelo chamador do combate, não pelo
+   bridge).
+8. **Fraquezas (`weaknesses`) de Zabuza são texto estruturado, não só
+   flavor** — descrevem interações mecânicas reais já implementadas (a
+   curva de resistência adaptativa favorece controlar cedo; a tag
+   Sensorial ignora a penalidade de Oculto), testado
+   (`enemies_bosses_catalog.test.js`) só quanto à presença/não-vazio, não
+   quanto ao conteúdo exato do texto.

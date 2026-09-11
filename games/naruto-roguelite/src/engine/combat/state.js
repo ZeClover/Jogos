@@ -54,7 +54,8 @@ export class CombatState {
       .map((id) => this.combatants.get(id));
   }
 
-  _enemySideIds(combatantId) {
+  /** IDs do time OPOSTO ao de `combatantId` — usado por IA (ai.js, Marco 5) para achar alvos. */
+  enemySideIds(combatantId) {
     return this.teamAIds.includes(combatantId) ? this.teamBIds : this.teamAIds;
   }
 

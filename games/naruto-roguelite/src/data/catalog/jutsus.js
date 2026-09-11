@@ -191,6 +191,19 @@ export const JUTSU_DEFINITIONS = [
     grantsResource: { amount: 1 },
     note: '"Revela informação" ainda depende do Arquivo Ninja (Marco 7+), que não existe. "Gera Planejamento" já concede 1 ponto do recurso exclusivo do Shikamaru — número provisório e conservador para uma ação de custo 0 (ver DECISIONS.md D017).',
   },
+  {
+    id: 'JUT_KIRIGAKURE_NO_JUTSU_001',
+    name: 'Kirigakure no Jutsu',
+    rank: 'B',
+    category: 'NINJUTSU',
+    tags: ['TAG_NINJUTSU_001', 'TAG_SUITON_001'],
+    cost: 15,
+    range: 'SELF',
+    cooldown: 3,
+    effect: 'UTILITY',
+    appliesStates: [{ stateId: 'STATUS_OCULTO_001', guaranteed: true, duration: 3 }],
+    note: 'Técnica de assinatura de Zabuza Momochi (Marco 5) — névoa cerrada que oculta o usuário (Oculto), reduzindo o acerto de ataques que não carregam a tag Sensorial (D018). Registrada aqui porque é mecanicamente um Jutsu como qualquer outro, mesmo não estando no loadout de nenhum Personagem jogável ainda.',
+  },
 ];
 
 jutsus.registerAll(JUTSU_DEFINITIONS);

@@ -1,12 +1,13 @@
 // Dev console dos Marcos 0 (Fundação), 1 (Combate Mínimo), 2 (Effect
-// Engine), 3 (Jutsus) e 4 (Personagens).
+// Engine), 3 (Jutsus), 4 (Personagens) e 5 (Inimigos e IA).
 //
 // Isto NÃO é a UI final do jogo (essa vem em marcos futuros, guiada pela
 // Style Bible Visual). É uma página de diagnóstico que prova, no navegador,
 // que a engine core funciona: RNG/Seed determinística, registries de
-// conteúdo, validadores, save/load e um combate de exemplo com Tags/
-// Estados/Reações/Jutsus/Personagens reais do catálogo rodando de ponta a
-// ponta (o Naruto do combate abaixo é CHAR_NARUTO_GENIN_001 de verdade).
+// conteúdo, validadores, save/load e combates de exemplo com Tags/
+// Estados/Reações/Jutsus/Personagens/Inimigos/IA reais do catálogo
+// rodando de ponta a ponta — incluindo o Naruto Genin real enfrentando o
+// boss Zabuza real, controlado por IA.
 
 import { SeedManager, generateSeedString } from '../engine/seed.js';
 import {
@@ -17,15 +18,17 @@ import { Registry } from '../engine/registry.js';
 import { summarizeRegistries, registries } from '../data/index.js';
 import '../data/catalog/index.js';
 import {
-  tags, statuses, reactions, jutsus, passives, characters,
+  tags, statuses, reactions, jutsus, passives, characters, enemies, bosses,
 } from '../data/index.js';
 import {
   assetManifest, assetBacklogP1, summarizeManifestByStatus, resolveAssetSrc,
 } from '../content/asset_manifest.js';
 import { createAttributes } from '../engine/combat/attributes.js';
-import { createCombatant } from '../engine/combat/combatant.js';
+import { createCombatant, isAlive } from '../engine/combat/combatant.js';
 import { createCombatantFromCharacter, computeSquadCost } from '../engine/combat/characterBridge.js';
+import { createCombatantFromBoss } from '../engine/combat/enemyBridge.js';
 import { CombatState } from '../engine/combat/state.js';
+import { chooseAction } from '../engine/combat/ai.js';
 import { ACTION_TYPES, POSITIONS } from '../engine/enums.js';
 
 const TARGET_SCALE = {
@@ -391,6 +394,127 @@ function renderCharacters() {
   `);
 }
 
+// --- Inimigos & Bosses (Marco 5) ------------------------------------------
+
+function renderEnemiesBosses() {
+  const enemyRows = enemies.all().map((def) => `
+    <tr>
+      <td>${escapeHtml(def.name)}</td>
+      <td>${escapeHtml(def.tier)}</td>
+      <td>${escapeHtml(def.aiLevel)}</td>
+      <td>${def.stats.hpMax} / ${def.stats.chakraMax}</td>
+    </tr>
+  `).join('');
+
+  const zabuza = bosses.get('BOSS_ZABUZA_001');
+  const phaseRows = zabuza.phases.map((p) => `
+    <tr>
+      <td>${escapeHtml(p.name)}</td>
+      <td>${Math.round(p.hpRange[0] * 100)}–${Math.round(p.hpRange[1] * 100)}%</td>
+      <td>${escapeHtml(p.telegraph)}</td>
+    </tr>
+  `).join('');
+
+  mount('enemies-output', `
+    <table>
+      <thead><tr><th>Inimigo</th><th>Tier</th><th>IA</th><th>HP/Chakra</th></tr></thead>
+      <tbody>${enemyRows}</tbody>
+    </table>
+    <p class="hint" style="margin-top:14px">
+      <strong>${escapeHtml(zabuza.name)}</strong> (boss, HP ${zabuza.stats.hpMax}) — fases por %HP:
+    </p>
+    <table>
+      <thead><tr><th>Fase</th><th>HP</th><th>Telegraph</th></tr></thead>
+      <tbody>${phaseRows}</tbody>
+    </table>
+    <p class="hint" style="margin-top:10px">
+      Fraquezas: ${zabuza.weaknesses.map((w) => escapeHtml(w)).join(' · ')}
+    </p>
+  `);
+}
+
+// --- Boss Fight: Naruto real vs Zabuza real, IA controlando o boss -------
+
+function runBossFight(seed) {
+  const naruto = createCombatantFromCharacter(characters.get('CHAR_NARUTO_GENIN_001'), {
+    id: 'demo-naruto', position: POSITIONS.FRENTE,
+  });
+  const zabuza = createCombatantFromBoss(bosses.get('BOSS_ZABUZA_001'), {
+    id: 'demo-zabuza', position: POSITIONS.FRENTE,
+  });
+
+  const state = new CombatState({
+    teamA: [naruto],
+    teamB: [zabuza],
+    seedManager: new SeedManager(seed),
+    statusCatalog: statuses,
+    reactionCatalog: reactions.all(),
+    jutsuCatalog: jutsus,
+  });
+
+  let guard = 0;
+  while (!state.isCombatOver() && guard < 300) {
+    const actorId = state.currentActorId();
+    let action;
+    if (actorId === naruto.id) {
+      action = naruto.chakra >= 28
+        ? { type: ACTION_TYPES.JUTSU, jutsuId: 'JUT_RASENGAN_001', targetId: zabuza.id }
+        : { type: ACTION_TYPES.ATAQUE_BASICO, targetId: zabuza.id };
+    } else {
+      action = chooseAction(state, zabuza, { level: 'BOSS', bossId: 'BOSS_ZABUZA_001' });
+    }
+    const result = state.applyAction(actorId, action);
+    if (!result.applied) {
+      const targetId = actorId === naruto.id ? zabuza.id : naruto.id;
+      state.applyAction(actorId, { type: ACTION_TYPES.ATAQUE_BASICO, targetId });
+    }
+    guard += 1;
+  }
+
+  return {
+    state, naruto, zabuza,
+  };
+}
+
+function renderBossFight() {
+  const seedInput = document.getElementById('boss-seed-input');
+  const seed = seedInput.value.trim() || generateSeedString();
+  seedInput.value = seed;
+
+  const { state, naruto, zabuza } = runBossFight(seed);
+
+  const lines = state.log.map((event) => {
+    if (event.type === 'ROUND_START') return `— Rodada ${event.round} —`;
+    if (event.type === 'COMBAT_END') return `>>> Combate encerrado — vencedor: time ${event.winner}`;
+    if (event.type === 'DOT') return `  [dano contínuo] ${event.targetId} perde ${event.amount} de ${event.stat}`;
+    if (event.type === 'ACTION') {
+      const { actorId, action, result } = event;
+      const label = action.jutsuId ?? action.type;
+      if (!result.applied) return null;
+      if (result.armed) return `  ${actorId} arma ${label}`;
+      if (result.evaded) return `  ${actorId} usa ${label} -> evitado por Kawarimi!`;
+      if (result.appliedStates?.some((s) => s.applied)) {
+        return `  ${actorId} usa ${label} -> a névoa se fecha (Oculto)`;
+      }
+      if (result.hit === false) return `  ${actorId} usa ${label} -> errou`;
+      if (result.damage !== undefined) {
+        return `  ${actorId} usa ${label} -> ${result.damage} de dano${result.isCrit ? ' (crítico!)' : ''} (alvo em ${result.targetHp} HP)`;
+      }
+      return null;
+    }
+    return null;
+  }).filter(Boolean);
+
+  mount('boss-fight-output', `
+    <p>
+      <span class="pill ${isAlive(naruto) ? 'ok' : 'error'}">${naruto.name} (HP ${naruto.hp}/${naruto.attributes.hpMax})</span>
+      <span class="pill ${isAlive(zabuza) ? 'ok' : 'error'}">${zabuza.name} (HP ${zabuza.hp}/${zabuza.attributes.hpMax})</span>
+      <span class="pill ok">vencedor: time ${state.winner()} · ${state.round} rodada(s)</span>
+    </p>
+    <pre class="log-line">${escapeHtml(lines.join('\n'))}</pre>
+  `);
+}
+
 // --- Init ----------------------------------------------------------------
 
 document.getElementById('seed-reroll').addEventListener('click', () => {
@@ -400,6 +524,8 @@ document.getElementById('seed-reroll').addEventListener('click', () => {
 document.getElementById('seed-input').addEventListener('change', renderRng);
 document.getElementById('combat-run').addEventListener('click', renderCombat);
 document.getElementById('combat-seed-input').addEventListener('change', renderCombat);
+document.getElementById('boss-run').addEventListener('click', renderBossFight);
+document.getElementById('boss-seed-input').addEventListener('change', renderBossFight);
 
 renderRng();
 renderRegistries();
@@ -409,5 +535,7 @@ renderAssets();
 renderValidators();
 renderSave();
 renderCombat();
+renderEnemiesBosses();
+renderBossFight();
 
 mount('boot-status', '<span class="pill ok">✓ engine carregada sem erros</span>');

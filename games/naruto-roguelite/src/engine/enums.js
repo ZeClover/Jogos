@@ -100,3 +100,15 @@ export const JUTSU_EFFECTS = Object.freeze([
 export const JUTSU_RANGES = Object.freeze([
   'MELEE', 'RANGED', 'AREA', 'ALLY', 'SELF',
 ]);
+
+// Níveis de IA inimiga (Marco 5). Ver CANON_RULES.md #82 — avançada usa
+// foco, proteção, posicionamento; bosses têm perfil próprio (ai.js).
+export const AI_LEVELS = Object.freeze([
+  'BASICA', 'INTERMEDIARIA', 'ELITE', 'BOSS',
+]);
+
+// Tiers de inimigo/boss (docs/design/05_INIMIGOS_ELITES_BOSSES.md).
+export const ENEMY_TIERS = Object.freeze([
+  'COMMON', 'VETERAN', 'SPECIALIST', 'ELITE', 'MINI_BOSS', 'BOSS',
+  'ACT_BOSS', 'FINAL_BOSS', 'SUPERBOSS', 'SPECIAL_ENCOUNTER',
+]);
