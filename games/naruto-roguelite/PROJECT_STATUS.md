@@ -14,8 +14,9 @@
 **MARCO 5 — INIMIGOS E IA: concluído e validado.**
 **MARCO 6 — VERTICAL SLICE: concluído e validado.**
 **MARCO 7 — RUN / MISSÕES / MAPA: concluído e validado.**
+**MARCO 8 — PROGRESSÃO: concluído e validado.**
 
-Próximo: **MARCO 8 — Progressão**.
+Próximo: **MARCO 9 — Protótipo 3 Atos**.
 
 ## Visão geral do projeto
 
@@ -70,9 +71,10 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   manifest, data registries), Marco 1 (atributos, dano/defesa/acerto,
   posições/alcance, ordem de turno, ações, CombatState ponta a ponta),
   Marco 2 (Effect Engine), Marco 3 (Jutsus), Marco 4 (Personagens),
-  Marco 5 (Inimigos e IA), Marco 6 (campanha/roteiro) e Marco 7 (mapa/
-  missão/reclassificação/run — ver abaixo; as UIs jogáveis em si não têm
-  testes Node, são validadas via Playwright).
+  Marco 5 (Inimigos e IA), Marco 6 (campanha/roteiro), Marco 7 (mapa/
+  missão/reclassificação/run) e Marco 8 (Maestria/Arquivo/Ameaça/conta —
+  ver abaixo; as UIs jogáveis em si não têm testes Node, são validadas
+  via Playwright).
 
 ### Concluído (Marco 1 — Combate Mínimo)
 
@@ -325,9 +327,43 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   lógica de batalha de `game.js` deliberadamente, sem extrair módulo
   compartilhado ainda).
 
+### Concluído (Marco 8 — Progressão)
+
+- **Maestria por personagem** (`src/engine/progression/mastery.js`):
+  XP concedido a todo o esquadrão ao fim de cada Run (soma do resultado
+  graduado de cada nó da Crônica, D020 #2), níveis 0-5; NÃO concede
+  nenhum bônus mecânico/de estatística (D022 #1) — só conhecimento
+  (Arquivo Ninja) e progresso exibido.
+- **Arquivo Ninja** (`src/engine/progression/archive.js`): registro
+  genérico por Content ID, `???` até ser descoberto; inimigos/bosses/
+  região entram ao serem enfrentados em combate (D022 #3) — o próprio
+  esquadrão não passa pelo Arquivo (já é conhecido desde o início).
+- **Ameaça** (`src/engine/progression/threat.js`): libera a faixa 0-20
+  inteira após a 1ª vitória de Run (PROMPT MESTRE §38); reaproveita só
+  as alavancas já existentes — nível de IA de inimigo comum (Marco 5) e
+  chance de reclassificação de missão (Marco 7) — nenhuma stat de
+  combatente é tocada (D022 #4).
+- **Estado de Conta** (`src/engine/progression/accountState.js`):
+  `createAccountState`/`applyRunEnd` — une Maestria/Arquivo/Ameaça/
+  vitórias num único objeto serializável, persistido via `SaveManager`
+  (Marco 0) no slot `"account"` a cada fim de Run.
+- **Modo Run integrado** (`src/ui/run.js`): painel "Progressão da Conta"
+  na tela de Introdução (Maestria por Genin, Arquivo Ninja com `???`
+  para o não descoberto, Vitórias/Runs jogadas); seletor de Nível de
+  Ameaça quando liberado; resumo de XP/level-up/descobertas na tela de
+  Vitória/Derrota.
+- 27 novos testes (`tests/progression/mastery.test.js`,
+  `tests/progression/archive.test.js`, `tests/progression/threat.test.js`,
+  `tests/progression/accountState.test.js`) — total do projeto: 313 testes.
+- DECISIONS.md D022 (Maestria sem bônus de status, XP por missão
+  concluída para o esquadrão inteiro, Arquivo genérico por Content ID,
+  Ameaça via IA/reclassificação sem tocar stats, `threatUnlocked`
+  booleano, conta como único save novo, Pós-game/Economia Permanente
+  fora de escopo).
+
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **287/287
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **313/313
   passando**.
 - Dev console verificado no Chromium headless (Playwright), Marcos 0-5:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
@@ -359,15 +395,23 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   Continuar/Recuar/Buscar Reforço renderiza corretamente e "Recuar"
   devolve ao Mapa com o nó ainda marcado como reclassificado (rank não
   re-sorteado); Crônica final confere com os nós realmente visitados.
+- **Progressão (Marco 8) verificada no Chromium headless (Playwright)**:
+  conta nova mostra Maestria 0/Arquivo 0-6/Ameaça bloqueada; uma Run
+  jogada até a Vitória concede XP de Maestria (visível no resumo da
+  tela final), descobre as entradas do Arquivo correspondentes aos
+  inimigos/região realmente enfrentados (o resto continua `???`), e
+  libera Ameaça; **persistência confirmada via `localStorage` real**
+  (reload completo da página, não só re-render em memória) — a conta
+  volta com Vitórias/Maestria/Arquivo intactos e o seletor de Nível de
+  Ameaça aparece na Introdução.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
-Nenhum item em andamento — Marcos 0-7 fechados.
+Nenhum item em andamento — Marcos 0-8 fechados.
 
 ## Pendente (próximos marcos, não começados)
 
-- Marco 8 — Progressão
 - Marco 9 — Protótipo 3 Atos
 - Marco 10 — Expansão
 
@@ -419,14 +463,18 @@ jeito.)
 
 ## Próximo passo
 
-Iniciar **Marco 8 — Progressão**: o Modo Run (`run.html`, Marco 7) hoje
-termina sem deixar rastro — nenhuma recompensa, XP, desbloqueio ou save
-de conta persiste entre runs. É quando isso passa a existir de verdade:
-recompensas por resultado de missão (Sucesso Perfeito/Sucesso/Parcial já
-graduados, D020 #2, só faltam ter consequência), progressão de
-personagem entre runs, save de conta via SaveManager (Marco 0, ainda não
-usado para nada real). Bom momento também para decidir as pendências
-que o Marco 7 deixou explícitas (D020 #9): salvar/carregar uma Run em
-andamento, "recuar" voltando uma camada no mapa, e se cooldowns/Estados
-devem persistir entre nós de uma mesma run (hoje resetam a cada
-`CombatState` novo, D019 #4/D020 #6).
+Iniciar **Marco 9 — Protótipo 3 Atos**: os Marcos 1-8 fecham um loop
+completo (Combate + Effect Engine + Jutsus + Personagens + Inimigos/IA +
+Vertical Slice + Run/Mapa/Missões + Progressão) mas só para 1 Ato
+(Formação) com 1 Região. O Marco 9 é quando calibrar de verdade os
+números provisórios acumulados desde o Marco 1 (D012/D017/D020/D022) com
+mais conteúdo real para comparar, e expandir para pelo menos mais um Ato
+(Ascensão) — mais Regiões, mais Personagens/Jutsus/Inimigos/Bosses em
+lote (PROMPT MESTRE §78), sempre validando antes de crescer mais
+(CANON_RULES — "não expandir antes de validar"). Pendências explícitas
+que continuam em aberto de marcos anteriores: salvar/carregar uma Run em
+andamento (D020 #9), "recuar" voltando uma camada no mapa (D020 #9),
+persistência de cooldowns/Estados entre nós de uma mesma run (D019 #4/
+D020 #6), passivas alternativas/skins de Maestria com ficha real
+(D022 #1), Pós-game e Economia Permanente com Legado/Tickets/Fragmentos
+(D022 #7).

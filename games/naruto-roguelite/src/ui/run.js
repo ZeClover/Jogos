@@ -13,6 +13,7 @@ import {
   characters, enemies, bosses, jutsus, statuses, reactions, regions,
 } from '../data/index.js';
 import { SeedManager, generateSeedString } from '../engine/seed.js';
+import { SaveManager } from '../engine/save.js';
 import { CombatState } from '../engine/combat/state.js';
 import { createCombatantFromCharacter, computeSquadCost } from '../engine/combat/characterBridge.js';
 import { createCombatantFromEnemy, createCombatantFromBoss } from '../engine/combat/enemyBridge.js';
@@ -25,6 +26,11 @@ import {
 } from '../engine/run/runState.js';
 import { maybeReclassifyNode, reinforceSquad } from '../engine/run/reclassify.js';
 import { resolveMissionResult } from '../engine/run/missionResult.js';
+import {
+  createAccountState, applyRunEnd, archiveLabel,
+  clampThreatLevel, effectiveAiLevel, effectiveReclassifyChance, THREAT_MIN, THREAT_MAX,
+  xpToNextLevel, MASTERY_MAX_LEVEL,
+} from '../engine/progression/index.js';
 
 const REGION_ID = 'REG_PAIS_DAS_ONDAS_001';
 const SQUAD_IDS = [
@@ -46,6 +52,8 @@ const ACTION_LABEL = { ATAQUE_BASICO: 'Ataque Básico', DEFENDER: 'Defender' };
 const AI_STEP_DELAY_MS = 500;
 const DESCANSO_HEAL_PERCENT = 0.5;
 
+const saveManager = new SaveManager();
+
 /** @type {any} */
 const R = {
   screen: 'INTRO',
@@ -60,6 +68,10 @@ const R = {
   squadBeforeBattle: null,
   pendingAction: null,
   lastResultMessage: null,
+  account: saveManager.load('account')?.data ?? createAccountState(),
+  threatLevel: THREAT_MIN,
+  encounteredIds: new Set(),
+  runEndSummary: null,
 };
 
 function escapeHtml(str) {
@@ -100,7 +112,10 @@ function buildEnemyTeam(node) {
     const bridge = bossDef ? createCombatantFromBoss : createCombatantFromEnemy;
     const combatant = bridge(def, { id: combatantId, position: POSITIONS.FRENTE });
     combatant.name = n > 1 ? `${def.name} ${n}` : def.name;
-    meta.set(combatant.id, { aiLevel: def.aiLevel, aiProfile: def.aiProfile ?? null });
+    // Ameaça (Marco 8): sob nível suficiente, inimigos comuns "sobem" 1 nível de IA — nunca stat bruto (ver DECISIONS.md D022).
+    const aiLevel = effectiveAiLevel(def.aiLevel, R.threatLevel);
+    meta.set(combatant.id, { aiLevel, aiProfile: def.aiProfile ?? null });
+    R.encounteredIds.add(enemyId);
     return combatant;
   });
   return { combatants, meta };
@@ -179,18 +194,22 @@ function buildActionPayload(option, targetId) {
 
 // --- Fluxo da Run ------------------------------------------------------
 
-function startRun(seedInput) {
+function startRun(seedInput, threatLevelInput) {
   const seed = seedInput?.trim() || generateSeedString();
   R.seedManager = new SeedManager(seed);
+  R.threatLevel = R.account.threatUnlocked ? clampThreatLevel(Number(threatLevelInput) || THREAT_MIN) : THREAT_MIN;
   R.run = createRun({ region: regions.get(REGION_ID), seedManager: R.seedManager });
   R.squadSnapshot = null;
+  R.encounteredIds = new Set();
+  R.runEndSummary = null;
   R.screen = 'MAP';
   render();
 }
 
 function ensureNodesReclassified() {
+  const chance = effectiveReclassifyChance(0.15, R.threatLevel);
   for (const node of availableNodes(R.run)) {
-    maybeReclassifyNode(node, R.seedManager.map);
+    maybeReclassifyNode(node, R.seedManager.map, chance);
   }
 }
 
@@ -210,6 +229,19 @@ function onSelectNode(nodeId) {
   startBattle(node);
 }
 
+/** Aplica o fim de Run (Marco 8) ao estado de conta e salva, se a Run acabou de terminar. */
+function finalizeRunIfEnded() {
+  if (R.run.status === 'IN_PROGRESS') return;
+  R.runEndSummary = applyRunEnd(R.account, {
+    chronicle: R.run.chronicle,
+    squadIds: SQUAD_IDS,
+    encounteredIds: [...R.encounteredIds],
+    regionId: REGION_ID,
+    won: R.run.status === 'VICTORY',
+  });
+  saveManager.save('account', R.account);
+}
+
 function resolveDescanso(node) {
   const squad = buildSquad(R.squadSnapshot);
   for (const c of squad) {
@@ -219,6 +251,7 @@ function resolveDescanso(node) {
   R.squadSnapshot = snapshotSquad(squad);
   resolveNode(R.run, node, 'DESCANSO');
   R.screen = R.run.status === 'IN_PROGRESS' ? 'MAP' : R.run.status;
+  finalizeRunIfEnded();
   render();
 }
 
@@ -307,6 +340,7 @@ function onBattleEnd() {
   resolveNode(R.run, R.pendingNode, result);
   R.lastResultMessage = null;
   R.screen = R.run.status === 'IN_PROGRESS' ? 'MAP' : R.run.status;
+  finalizeRunIfEnded();
   render();
 }
 
@@ -440,9 +474,63 @@ function formatLogLines() {
   }).filter(Boolean);
 }
 
+function archiveTotalCount() {
+  return enemies.size + bosses.size + regions.size;
+}
+
+function renderMasteryRow(characterId) {
+  const def = characters.get(characterId);
+  const entry = R.account.mastery[characterId];
+  const level = entry?.level ?? 0;
+  const xp = entry?.xp ?? 0;
+  const toNext = xpToNextLevel(entry);
+  return `
+    <div class="vs-bar-row">
+      <span class="vs-bar-label">${escapeHtml(def.name)}</span>
+      <span class="vs-bar-track"><span class="vs-bar-fill resource" style="width:${Math.round((level / MASTERY_MAX_LEVEL) * 100)}%"></span></span>
+      <span class="vs-bar-value">Nv ${level}${toNext !== null ? ` (+${toNext}xp)` : ' (máx)'}</span>
+    </div>
+  `;
+}
+
+function renderArchiveEntries() {
+  const allIds = [...enemies.all(), ...bosses.all(), ...regions.all()].map((def) => def.id);
+  const items = allIds.map((id) => {
+    const registry = bosses.has(id) ? bosses : (regions.has(id) ? regions : enemies);
+    return `<span class="vs-tag ${bosses.has(id) ? 'state-control' : ''}">${escapeHtml(archiveLabel(R.account.archive, id, registry))}</span>`;
+  }).join('');
+  return `<div class="vs-tag-row" style="margin:8px 0 4px">${items}</div>`;
+}
+
+function renderAccountPanel() {
+  const discovered = R.account.archive.discoveredIds.length;
+  const total = archiveTotalCount();
+  return `
+    <h3 style="margin-top:18px">Progressão da Conta</h3>
+    <p class="vs-hint">
+      Vitórias: ${R.account.victories} · Runs jogadas: ${R.account.runsPlayed} ·
+      Arquivo Ninja: ${discovered}/${total} entradas descobertas
+      ${R.account.threatUnlocked ? '· Ameaça liberada 🔓' : '· Ameaça bloqueada (vença uma Run para liberar)'}
+    </p>
+    ${renderArchiveEntries()}
+    <p class="vs-hint">Maestria (ganha jogando — nunca comprada, nunca vira bônus de status):</p>
+    ${SQUAD_IDS.map(renderMasteryRow).join('')}
+  `;
+}
+
 function renderIntroScreen() {
   const region = regions.get(REGION_ID);
   const defs = SQUAD_IDS.map((id) => characters.get(id));
+  const threatOptions = R.account.threatUnlocked
+    ? `
+      <div style="display:flex;gap:8px;align-items:center;margin:6px 0 14px;flex-wrap:wrap">
+        <label for="run-threat-input" class="vs-hint">Nível de Ameaça (${THREAT_MIN}-${THREAT_MAX}, sobe a IA inimiga, não HP/dano):</label>
+        <input id="run-threat-input" type="number" min="${THREAT_MIN}" max="${THREAT_MAX}" value="0"
+               style="width:70px;background:#fff;border:1px solid var(--panel-border);color:var(--ink);border-radius:6px;padding:6px 8px;font-family:inherit" />
+      </div>
+    `
+    : '';
+
   return `
     <div class="vs-scroll">
       <h2>${escapeHtml(region.name)} — Modo Run</h2>
@@ -457,8 +545,10 @@ function renderIntroScreen() {
                style="flex:1;min-width:200px;background:#fff;border:1px solid var(--panel-border);
                       color:var(--ink);border-radius:6px;padding:8px 10px;font-family:inherit" />
       </div>
+      ${threatOptions}
       <button class="vs-btn" data-start-run>Gerar Mapa e Começar</button>
       <p class="vs-hint" style="margin-top:14px">Prefere o roteiro fixo já validado? <a href="play.html">Jogar o Vertical Slice</a>.</p>
+      ${renderAccountPanel()}
     </div>
   `;
 }
@@ -548,11 +638,27 @@ function renderChronicle() {
   return `<h3>Crônica da Run</h3><ul class="vs-chronicle">${rows}</ul>`;
 }
 
+function renderRunEndSummary() {
+  if (!R.runEndSummary) return '';
+  const { leveledUp, discoveredCount, missionXp } = R.runEndSummary;
+  const levelUpTxt = leveledUp.length
+    ? leveledUp.map((l) => `${escapeHtml(characters.get(l.characterId)?.name ?? l.characterId)} -> Nível ${l.level}`).join(', ')
+    : 'nenhum';
+  return `
+    <p class="vs-hint">
+      +${missionXp} XP de Maestria para cada membro do esquadrão · Subiu de nível: ${levelUpTxt} ·
+      ${discoveredCount} nova(s) entrada(s) no Arquivo Ninja
+      ${R.account.threatUnlocked ? '· Ameaça liberada!' : ''}
+    </p>
+  `;
+}
+
 function renderVictoryScreen() {
   return `
     <div class="vs-scroll vs-end-screen">
       <h2>🏆 País das Ondas protegido!</h2>
       <p class="vs-hint">Zabuza Momochi foi derrotado no Dia ${R.run.day}. Seed: <code>${escapeHtml(R.run.seed)}</code></p>
+      ${renderRunEndSummary()}
       ${renderChronicle()}
       <p><button class="vs-btn" data-restart>Jogar outra Run</button></p>
     </div>
@@ -564,6 +670,7 @@ function renderDefeatScreen() {
     <div class="vs-scroll vs-end-screen">
       <h2>💀 A run termina aqui</h2>
       <p class="vs-hint">O esquadrão não resistiu. Seed: <code>${escapeHtml(R.run.seed)}</code></p>
+      ${renderRunEndSummary()}
       ${renderChronicle()}
       <p><button class="vs-btn danger" data-restart>Tentar outra Run</button></p>
     </div>
@@ -592,7 +699,10 @@ function render() {
 
 function handleClick(event) {
   if (event.target.closest('[data-start-run]')) {
-    startRun(document.getElementById('run-seed-input')?.value);
+    startRun(
+      document.getElementById('run-seed-input')?.value,
+      document.getElementById('run-threat-input')?.value,
+    );
     return;
   }
   if (event.target.closest('[data-restart]')) { restart(); render(); return; }

@@ -3,6 +3,44 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Marco 8 — Progressão
+
+### Adicionado
+
+- `src/engine/progression/mastery.js` — `xpForMissionResult`/
+  `levelFromXp`/`grantMastery`/`xpToNextLevel`: Maestria por personagem
+  (níveis 0-5), XP da graduação de missão do Marco 7; NÃO concede
+  nenhum bônus de estatística (só conhecimento/progresso exibido).
+- `src/engine/progression/archive.js` — `createArchive`/`discover`/
+  `discoverAll`/`isDiscovered`/`archiveLabel`: Arquivo Ninja genérico
+  por Content ID, `???` até descoberto.
+- `src/engine/progression/threat.js` — `clampThreatLevel`/
+  `effectiveAiLevel`/`effectiveReclassifyChance`: Ameaça (0-20) via
+  upgrade de nível de IA de inimigo comum + chance de reclassificação
+  de missão — nenhuma stat de combatente tocada.
+- `src/engine/progression/accountState.js` — `createAccountState`/
+  `applyRunEnd`: une Maestria/Arquivo/Ameaça/vitórias num estado
+  serializável, salvo via `SaveManager` (slot `"account"`).
+- `src/ui/run.js`: painel "Progressão da Conta" na Introdução (Maestria
+  por Genin, Arquivo Ninja, Vitórias/Runs), seletor de Nível de Ameaça
+  quando liberado, resumo de XP/level-up/descobertas na tela de fim de
+  Run; conta carregada no boot e salva a cada fim de Run.
+- 27 novos testes (`tests/progression/*.test.js`) — total do projeto:
+  313 testes.
+- DECISIONS.md D022 (Maestria sem bônus de status, XP por missão para o
+  esquadrão inteiro, Arquivo genérico, Ameaça via IA/reclassificação,
+  `threatUnlocked` booleano, conta como único save novo, Pós-game/
+  Economia Permanente fora de escopo).
+
+### Validado
+
+- `npm test`: 313/313 passando.
+- `run.html` testado em Chromium headless (Playwright): conta nova
+  mostra Maestria 0/Arquivo 0-6/Ameaça bloqueada; uma Run até a Vitória
+  concede XP/descobre entradas/libera Ameaça; **persistência confirmada
+  via reload real de página** (não só memória) — Vitórias/Maestria/
+  Arquivo voltam intactos e o seletor de Ameaça aparece.
+
 ## Marco 7 — Run / Missões / Mapa
 
 ### Adicionado

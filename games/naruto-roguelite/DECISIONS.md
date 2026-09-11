@@ -675,3 +675,81 @@ uma UI que já funciona. **Revisitar esta decisão** (extrair
 `src/ui/battleView.js` de verdade) assim que aparecer um 3º consumidor
 real da tela de batalha, ou em uma sessão dedicada só a esse refactor com
 tempo para re-validar as duas UIs via Playwright depois.
+
+## D022 — Progressão (Marco 8): Maestria sem bônus de status, Ameaça via IA, Arquivo Ninja genérico
+
+**Contexto:** PROMPT MESTRE §2/§37/§38/§40 e CANON_RULES.md — Economia e
+Progressão são explícitos: a progressão permanente deve dar principalmente
+"novas opções" (personagens, jutsus, regiões, conhecimento), **nunca**
+"enormes bônus permanentes de estatística"; Maestria é "por versão de
+personagem, ganha jogando, nunca comprada"; Ameaça (0-20) libera após a
+1ª vitória e sobe a dificuldade "via IA/composição/mecânica/modificadores
+... não apenas HP/dano"; o Arquivo Ninja "registra progressivamente o que
+o jogador aprendeu", com conteúdo não descoberto como `???`.
+
+**Decisões:**
+
+1. **Maestria não concede nenhum poder mecânico extra neste marco** — só
+   XP/nível acumulados e exibidos (`src/engine/progression/mastery.js`).
+   O doc lista "passivas alternativas/skins/pequenas flexibilidades" como
+   o que a Maestria destrava, mas os 4 Genin do Vertical Slice só têm 1
+   passiva catalogada no total (Cabeça-Dura, D017 #5) e nenhuma
+   alternativa/skin com ficha real — inventar o que cada nível
+   "libera" mecanicamente fabricaria conteúdo sem base (CANON_RULES
+   #30/#79), e "poder mecânico" seria exatamente o tipo de bônus de
+   estatística que o doc pede para NÃO existir. Maestria aqui já cumpre
+   a parte de "conhecimento" (ver item 3) honestamente; "passivas
+   alternativas" fica pendente para quando existirem fichas reais de
+   passiva alternativa por personagem.
+2. **XP de Maestria vem do resultado graduado de missão** (D020 #2) —
+   `xpForMissionResult` (30/20/10/5/0 por Perfeito/Sucesso/Parcial/Falha/
+   Desastre, números provisórios no mesmo espírito de D012/D017/D020) —
+   e é concedido a TODO o esquadrão que participou da Run inteira (não só
+   quem "bateu o golpe final"), somando o XP de cada nó da Crônica de
+   uma vez ao fim da Run (`applyRunEnd`). Simplificação deliberada: não
+   há registro de XP por ação individual dentro do combate, só por
+   missão concluída — granularidade menor seria over-engineering sem uso
+   real ainda (nada lê XP "por combatente que participou de X turnos").
+3. **Arquivo Ninja é genérico por Content ID** (`src/engine/progression/
+   archive.js`) — não conhece "inimigo" vs "boss" vs "região", só um
+   array de IDs descobertos; `archiveLabel(archive, id, registry)`
+   decide o nome real ou `???` lendo de QUALQUER Registry (enemies/
+   bosses/regions hoje; characters/jutsus/etc. quando fizer sentido). Os
+   4 Genin do esquadrão NÃO passam pelo Arquivo (o jogador já os conhece
+   desde o início — não há "descoberta" de quem você mesmo controla);
+   só inimigos/bosses/região entram, descobertos ao serem enfrentados em
+   combate (`buildEnemyTeam` alimenta `R.encounteredIds`, aplicado à
+   conta no fim da Run). Descoberta é por CONTA (entre runs), não por
+   Run individual — uma Run não teve "névoa de guerra" no mapa (os nós
+   sempre mostram o nome real do inimigo antes da luta, D020 já
+   assumia isso); o Arquivo é só o registro histórico agregado.
+4. **Ameaça reaproveita só as duas alavancas já implementadas**
+   (`src/engine/progression/threat.js`): nível de IA (`ai.js`, Marco 5 —
+   inimigo comum "sobe" 1 nível de IA a partir de Ameaça 8) e chance de
+   reclassificação de missão (`reclassify.js`, Marco 7 — +1 ponto
+   percentual por nível de Ameaça). Nenhuma stat de combatente é tocada
+   — cumpre "não apenas HP/dano" com precisão porque literalmente não
+   mexe em HP/dano nenhum. Bosses não sobem de nível de IA (já usam o
+   próprio perfil bespoke, `aiLevel: 'BOSS'`, que não está no mapa de
+   upgrade). Limiares (8 de Ameaça para o upgrade de IA, +1pp/nível de
+   reclassificação, teto 90%) são números provisórios, mesmo espírito
+   das decisões anteriores.
+5. **`threatUnlocked` é um booleiro simples, não um contador incremental**
+   — a primeira vitória libera a FAIXA INTEIRA 0-20 para escolha (o doc
+   diz "liberar níveis de Ameaça" após a 1ª vitória, não "libera 1 nível
+   por vitória"); o jogador escolhe o nível na tela de Introdução do
+   Modo Run quando liberado.
+6. **`accountState` é o único estado novo salvo de verdade neste
+   marco** (`src/engine/progression/accountState.js`, slot `"account"`
+   do `SaveManager` já existente desde o Marco 0) — carregado uma vez no
+   boot de `run.js`, salvo a cada fim de Run (`finalizeRunIfEnded`). O
+   estado de Run em si (`runState.js`, Marco 7) continua só na memória
+   da aba — salvar/carregar uma Run em andamento segue como pendência
+   explícita (D020 #9), não é o mesmo problema que salvar a conta.
+7. **Pós-game (Boss Rush/Endless/Nukenin/etc., PROMPT MESTRE §39) e
+   Roletas/Economia Permanente com Legado/Tickets/Fragmentos
+   (CANON_RULES — Economia e Progressão) ficam de fora** — dependem de
+   muito mais conteúdo (vários bosses, itens, modos) do que o projeto
+   tem hoje; implementá-los agora com 1 boss e 0 itens seria construir
+   um sistema vazio. `victories`/`runsPlayed` já ficam registrados em
+   `accountState` como base para quando isso for retomado.
