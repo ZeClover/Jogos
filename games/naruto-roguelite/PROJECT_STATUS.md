@@ -13,8 +13,9 @@
 **MARCO 4 — PERSONAGENS: concluído e validado.**
 **MARCO 5 — INIMIGOS E IA: concluído e validado.**
 **MARCO 6 — VERTICAL SLICE: concluído e validado.**
+**MARCO 7 — RUN / MISSÕES / MAPA: concluído e validado.**
 
-Próximo: **MARCO 7 — Run / Missões / Mapa**.
+Próximo: **MARCO 8 — Progressão**.
 
 ## Visão geral do projeto
 
@@ -64,13 +65,14 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
 - **Dev console** (`index.html` + `src/ui/devconsole.js`): página de
   diagnóstico que carrega a engine via ES Modules no browser e exercita
   ao vivo RNG/Seed, registries, Asset Manifest, validadores e save/load.
-- **Testes automatizados**: 250 casos (`node --test`, zero dependências)
+- **Testes automatizados**: 287 casos (`node --test`, zero dependências)
   cobrindo Marco 0 (ids, rng, seed, registry, validators, save, asset
   manifest, data registries), Marco 1 (atributos, dano/defesa/acerto,
   posições/alcance, ordem de turno, ações, CombatState ponta a ponta),
   Marco 2 (Effect Engine), Marco 3 (Jutsus), Marco 4 (Personagens),
-  Marco 5 (Inimigos e IA) e Marco 6 (campanha/roteiro — ver abaixo; a UI
-  jogável em si não tem testes Node, é validada via Playwright).
+  Marco 5 (Inimigos e IA), Marco 6 (campanha/roteiro) e Marco 7 (mapa/
+  missão/reclassificação/run — ver abaixo; as UIs jogáveis em si não têm
+  testes Node, são validadas via Playwright).
 
 ### Concluído (Marco 1 — Combate Mínimo)
 
@@ -277,9 +279,55 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   esquadrão, posições iniciais uniformes, IA/fallback consistentes com o
   Marco 5, renderização por string HTML com listener delegado).
 
+### Concluído (Marco 7 — Run / Missões / Mapa)
+
+- **Gerador de Mapa** (`src/engine/run/mapGenerator.js`): grafo
+  ramificado determinístico (via `seedManager.map`) — 2 camadas de nó
+  comum (MISSAO/ELITE/DESCANSO, sorteados pelos pesos da Região) + 1
+  camada final de nó BOSS; todo nó tem garantia de ao menos 1 aresta de
+  entrada (sem nó inalcançável), ver DECISIONS.md D020 #4.
+- **Resultado graduado de missão** (`src/engine/run/missionResult.js`):
+  Sucesso Perfeito/Sucesso/Sucesso Parcial/Falha/Desastre a partir do
+  HP%/baixas do esquadrão após o combate (D020 #2) — Falha não encerra a
+  run, só Desastre.
+- **Reclassificação de rank** (`src/engine/run/reclassify.js`):
+  `maybeReclassifyNode` (15% de chance, memoizada por nó) + as 3
+  escolhas do doc mapeadas para mecânica real — continuar/recuar (outra
+  rota disponível)/buscar reforço (`reinforceSquad`, +25% HP, custa 1
+  dia via `spendReinforceDay`) — ver D020 #3.
+- **Estado de Run** (`src/engine/run/runState.js`): `createRun`/
+  `availableNodes`/`resolveNode` — calendário (1 dia por nó resolvido),
+  Crônica (`chronicle`, um registro por nó concluído), status IN_PROGRESS/
+  VICTORY/DEFEAT; serializável em JSON puro, pronto para o SaveManager
+  (save de run em si ainda não fiado, D020 #9).
+- **Catálogo de Regiões** (`src/data/catalog/regions.js`): País das
+  Ondas — pool de Inimigo por tier + boss fixo + pesos de tipo de nó como
+  identidade mecânica (D020 #5); identidade de loot adiada (Itens ainda
+  não existe).
+- **Catálogo de Templates de Missão** (`src/data/catalog/missions.js`):
+  4 templates (Batalha, Defesa, Caça, Duelo) — só os tipos de objetivo
+  com mecânica de combate real; os outros 16 do vocabulário completo
+  (`MISSION_OBJECTIVE_TYPES`, enums.js) ficam sem Template até mecânica
+  não-combate existir (D020 #1).
+- **Modo Run jogável** (`run.html` + `src/ui/run.js`): tela de Introdução
+  (seed opcional) -> Mapa (nós clicáveis, Crônica visível) -> [tela de
+  Reclassificação quando aplicável] -> Batalha (mesmo HUD/ações do
+  Marco 6) ou Descanso instantâneo -> Vitória (boss derrotado) ou Derrota
+  (Desastre). Link cruzado com `play.html` (Vertical Slice continua
+  disponível como roteiro fixo já validado).
+- 26 novos testes (`tests/run/mapGenerator.test.js`,
+  `tests/run/missionResult.test.js`, `tests/run/reclassify.test.js`,
+  `tests/run/runState.test.js`, `tests/data/regions_missions_catalog.test.js`)
+  — total do projeto: 287 testes.
+- DECISIONS.md D020 (escopo de nó/objetivo, resultado graduado,
+  reclassificação, tamanho do mapa, identidade de Região, calendário,
+  serialização, pendências explícitas) e D021 (UI do Modo Run duplica
+  lógica de batalha de `game.js` deliberadamente, sem extrair módulo
+  compartilhado ainda).
+
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **250/250
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **287/287
   passando**.
 - Dev console verificado no Chromium headless (Playwright), Marcos 0-5:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
@@ -303,15 +351,22 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   realmente carrega de um combate para o outro (snapshot); confirmado
   que a IA dos inimigos age sozinha e o turno sempre avança mesmo
   quando a ação preferida falha.
+- **Modo Run (`run.html`) verificado no Chromium headless (Playwright)**:
+  tela de Introdução -> Mapa com seed customizada; jogado de ponta a
+  ponta (múltiplas seeds) até a tela de Vitória, incluindo passar por um
+  nó DESCANSO (cura confirmada) sem erros de console; um seed com nó
+  reclassificado (`⚠️`) testado explicitamente — a tela de escolha
+  Continuar/Recuar/Buscar Reforço renderiza corretamente e "Recuar"
+  devolve ao Mapa com o nó ainda marcado como reclassificado (rank não
+  re-sorteado); Crônica final confere com os nós realmente visitados.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
-Nenhum item em andamento — Marcos 0-6 fechados.
+Nenhum item em andamento — Marcos 0-7 fechados.
 
 ## Pendente (próximos marcos, não começados)
 
-- Marco 7 — Run / Missões / Mapa
 - Marco 8 — Progressão
 - Marco 9 — Protótipo 3 Atos
 - Marco 10 — Expansão
@@ -346,8 +401,8 @@ sem pedido explícito do usuário).
 | Inimigos comuns | 4 | — |
 | Bosses/elites | 1 | 200–300+ |
 | Eventos | 0 | 300+ |
-| Templates de missão | 0 | 200+ |
-| Regiões | 0 | 50+ |
+| Templates de missão | 4 | 200+ |
+| Regiões | 1 | 50+ |
 | Conquistas | 0 | 500+ |
 | Tags | 21 | — (vocabulário fechado) |
 | Estados | 29 | — (vocabulário fechado) |
@@ -356,21 +411,22 @@ sem pedido explícito do usuário).
 (Itens/etc. esperados em 0 até um marco futuro, em lotes, conforme
 CANON_RULES.md "qualidade > quantidade". Personagens/Jutsus/Passivas
 começaram com o lote do Vertical Slice (4/13/1); Inimigos/Bosses com o
-primeiro lote do País das Ondas (4/1, Marco 5) — próximos lotes maiores
+primeiro lote do País das Ondas (4/1, Marco 5); Templates de Missão/
+Regiões com o primeiro lote do Marco 7 (4/1) — próximos lotes maiores
 vêm em Konoha Genins/Suna/etc. (PROMPT MESTRE §78). Tags/Estados/Reações
 já são o vocabulário completo do doc 01 — não crescem "em lote" do mesmo
 jeito.)
 
 ## Próximo passo
 
-Iniciar **Marco 7 — Run / Missões / Mapa**: o roteiro fixo do Vertical
-Slice (`src/data/vertical_slice.js`, D019 #2) vira o primeiro caso de uso
-real de um sistema de Missões/Mapa de verdade — nós de mapa, ramificação,
-templates de missão (doc 04), resultados parciais/desastre (`MISSION_RESULTS`
-já existe em `enums.js` desde o Marco 0), e uma run real com save entre
-sessões (a "campanha" hoje só vive na memória da aba, `campaign.js`
-D019 #4). Também é quando decidir se cooldowns/Estados devem ou não
-persistir entre combates de uma mesma run (D019 #4 deixou isso de fora
-deliberadamente) e se vale introduzir uma tela real de seleção de
-esquadrão (D019 #5) agora que há um motivo concreto (mais regiões, mais
-personagens disponíveis no roster).
+Iniciar **Marco 8 — Progressão**: o Modo Run (`run.html`, Marco 7) hoje
+termina sem deixar rastro — nenhuma recompensa, XP, desbloqueio ou save
+de conta persiste entre runs. É quando isso passa a existir de verdade:
+recompensas por resultado de missão (Sucesso Perfeito/Sucesso/Parcial já
+graduados, D020 #2, só faltam ter consequência), progressão de
+personagem entre runs, save de conta via SaveManager (Marco 0, ainda não
+usado para nada real). Bom momento também para decidir as pendências
+que o Marco 7 deixou explícitas (D020 #9): salvar/carregar uma Run em
+andamento, "recuar" voltando uma camada no mapa, e se cooldowns/Estados
+devem persistir entre nós de uma mesma run (hoje resetam a cada
+`CombatState` novo, D019 #4/D020 #6).

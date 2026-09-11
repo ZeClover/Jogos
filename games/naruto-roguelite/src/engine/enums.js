@@ -112,3 +112,34 @@ export const ENEMY_TIERS = Object.freeze([
   'COMMON', 'VETERAN', 'SPECIALIST', 'ELITE', 'MINI_BOSS', 'BOSS',
   'ACT_BOSS', 'FINAL_BOSS', 'SUPERBOSS', 'SPECIAL_ENCOUNTER',
 ]);
+
+// Tipos de nó de mapa (Marco 7, CANON_RULES.md — Run/Campanha: "múltiplos
+// tipos de nó"). Vocabulário completo do doc citado como meta; só MISSAO/
+// ELITE/BOSS/DESCANSO têm mecânica real implementada por ora — os demais
+// dependem de sistemas que ainda não existem (Itens/Economia para
+// LOJA/HOSPITAL, Eventos para EVENTO/SEGREDO, Progressão para
+// TREINO/RECRUTAMENTO) e ficam de fora do vocabulário até terem base real,
+// em vez de virar um tipo de nó "capenga" sem efeito (ver DECISIONS.md D020).
+export const NODE_TYPES = Object.freeze([
+  'MISSAO', 'ELITE', 'BOSS', 'DESCANSO',
+]);
+
+// Tipos de objetivo de missão (docs/design/04_RUN_MAPA_MISSOES_REGIOES.md —
+// "nunca apenas mate todos"). Vocabulário completo e fechado do doc; só um
+// subconjunto tem Template de Missão real cadastrado até um marco que
+// implemente mecânica não-combate (infiltração/furto/etc) de verdade — ver
+// DECISIONS.md D020, mesmo padrão do D015 #1 (catálogo completo, mecânica
+// seletiva).
+export const MISSION_OBJECTIVE_TYPES = Object.freeze([
+  'ESCOLTA', 'CAPTURA', 'ASSASSINATO', 'RESGATE', 'INFILTRACAO', 'ESPIONAGEM',
+  'RECONHECIMENTO', 'DEFESA', 'SOBREVIVENCIA', 'SABOTAGEM', 'RECUPERACAO',
+  'INVESTIGACAO', 'CACA', 'FUGA', 'DUELO', 'PROTECAO', 'BATALHA', 'INVASAO',
+  'INTERCEPTACAO', 'RASTREAMENTO',
+]);
+
+// Status de uma Run em andamento (Marco 7).
+export const RUN_STATUSES = Object.freeze({
+  IN_PROGRESS: 'IN_PROGRESS',
+  VICTORY: 'VICTORY',
+  DEFEAT: 'DEFEAT',
+});

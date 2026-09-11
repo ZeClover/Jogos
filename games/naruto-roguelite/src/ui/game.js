@@ -406,7 +406,11 @@ function renderSquadScreen() {
         Oculto da Névoa — Zabuza Momochi. Custo de Esquadrão: ${computeSquadCost(defs)}/12.
       </p>
       <div class="vs-roster">${cards}</div>
-      <button class="vs-btn" data-start>Iniciar Missão</button>
+      <button class="vs-btn" data-start>Iniciar Missão (roteiro fixo)</button>
+      <p class="vs-hint" style="margin-top:14px">
+        Prefere um mapa gerado por seed, com Descanso/Elite/Reclassificação de
+        rank de verdade (Marco 7)? <a href="run.html">Jogar o Modo Run</a>.
+      </p>
     </div>
   `;
 }

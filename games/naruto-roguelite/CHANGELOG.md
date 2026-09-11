@@ -3,6 +3,48 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Marco 7 — Run / Missões / Mapa
+
+### Adicionado
+
+- `src/engine/run/mapGenerator.js` — `generateRegionMap`/`findNode`:
+  grafo ramificado determinístico (2 camadas de nó comum + 1 de boss),
+  sem nós inalcançáveis.
+- `src/engine/run/missionResult.js` — `resolveMissionResult`: resultado
+  graduado (Sucesso Perfeito/Sucesso/Sucesso Parcial/Falha/Desastre) a
+  partir do HP%/baixas do esquadrão após o combate.
+- `src/engine/run/reclassify.js` — `maybeReclassifyNode` (15% de chance,
+  memoizada por nó) + `reinforceSquad` (cura 25% ao custo de 1 dia).
+- `src/engine/run/runState.js` — `createRun`/`availableNodes`/
+  `resolveNode`/`spendReinforceDay`: calendário, Crônica, status
+  IN_PROGRESS/VICTORY/DEFEAT; serializável em JSON puro.
+- `src/data/catalog/regions.js` — Região País das Ondas (pool de Inimigo
+  por tier + boss + pesos de tipo de nó).
+- `src/data/catalog/missions.js` — 4 Templates de Missão (Batalha,
+  Defesa, Caça, Duelo); vocabulário completo de 20 tipos de objetivo em
+  `MISSION_OBJECTIVE_TYPES` (enums.js), só 4 com mecânica real.
+- `enums.js`: `NODE_TYPES`, `MISSION_OBJECTIVE_TYPES`, `RUN_STATUSES`.
+- `run.html` + `src/ui/run.js` — Modo Run jogável: Introdução (seed
+  customizável) -> Mapa (nós clicáveis, Crônica) -> [Reclassificação
+  quando aplicável] -> Batalha/Descanso -> Vitória/Derrota. Link cruzado
+  com `play.html` (Vertical Slice continua disponível).
+- 26 novos testes (`tests/run/*.test.js`,
+  `tests/data/regions_missions_catalog.test.js`) — total do projeto:
+  287 testes.
+- DECISIONS.md D020 (escopo de nó/objetivo, resultado graduado,
+  reclassificação, tamanho do mapa, identidade de Região, calendário,
+  pendências explícitas) e D021 (UI do Modo Run duplica lógica de
+  batalha de `game.js` deliberadamente, sem módulo compartilhado ainda).
+
+### Validado
+
+- `npm test`: 287/287 passando.
+- `run.html` testado em Chromium headless (Playwright) em múltiplas
+  seeds: ponta a ponta até Vitória, passando por nó Descanso (cura
+  confirmada); um seed com reclassificação testado explicitamente —
+  tela de escolha renderiza e "Recuar" preserva o estado reclassificado;
+  sem erros de console em nenhum caso.
+
 ## Marco 6 — Vertical Slice
 
 ### Adicionado

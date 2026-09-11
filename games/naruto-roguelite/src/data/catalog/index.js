@@ -15,3 +15,5 @@ export * from './passives.js';
 export * from './characters.js';
 export * from './enemies.js';
 export * from './bosses.js';
+export * from './missions.js';
+export * from './regions.js';

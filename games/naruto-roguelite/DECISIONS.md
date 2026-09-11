@@ -573,3 +573,105 @@ dos dois é o sistema de Missões/Mapa completo (Marco 7).
    `data-option-index` (índice na lista de opções recalculada a cada
    render, determinística para o mesmo estado) e `data-target-id`
    (clique no card do combatente-alvo) em vez de formulários.
+
+## D020 — Run/Mapa/Missões (Marco 7): escopo dos tipos de nó/objetivo, resultado graduado, reclassificação
+
+**Contexto:** `docs/design/04_RUN_MAPA_MISSOES_REGIOES.md`/CANON_RULES.md
+pedem um sistema bem mais amplo do que o Combate sozinho cobre: mapa
+ramificado com "múltiplos tipos de nó (missão, elite, boss, evento, loja,
+hospital, treino, recrutamento, dungeon, descanso, segredo...)", 20 tipos
+de objetivo de missão, resultado graduado, reclassificação de rank com 3
+escolhas, região com "identidade mecânica e de loot". Boa parte disso
+depende de sistemas que ainda não existem (Itens/Economia — doc 03 — para
+loja/hospital; Eventos — doc 06 — para evento/segredo; Progressão para
+treino/recrutamento).
+
+**Decisões:**
+
+1. **Vocabulário completo, mecânica seletiva** — mesmo padrão do D015 #1.
+   `NODE_TYPES` (enums.js) só lista `MISSAO`/`ELITE`/`BOSS`/`DESCANSO`
+   (os 4 com mecânica real hoje); `MISSION_OBJECTIVE_TYPES` lista os 20
+   tipos do doc como vocabulário fechado, mas só 4 (`BATALHA`, `DEFESA`,
+   `CACA`, `DUELO`) ganham Template de Missão real
+   (`src/data/catalog/missions.js`) — os demais (Escolta, Infiltração,
+   Espionagem, Resgate, Sabotagem...) exigem mecânica não-combate
+   (proteger um NPC, furtividade, investigação) que não existe; cadastrar
+   um Template "vazio" para eles fabricaria conteúdo sem base
+   (CANON_RULES #30/#79).
+2. **Resultado graduado de missão** (`src/engine/run/missionResult.js`):
+   fórmula provisória baseada em HP% do esquadrão + nº de baixas após o
+   combate (Sucesso Perfeito: 0 baixas e ≥85% HP total; Sucesso: 0 baixas
+   e ≥50%; Sucesso Parcial: 0 baixas com HP baixo OU exatamente 1 baixa;
+   Falha: 2+ baixas; Desastre: o esquadrão perdeu o combate) — mesmo
+   espírito da D012 (número sem base textual exata, revisável no
+   Marco 9 sem mudar a arquitetura). Falha não encerra a run (CANON_RULES);
+   só Desastre encerra (`runState.js#resolveNode`).
+3. **Reclassificação mapeada para 3 escolhas mecânicas reais**, sem
+   inventar um sistema de reforços/NPCs: "continuar" = luta a versão
+   reclassificada tal como está; "recuar" = volta ao mapa e escolhe outro
+   nó dentre os já disponíveis (se só houver 1 rota, o jogador
+   eventualmente precisa decidir — não há "voltar uma camada", o mapa é
+   só progressivo); "buscar reforço" = cura 25% do HP máximo do
+   esquadrão (`reinforceSquad`) ao custo de +1 dia no calendário
+   (`spendReinforceDay`), sem desfazer a reclassificação. Chance de
+   reclassificar é 15% por nó comum (não-Descanso, não-Boss), sorteada
+   uma única vez por nó (memoizada via `node.reclassified`) na primeira
+   vez que ele aparece como disponível — não a cada render.
+4. **Mapa: 2 camadas de nó comum + 1 camada final de Boss**, 2 nós por
+   camada comum, cada nó conectando a 1-2 nós da camada seguinte (a
+   "ramificação 2-4 rotas" do CANON_RULES nesta escala pequena vira
+   "às vezes 1 rota, às vezes 2" — layouts maiores/mais camadas ficam
+   para quando houver mais de 1 Região e mais conteúdo de inimigo por
+   tier para sustentar mapas maiores sem repetição). Todo nó da camada
+   seguinte tem garantia de ao menos 1 aresta de entrada (testado) —
+   nenhum nó fica inalcançável.
+5. **Região = pool de Inimigo por tier + boss fixo + pesos de tipo de
+   nó**, isso já é "identidade mecânica" real (doc: "não só visual") —
+   uma 2ª Região com pool/pesos diferentes já jogaria de forma
+   perceptivelmente diferente. Identidade de LOOT fica adiada até Itens/
+   Economia (doc 03) existir — `lootIdentityNote` documenta isso na
+   própria ficha em vez de inventar drops.
+6. **Calendário = 1 dia por nó resolvido** (missão, descanso, ou pedido
+   de reforço) — implementação mais simples da regra "calendário avança
+   com missões, descanso e viagem" sem modelar viagem como um passo
+   separado (não há mapa geográfico real com distância, só o grafo de
+   nós).
+7. **`runState` é serializável em JSON puro** (sem Map/Set/classe) —
+   preparado para o SaveManager (Marco 0) salvar/carregar sem adaptação,
+   mas o Marco 7 NÃO fiou essa integração (sem autosave/tela de
+   carregar); ver item 9 abaixo para o que fica pendente.
+8. **Eventos globais que avançam mesmo ignorados, reputação por facção,
+   crônica com epílogo dinâmico** (CANON_RULES — Narrativa) ficam de
+   fora — dependem do sistema de Eventos/Facções (doc 06), que não
+   existe. A Crônica implementada aqui é só o registro
+   dia-a-dia/nó-a-nó dos resultados de missão (sem narrativa gerada),
+   base honesta para quando Eventos existir.
+9. **Pendências explícitas para um marco futuro** (não fabricadas
+   agora): salvar/carregar uma Run em andamento via SaveManager (a
+   estrutura já é serializável, só falta a UI); nós LOJA/HOSPITAL/
+   TREINO/RECRUTAMENTO/DUNGEON/SEGREDO/EVENTO; mais de 1 Região;
+   Sucesso/Falha de missão afetando reputação de facção; "recuar"
+   permitir voltar uma camada (hoje só permite escolher outra rota já
+   disponível na mesma camada).
+
+## D021 — UI do Modo Run (`run.html`) duplica lógica de batalha de `game.js`, não extrai módulo compartilhado ainda
+
+**Contexto:** `src/ui/run.js` (Modo Run, Marco 7) precisa da mesma tela de
+batalha que `src/ui/game.js` (Vertical Slice, Marco 6) já tem — HUD de
+combatentes, painel de ações, log formatado, tudo em cima do MESMO motor
+de combate (nenhuma regra de jogo é duplicada, só a camada de
+apresentação).
+
+**Decisão:** `run.js` traz sua própria cópia (levemente adaptada) das
+funções de renderização de batalha em vez de extrair um módulo
+`battleView.js` compartilhado agora.
+
+**Motivo:** extrair esse módulo exigiria refatorar `game.js` (já validado
+via Playwright no Marco 6) para parar de ler o estado `G` module-level
+direto e passar tudo por parâmetro — um risco real de regressão sob a
+pressão de entregar o Marco 7 inteiro (engine + dados + UI) na mesma
+sessão. Prefiro pagar a duplicação agora, documentada, a arriscar quebrar
+uma UI que já funciona. **Revisitar esta decisão** (extrair
+`src/ui/battleView.js` de verdade) assim que aparecer um 3º consumidor
+real da tela de batalha, ou em uma sessão dedicada só a esse refactor com
+tempo para re-validar as duas UIs via Playwright depois.
