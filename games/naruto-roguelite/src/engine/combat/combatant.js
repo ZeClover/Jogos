@@ -1,7 +1,8 @@
 // Combatente: instância em combate de um personagem/inimigo. Não confundir
 // com a ficha de conteúdo (CHAR_.../ENEMY_...) — essa entra no Marco 4/5;
-// aqui só existe o suficiente para o Combate Mínimo rodar (HP, Chakra,
-// posição, orçamento de ações, guarda).
+// aqui só existe o suficiente para o Combate Mínimo + Effect Engine
+// rodarem (HP, Chakra, posição, orçamento de ações, guarda, Estados
+// ativos).
 
 import { POSITIONS, ACTION_BUDGET_PER_ROUND } from '../enums.js';
 
@@ -30,6 +31,8 @@ export function createCombatant({
     chakra: attributes.chakraMax,
     guard: 0,
     actionBudget: { ...ACTION_BUDGET_PER_ROUND },
+    states: [],
+    controlApplications: new Map(),
   };
 }
 

@@ -1,11 +1,12 @@
-// CombatState: laço de rodadas do Combate Mínimo. Motor "pull-based" — quem
-// está no controle (UI, IA, teste) chama applyAction() para o ator da vez;
-// o estado não avança sozinho. Isso serve tanto para um jogador humano
-// quanto para a IA (Marco 5) sem duplicar lógica de loop.
+// CombatState: laço de rodadas do Combate Mínimo + Effect Engine. Motor
+// "pull-based" — quem está no controle (UI, IA, teste) chama applyAction()
+// para o ator da vez; o estado não avança sozinho. Isso serve tanto para
+// um jogador humano quanto para a IA (Marco 5) sem duplicar lógica de loop.
 
 import { isAlive } from './combatant.js';
 import { computeTurnOrder } from './turnOrder.js';
 import { resolveAction } from './actions.js';
+import { tickStates } from './effects.js';
 import { ACTION_BUDGET_PER_ROUND } from '../enums.js';
 
 export class CombatState {
@@ -14,8 +15,13 @@ export class CombatState {
    * @param {object[]} params.teamA - combatentes (ver createCombatant()).
    * @param {object[]} params.teamB
    * @param {import('../seed.js').SeedManager} params.seedManager
+   * @param {Map} [params.statusCatalog] - id -> definição de Estado (src/data/catalog/statuses.js).
+   *   Sem isso, Estados ainda podem ser tickados (duração) mas sem dano contínuo.
+   * @param {object[]} [params.reactionCatalog] - definições de Reação (src/data/catalog/reactions.js).
    */
-  constructor({ teamA, teamB, seedManager }) {
+  constructor({
+    teamA, teamB, seedManager, statusCatalog = new Map(), reactionCatalog = [],
+  }) {
     if (!teamA?.length || !teamB?.length) {
       throw new Error('CombatState: teamA e teamB precisam ter ao menos 1 combatente');
     }
@@ -23,6 +29,8 @@ export class CombatState {
     this.teamAIds = teamA.map((c) => c.id);
     this.teamBIds = teamB.map((c) => c.id);
     this.rng = seedManager.combat;
+    this.statusCatalog = statusCatalog;
+    this.reactionCatalog = reactionCatalog;
     this.round = 0;
     this.turnOrder = [];
     this.turnIndex = 0;
@@ -107,7 +115,18 @@ export class CombatState {
   }
 
   _startRound() {
-    if (this.round > 0) this._endRound();
+    if (this.round > 0) {
+      this._endRound();
+      // Dano contínuo de Estados (ex: Queimando) pode decidir o combate
+      // no fim da rodada, antes de qualquer novo turno — não inicie uma
+      // rodada nova nesse caso.
+      if (this.isCombatOver()) {
+        this.turnOrder = [];
+        this.turnIndex = 0;
+        this._log({ type: 'COMBAT_END', round: this.round, winner: this.winner() });
+        return;
+      }
+    }
     this.round += 1;
 
     for (const c of this.combatants.values()) {
@@ -131,6 +150,8 @@ export class CombatState {
       if (c.attributes.regenChakra) {
         c.chakra = Math.min(c.attributes.chakraMax, c.chakra + c.attributes.regenChakra);
       }
+      const stateEvents = tickStates(c, this.statusCatalog);
+      for (const event of stateEvents) this._log({ round: this.round, ...event });
     }
     this._log({ type: 'ROUND_END', round: this.round });
   }

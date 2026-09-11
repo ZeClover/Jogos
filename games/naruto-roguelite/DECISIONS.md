@@ -213,3 +213,71 @@ estável desde o Marco 0), só o handler chega depois.
 **Motivo:** uma implementação "pela metade" desses handlers seria pior do
 que não ter nenhuma — daria a impressão de que funcionam. Um stub
 explícito e testado é honesto sobre o que o Marco 1 cobre.
+
+## D015 — Effect Engine (Marco 2): catálogo completo, mecânica seletiva
+
+**Contexto:** `docs/design/01_COMBATE_TAGS_ESTADOS_REACOES.md` lista 29
+Estados, ~20+ Tags e um punhado de Reações concretas ("Molhado+Raiton=
+Eletrificação" etc.), mas não formaliza todos os números (duração exata,
+% de dano contínuo) nem cobre todas as combinações imagináveis.
+
+**Decisões:**
+
+1. **Catálogo (dado) é completo; mecânica (código) é genérica.** Os 29
+   Estados e ~21 Tags do doc foram todos registrados em
+   `src/data/catalog/` — isso não é "conteúdo raso" (regra #79), é o
+   vocabulário fechado que o próprio doc pede para existir (CANON_RULES
+   #12/#14). Registrar um Estado não escreve nenhum código novo: o Effect
+   Engine (`src/engine/combat/effects.js`) já sabe tickar duração, stacks,
+   resistência e DoT para qualquer Estado, a partir só dos campos de dado
+   (`category`, `stacks`, `maxStacks`, `baseDuration`, `removal`,
+   `controlType`, `dot`).
+2. **Duração/`dot.percentPerStack` são números provisórios** (o doc só dá
+   valores exatos para poucos casos, ex: Kagemane no doc 13) — mesmo
+   espírito da D012, revisáveis no Marco 9 sem mudar a arquitetura.
+3. **`removal` é só metadado por enquanto.** `TEMPO` já é aplicado pelo
+   motor (duração chega a 0 -> remove). `CURA` (Selado, Genjutsu) e
+   `ACAO_ALVO` (Oculto) descrevem *como* o Estado deveria ser removido,
+   mas nenhuma ação de limpeza (ex: Kai) existe ainda — isso é conteúdo de
+   Jutsu (Marco 3). Não é um handler pela metade (D014): é um campo de
+   dado descritivo, sem promessa de comportamento.
+4. **Resistência a Estado é sempre via o atributo `resistenciaEstado`**
+   (secundário, já existia desde o Marco 1) — não criei um canal de
+   resistência por categoria. `resistenciaMental` continua sendo só a
+   defesa contra dano de Genjutsu (D012 #3), papel distinto.
+5. **Resistência adaptativa de controle (CANON_RULES #31, 100%/70%/40%/
+   imune) generalizada para qualquer Estado com `controlType: true`**, não
+   só bosses — mais simples e consistente; nada impede um Marco futuro
+   (IA/bosses, Marco 5) de dar a bosses uma curva própria via dado, sem
+   mexer no motor. O contador de aplicações só avança em aplicações
+   *bem-sucedidas* (uma tentativa resistida não "ensina" nada ao alvo) e
+   persiste a luta inteira, mesmo que o Estado em si já tenha expirado.
+6. **Reações não implementadas:** "Óleo+Katon" (Óleo é citado de
+   passagem no doc, sem ser um Estado catalogado — não inventei um) e
+   "Katon+Suiton=Vapor/Névoa" (Névoa é um Campo de batalha, categoria
+   distinta de Estado por combatente que doc 01 lista separadamente —
+   Campos ficam fora de escopo até existir necessidade real). As 5
+   Reações implementadas (Eletrificação, Congelamento Facilitado,
+   Propagação, Lama, Derrubado) cobrem todas as combinações do doc que são
+   só "Estado do alvo + Tag recebida -> novo Estado".
+7. **"Molhado" faz dupla função** como marcador de "acabou de ser atingido
+   por Suiton" tanto para a Reação de Eletrificação (+Raiton) quanto para
+   Lama (+Doton) — evita inventar um segundo Estado só para "úmido"/"chão
+   molhado" quando o doc já usa "Molhado" para ambos os contextos.
+8. **Bônus de acerto/crítico contra Imobilizado é a única checagem
+   "hardcoded"** do motor de combate (`IMOBILIZADO_STATE_ID` em
+   `effects.js`) em vez de um campo de dado genérico tipo
+   `grantsAttackerBonus`. Justificativa: é uma regra citada literalmente
+   no doc ("Imobilizado+ataque de precisão=maior acerto/crítico"), não uma
+   invenção; e checar `state === IMOBILIZADO` é equivalente em espírito a
+   checar `action.type === JUTSU` — é vocabulário da própria engine
+   (Estados são parte do contrato, não conteúdo de personagem), então não
+   viola CANON_RULES #49 ("não escreva `if character === 'Naruto'`").
+   Interações semelhantes sugeridas no doc (Quebrado+Impacto/Perfuração
+   "sinergiza", Sensorial ignora bônus de Oculto) ficaram de fora deste
+   marco por serem descritas de forma mais vaga — matéria para o Marco 3
+   quando houver jutsus reais para calibrar o efeito.
+9. **Effect Engine mora em `src/engine/combat/`**, não em um
+   `src/engine/effects/` separado — por ora só combate consome Estados;
+   mover para um módulo mais genérico é reversível caso Missões/Eventos
+   (Marco 7) precisem aplicar Estados fora de combate.

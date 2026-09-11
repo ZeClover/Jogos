@@ -8,9 +8,10 @@
 
 **MARCO 0 — FUNDAÇÃO: concluído e validado.**
 **MARCO 1 — COMBATE MÍNIMO: concluído e validado.**
+**MARCO 2 — EFFECT ENGINE: concluído e validado.**
 
-Próximo: **MARCO 2 — Effect Engine** (Tags, Estados, Buffs/Debuffs, Reações,
-duração).
+Próximo: **MARCO 3 — Jutsus** (engine data-driven completa: fichas reais de
+jutsu substituindo as ações JUTSU genéricas do Marco 1/2).
 
 ## Visão geral do projeto
 
@@ -60,10 +61,11 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
 - **Dev console** (`index.html` + `src/ui/devconsole.js`): página de
   diagnóstico que carrega a engine via ES Modules no browser e exercita
   ao vivo RNG/Seed, registries, Asset Manifest, validadores e save/load.
-- **Testes automatizados**: 123 casos (`node --test`, zero dependências)
+- **Testes automatizados**: 153 casos (`node --test`, zero dependências)
   cobrindo Marco 0 (ids, rng, seed, registry, validators, save, asset
-  manifest, data registries) e Marco 1 (atributos, dano/defesa/acerto,
-  posições/alcance, ordem de turno, ações, CombatState ponta a ponta).
+  manifest, data registries), Marco 1 (atributos, dano/defesa/acerto,
+  posições/alcance, ordem de turno, ações, CombatState ponta a ponta) e
+  Marco 2 (Effect Engine — ver abaixo).
 
 ### Concluído (Marco 1 — Combate Mínimo)
 
@@ -98,30 +100,62 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   regenera só no fim da rodada (não reseta por batalha), guarda/orçamento
   resetam a cada rodada nova, log estruturado de eventos, detecção de fim
   de combate e vencedor.
-- **Dev console**: novo painel "Combate" roda um 1v1 de demonstração
-  ponta a ponta (Ataque Básico + Jutsu genérico) com seed ajustável e log
-  legível.
+- **Dev console**: painel "Combate" roda um 1v1 de demonstração ponta a
+  ponta (Ataque Básico + Jutsu genérico) com seed ajustável e log legível.
+
+### Concluído (Marco 2 — Effect Engine)
+
+- **Catálogo de Tags** (`src/data/catalog/tags.js`): 21 tags canônicas do
+  doc 01/15 (natureza: Katon/Raiton/Suiton/Fūton/Doton/Hyōton; estilo:
+  Ninjutsu/Taijutsu/Genjutsu/Hiden/Dōjutsu; entrega: Projétil/Área/
+  Barreira/Invocação/Clone; efeito: Impacto/Perfuração/Quebra/Execução/
+  Sensorial), registradas na Registry `tags`.
+- **Catálogo de Estados** (`src/data/catalog/statuses.js`): os 29 Estados
+  do doc 01, cada um como dado puro (categoria, stacks/maxStacks, duração
+  base, remoção, `controlType`, `dot` opcional) — nenhum Estado exige
+  código específico no motor, ver DECISIONS.md D015.
+- **Catálogo de Reações** (`src/data/catalog/reactions.js`): 5 Reações
+  concretas do doc (Eletrificação, Congelamento Facilitado, Propagação,
+  Lama, Derrubado por Impacto); "Óleo+Katon" e "Katon+Suiton=Vapor"
+  deliberadamente fora de escopo (D015 #6).
+- **Effect Engine** (`src/engine/combat/effects.js`): `tryApplyState`
+  (resistência via `resistenciaEstado` + resistência adaptativa de
+  controle 100%/70%/40%/imune, stacking/refresh de duração), `tickStates`
+  (dano/dreno contínuo no fim da rodada + expiração), `removeState`,
+  `resolveReactions` (Estado gatilho + Tag recebida -> Estado resultado,
+  limitado a 4 por ação), `attackerBonusFromTargetStates` (bônus de
+  acerto/crítico contra Imobilizado — única checagem "hardcoded" do
+  motor, justificada em D015 #8).
+- **Integração ao combate**: `combatant.js` ganhou `states[]` e
+  `controlApplications`; `JUTSU` aceita `tags`/`appliesStates` e devolve
+  `appliedStates`/`reactions` no resultado; `CombatState` aceita
+  `statusCatalog`/`reactionCatalog` e tica Estados no fim de cada rodada
+  (com correção para não iniciar uma rodada nova se um DoT decidir o
+  combate primeiro).
+- **Dev console**: painel de Combate agora mostra Estados ativos, dano
+  contínuo e Reações disparadas linha a linha; novo painel "Catálogo"
+  com contagem de Tags/Estados/Reações.
 
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **123/123
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **153/153
   passando**.
-- Dev console verificado no Chromium headless (Playwright), Marco 0 e
-  Marco 1: engine carrega sem erros de página, todos os módulos ES
-  retornam HTTP 200 (único 404 é o `favicon.ico` padrão do navegador),
-  botões "Salvar demo"/"Limpar" fazem round-trip de save corretamente,
-  seção de validadores detecta as 4 classes de problema esperadas, painel
-  de Combate roda um 1v1 completo até decidir vencedor e reproduz o mesmo
-  resultado ao reexecutar com a mesma seed.
+- Dev console verificado no Chromium headless (Playwright), Marcos 0-2:
+  engine carrega sem erros de página, todos os módulos ES retornam HTTP
+  200 (único 404 é o `favicon.ico` padrão do navegador), botões "Salvar
+  demo"/"Limpar" fazem round-trip de save corretamente, seção de
+  validadores detecta as 4 classes de problema esperadas, painel de
+  Combate roda um 1v1 completo com Queimando aplicando/resistindo/
+  causando dano contínuo visível no log, painel de Catálogo mostra 21
+  Tags/29 Estados/5 Reações.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
-Nenhum item em andamento — Marcos 0 e 1 fechados.
+Nenhum item em andamento — Marcos 0, 1 e 2 fechados.
 
 ## Pendente (próximos marcos, não começados)
 
-- Marco 2 — Effect Engine (Tags/Estados/Reações)
 - Marco 3 — Jutsus (engine data-driven completa)
 - Marco 4 — Personagens (recursos, passivas, loadouts)
 - Marco 5 — Inimigos e IA
@@ -165,17 +199,24 @@ sem pedido explícito do usuário).
 | Templates de missão | 0 | 200+ |
 | Regiões | 0 | 50+ |
 | Conquistas | 0 | 500+ |
+| Tags | 21 | — (vocabulário fechado) |
+| Estados | 29 | — (vocabulário fechado) |
+| Reações | 5 | — (cresce conforme combinações fizerem sentido) |
 
-(Esperado nos Marcos 0-1 — conteúdo real chega a partir do Marco 3/4, em
-lotes, conforme CANON_RULES.md "qualidade > quantidade".)
+(Personagens/Jutsus/etc. esperados em 0 até o Marco 3/4, em lotes, conforme
+CANON_RULES.md "qualidade > quantidade". Tags/Estados/Reações já são o
+vocabulário completo do doc 01 — não crescem "em lote" do mesmo jeito.)
 
 ## Próximo passo
 
-Iniciar **Marco 2 — Effect Engine**: catálogo de Tags e Estados
-data-driven (duração, stacks, categoria, remoção, resistência), sistema de
-Buffs/Debuffs genérico sobre `CombatState`, e Reações (Molhado+Raiton=
-Eletrificação etc.) resolvidas a partir de combinações de Tag/Estado, com
-o limite de 4 reações automáticas por ação (CANON_RULES.md). É também
-quando o slot de Reação do combate ganha um uso real (ex: Kawarimi), e o
-mapeamento categoria→defesa/Power de jutsu de D012 pode ser revisitado com
-dados reais.
+Iniciar **Marco 3 — Jutsus**: engine data-driven completa de fichas de
+jutsu (ID, Nome, Rank, Categoria, Natureza, Tags, Custo, Power, Accuracy,
+Range, Target, Prep, Cooldown, Estados, Condições, Upgrades, Compatibilidade
+— ver `docs/design/02` e `11_TEMPLATES_FICHAS.md`), substituindo as ações
+`JUTSU` genéricas montadas à mão no Marco 1/2 por jutsus reais carregados
+de `src/data/index.js` (`jutsus` Registry). Primeiro lote: os jutsus do
+Vertical Slice em `docs/design/13_JUTSUS_VERTICAL_SLICE.md` (Kage Bunshin,
+Rasengan, Katon: Gōkakyū, Chidori, Kagemane, Kawarimi, Uzumaki Naruto
+Rendan, Shishi Rendan, Kai, First Aid, Shadow Setup, Analyze). É também a
+hora de revisitar a relação Power↔atributo do atacante (D012) com dados
+reais, e dar ao slot de Reação um uso de verdade (Kawarimi).

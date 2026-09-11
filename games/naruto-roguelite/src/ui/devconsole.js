@@ -1,11 +1,11 @@
-// Dev console dos Marcos 0 (Fundação) e 1 (Combate Mínimo).
+// Dev console dos Marcos 0 (Fundação), 1 (Combate Mínimo) e 2 (Effect Engine).
 //
 // Isto NÃO é a UI final do jogo (essa vem em marcos futuros, guiada pela
 // Style Bible Visual). É uma página de diagnóstico que prova, no navegador,
 // que a engine core funciona: RNG/Seed determinística, registries de
-// conteúdo, validadores, save/load e agora um combate de exemplo rodando
-// de ponta a ponta. Nenhum dado aqui é conteúdo real do jogo — os
-// personagens/jutsus da run chegam a partir do Marco 3/4.
+// conteúdo, validadores, save/load e um combate de exemplo com Tags/
+// Estados/Reações rodando de ponta a ponta. Nenhum dado aqui é conteúdo
+// real do jogo — os personagens/jutsus da run chegam a partir do Marco 3/4.
 
 import { SeedManager, generateSeedString } from '../engine/seed.js';
 import {
@@ -14,6 +14,8 @@ import {
 import { SaveManager, CURRENT_SCHEMA_VERSION, createMemoryStorage } from '../engine/save.js';
 import { Registry } from '../engine/registry.js';
 import { summarizeRegistries, registries } from '../data/index.js';
+import '../data/catalog/index.js';
+import { tags, statuses, reactions } from '../data/index.js';
 import {
   assetManifest, assetBacklogP1, summarizeManifestByStatus, resolveAssetSrc,
 } from '../content/asset_manifest.js';
@@ -199,7 +201,7 @@ data: ${escapeHtml(JSON.stringify(loaded.data))}</pre>
   renderSaveStatus();
 }
 
-// --- Combate (Marco 1) ------------------------------------------------
+// --- Combate + Effect Engine (Marcos 1 e 2) -----------------------------
 
 function makeDemoFighter(id, name, overrides, position) {
   return createCombatant({
@@ -209,7 +211,10 @@ function makeDemoFighter(id, name, overrides, position) {
 
 /**
  * Combate 1v1 de demonstração — não é conteúdo real do jogo (isso é Marco 4),
- * só prova que CombatState/ações/dano funcionam de ponta a ponta.
+ * só prova que CombatState/ações/dano/Estados/Reações funcionam de ponta a
+ * ponta. O "Gōkakyū" do Naruto aqui carrega TAG_KATON_001 e tenta aplicar
+ * Queimando (chance normal, sujeita a resistência) para exercitar o Effect
+ * Engine no meio de um combate real.
  */
 function runDemoCombat(seed) {
   const naruto = makeDemoFighter('demo-naruto', 'Naruto (demo)', {
@@ -217,13 +222,15 @@ function runDemoCombat(seed) {
     velocidade: 22, precisao: 8, chakraMax: 118, regenChakra: 6,
   }, POSITIONS.FRENTE);
   const bandido = makeDemoFighter('demo-bandido', 'Bandido (demo)', {
-    taijutsu: 20, defesaFisica: 12, velocidade: 14, hpMax: 90,
+    taijutsu: 20, defesaFisica: 12, velocidade: 14, hpMax: 90, resistenciaEstado: 10,
   }, POSITIONS.FRENTE);
 
   const state = new CombatState({
     teamA: [naruto],
     teamB: [bandido],
     seedManager: new SeedManager(seed),
+    statusCatalog: statuses,
+    reactionCatalog: reactions.all(),
   });
 
   let guard = 0;
@@ -234,7 +241,14 @@ function runDemoCombat(seed) {
 
     const action = (actorId === naruto.id && actor.chakra >= 18)
       ? {
-        type: ACTION_TYPES.JUTSU, targetId, category: 'NINJUTSU', power: 30, cost: 18, range: 'RANGED',
+        type: ACTION_TYPES.JUTSU,
+        targetId,
+        category: 'NINJUTSU',
+        power: 30,
+        cost: 18,
+        range: 'RANGED',
+        tags: ['TAG_KATON_001'],
+        appliesStates: [{ stateId: 'STATUS_QUEIMANDO_001', chance: 0.6 }],
       }
       : { type: ACTION_TYPES.ATAQUE_BASICO, targetId };
 
@@ -243,6 +257,15 @@ function runDemoCombat(seed) {
   }
 
   return { state, naruto, bandido };
+}
+
+function describeStateResult(entries, label) {
+  if (!entries?.length) return '';
+  const parts = entries.map((e) => {
+    if (e.reactionId) return `${e.reactionId}${e.outcome.applied ? ` -> ${e.outcome.stateId}` : ' (resistida)'}`;
+    return `${e.stateId}${e.applied ? '' : ` (${e.reason ?? 'resistido'})`}`;
+  });
+  return ` [${label}: ${parts.join(', ')}]`;
 }
 
 function renderCombat() {
@@ -254,20 +277,28 @@ function renderCombat() {
 
   const lines = state.log.map((event) => {
     if (event.type === 'ROUND_START') return `— Rodada ${event.round} — ordem: ${event.order.join(', ')}`;
-    if (event.type === 'ROUND_END') return `  (fim da rodada ${event.round}, Chakra regenera)`;
+    if (event.type === 'ROUND_END') return `  (fim da rodada ${event.round}, Chakra regenera, Estados avançam)`;
     if (event.type === 'COMBAT_END') return `>>> Combate encerrado — vencedor: time ${event.winner}`;
+    if (event.type === 'DOT') return `  [dano contínuo] ${event.targetId} perde ${event.amount} de ${event.stat} (${event.stateId})`;
+    if (event.type === 'STATE_EXPIRED') return `  [Estado expira] ${event.stateId} em ${event.targetId}`;
     if (event.type === 'ACTION') {
       const { actorId, action, result } = event;
       if (!result.applied) return `  ${actorId} tenta ${action.type} -> recusado (${result.reason})`;
       if (result.hit === false) return `  ${actorId} usa ${action.type} em ${action.targetId} -> errou`;
       if (result.damage !== undefined) {
+        const statesTxt = describeStateResult(result.appliedStates, 'Estados');
+        const reactionsTxt = describeStateResult(result.reactions, 'Reações');
         return `  ${actorId} usa ${action.type} em ${action.targetId} -> ${result.damage} de dano`
-          + `${result.isCrit ? ' (crítico!)' : ''} (alvo em ${result.targetHp} HP)`;
+          + `${result.isCrit ? ' (crítico!)' : ''} (alvo em ${result.targetHp} HP)${statesTxt}${reactionsTxt}`;
       }
       return `  ${actorId} usa ${action.type}`;
     }
     return `  ${event.type}`;
   });
+
+  const activeStates = (c) => (c.states.length
+    ? c.states.map((s) => `${s.stateId}${s.stacks > 1 ? `×${s.stacks}` : ''}(${s.duration}r)`).join(', ')
+    : '—');
 
   mount('combat-output', `
     <p>
@@ -275,7 +306,28 @@ function renderCombat() {
       <span class="pill ${state.winner() === 'B' ? 'ok' : 'warn'}">${bandido.name} (HP ${bandido.hp}/${bandido.attributes.hpMax})</span>
       <span class="pill ok">vencedor: time ${state.winner()} · ${state.round} rodada(s)</span>
     </p>
+    <p style="font-size:0.8rem;color:var(--muted)">
+      Estados ativos ao final — ${naruto.name}: ${escapeHtml(activeStates(naruto))} ·
+      ${bandido.name}: ${escapeHtml(activeStates(bandido))}
+    </p>
     <pre class="log-line">${escapeHtml(lines.join('\n'))}</pre>
+  `);
+}
+
+// --- Catálogo (Tags/Estados/Reações) ------------------------------------
+
+function renderCatalog() {
+  mount('catalog-output', `
+    <div class="stat-grid">
+      <div class="stat"><div class="n">${tags.size}</div><div class="l">Tags</div></div>
+      <div class="stat"><div class="n">${statuses.size}</div><div class="l">Estados</div></div>
+      <div class="stat"><div class="n">${reactions.size}</div><div class="l">Reações</div></div>
+    </div>
+    <p class="hint" style="margin-top:10px">
+      ${statuses.all().filter((s) => s.controlType).length} Estados de Controle (resistência adaptativa),
+      ${statuses.all().filter((s) => s.dot).length} com dano contínuo.
+      Ver <code>docs/design/01_COMBATE_TAGS_ESTADOS_REACOES.md</code> e <code>DECISIONS.md</code> D015.
+    </p>
   `);
 }
 
@@ -291,6 +343,7 @@ document.getElementById('combat-seed-input').addEventListener('change', renderCo
 
 renderRng();
 renderRegistries();
+renderCatalog();
 renderAssets();
 renderValidators();
 renderSave();

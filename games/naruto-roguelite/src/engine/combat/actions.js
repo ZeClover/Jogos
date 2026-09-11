@@ -7,11 +7,18 @@
 // - `applied: true`  -> a ação foi de fato jogada (mesmo que tenha
 //   errado o alvo); o turno É consumido.
 //
-// Escopo do Marco 1 (Combate Mínimo): ATAQUE_BASICO, JUTSU (genérico, sem
-// Tags/Estados — isso é Effect Engine, Marco 2), DEFENDER, MOVER, TROCAR.
-// ITEM/PREPARAR/INTERAGIR dependem de sistemas que ainda não existem (Itens,
-// prep-time de jutsu real, Missões) — ficam como stub explícito
-// NOT_IMPLEMENTED_YET em vez de um comportamento inventado pela metade.
+// Escopo do Marco 1 (Combate Mínimo): ATAQUE_BASICO, JUTSU, DEFENDER, MOVER,
+// TROCAR. ITEM/PREPARAR/INTERAGIR dependem de sistemas que ainda não
+// existem (Itens, prep-time de jutsu real, Missões) — ficam como stub
+// explícito NOT_IMPLEMENTED_YET em vez de um comportamento inventado pela
+// metade.
+//
+// Marco 2 (Effect Engine) acrescenta: bônus de acerto/crítico contra
+// Imobilizado (D015), e JUTSU passa a aceitar `tags` (natureza/estilo/
+// efeito da técnica) e `appliesStates` (Estados que tenta aplicar ao
+// acertar) — que também disparam Reações quando o alvo já tem o Estado
+// gatilho certo. ATAQUE_BASICO não tem jutsu por trás (D012), então não
+// carrega tags/appliesStates.
 
 import { ACTION_SLOTS, ACTION_TYPES, POSITIONS } from '../enums.js';
 import { isAlive, applyDamage } from './combatant.js';
@@ -20,9 +27,10 @@ import {
   CATEGORY_TO_DEFENSE_FIELD, CATEGORY_TO_PENETRATION_FIELD,
   computeAccuracy, rollHit, rollCrit, computeDamage,
 } from './damage.js';
+import { attackerBonusFromTargetStates, tryApplyState, resolveReactions } from './effects.js';
 
 function resolveAttack({
-  state, actor, target, range, category, power, guard,
+  state, actor, target, range, category, power, guard, baseAccuracy = 0.9,
 }) {
   const enemyTeam = state.sideIds(target.id).map((id) => state.combatants.get(id));
   if (!isValidRangeTarget({
@@ -31,7 +39,9 @@ function resolveAttack({
     return { applied: false, reason: 'OUT_OF_RANGE' };
   }
 
+  const { accuracyBonus, critBonus } = attackerBonusFromTargetStates(target);
   const accuracy = computeAccuracy({
+    baseAccuracy: baseAccuracy + accuracyBonus,
     precisao: actor.attributes.precisao,
     evasao: target.attributes.evasao,
   });
@@ -41,7 +51,7 @@ function resolveAttack({
     };
   }
 
-  const isCrit = rollCrit(actor.attributes.critChance, state.rng);
+  const isCrit = rollCrit(actor.attributes.critChance + critBonus, state.rng);
   const defenseField = CATEGORY_TO_DEFENSE_FIELD[category];
   const penetrationField = CATEGORY_TO_PENETRATION_FIELD[category];
   const damage = computeDamage({
@@ -63,6 +73,40 @@ function resolveAttack({
     targetId: target.id,
     targetHp: target.hp,
   };
+}
+
+/** Aplica os `appliesStates` de um jutsu e resolve Reações, só chamado quando a ação acertou. */
+function applyJutsuEffects({
+  state, actor, target, action,
+}) {
+  const appliedStates = [];
+  for (const spec of action.appliesStates ?? []) {
+    const def = state.statusCatalog?.get(spec.stateId);
+    if (!def) {
+      appliedStates.push({ stateId: spec.stateId, applied: false, reason: 'UNKNOWN_STATE' });
+      continue;
+    }
+    const outcome = tryApplyState(target, def, {
+      chance: spec.chance ?? 1,
+      stacks: spec.stacks ?? 1,
+      duration: spec.duration,
+      guaranteed: spec.guaranteed ?? false,
+      sourceId: actor.id,
+      rng: state.rng,
+    });
+    appliedStates.push(outcome);
+  }
+
+  const reactions = resolveReactions({
+    reactionCatalog: state.reactionCatalog,
+    statusCatalog: state.statusCatalog,
+    target,
+    incomingTags: action.tags ?? [],
+    sourceId: actor.id,
+    rng: state.rng,
+  });
+
+  return { appliedStates, reactions };
 }
 
 function handleAtaqueBasico(state, actor, action) {
@@ -102,8 +146,9 @@ function handleJutsu(state, actor, action) {
 
   actor.chakra -= cost;
 
+  const { accuracyBonus, critBonus } = attackerBonusFromTargetStates(target);
   const accuracy = computeAccuracy({
-    baseAccuracy: action.accuracy ?? 0.9,
+    baseAccuracy: (action.accuracy ?? 0.9) + accuracyBonus,
     precisao: actor.attributes.precisao,
     evasao: target.attributes.evasao,
   });
@@ -113,7 +158,7 @@ function handleJutsu(state, actor, action) {
     };
   }
 
-  const isCrit = rollCrit(actor.attributes.critChance, state.rng);
+  const isCrit = rollCrit(actor.attributes.critChance + critBonus, state.rng);
   const defenseField = CATEGORY_TO_DEFENSE_FIELD[category];
   const penetrationField = CATEGORY_TO_PENETRATION_FIELD[category];
   const damage = computeDamage({
@@ -126,6 +171,10 @@ function handleJutsu(state, actor, action) {
   });
   applyDamage(target, damage);
 
+  const { appliedStates, reactions } = applyJutsuEffects({
+    state, actor, target, action,
+  });
+
   return {
     applied: true,
     success: true,
@@ -135,6 +184,8 @@ function handleJutsu(state, actor, action) {
     chakraSpent: cost,
     targetId: target.id,
     targetHp: target.hp,
+    appliedStates,
+    reactions,
   };
 }
 

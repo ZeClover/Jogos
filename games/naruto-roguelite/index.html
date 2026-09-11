@@ -10,13 +10,13 @@
 
 <header class="dev-header">
   <h1>🍥 Naruto Roguelite</h1>
-  <span class="badge">Marco 1 — Combate Mínimo</span>
+  <span class="badge">Marco 2 — Effect Engine</span>
   <span id="boot-status"><span class="pill warn">carregando engine…</span></span>
   <p>
     Console de diagnóstico da engine, não a UI final do jogo. Prova que RNG/Seed,
-    registries de conteúdo, validadores, save/load e agora o combate por turnos
-    funcionam. Ver <code>PROJECT_STATUS.md</code> para o estado completo do
-    projeto e <code>docs/design/</code> para a documentação oficial.
+    registries de conteúdo, validadores, save/load, combate por turnos e agora
+    Tags/Estados/Reações funcionam. Ver <code>PROJECT_STATUS.md</code> para o
+    estado completo do projeto e <code>docs/design/</code> para a documentação oficial.
   </p>
 </header>
 
@@ -40,12 +40,13 @@
   </section>
 
   <section class="panel" style="grid-column: 1 / -1">
-    <h2>⚔️ Combate (Marco 1)</h2>
+    <h2>⚔️ Combate + Effect Engine (Marcos 1 e 2)</h2>
     <p class="hint">
       Combate 1v1 de demonstração (não é conteúdo real — personagens de verdade
       chegam no Marco 4) rodando via <code>CombatState</code>: turnos ordenados
       por Velocidade, ações Ataque Básico/Jutsu, dano com mitigação por Defesa,
-      Chakra que persiste e regenera entre rodadas.
+      Chakra que persiste e regenera entre rodadas, e agora Estados (o Gōkakyū
+      do Naruto tenta aplicar Queimando) e Reações data-driven.
     </p>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
       <input id="combat-seed-input" type="text" placeholder="seed do combate"
@@ -59,8 +60,14 @@
   </section>
 
   <section class="panel">
+    <h2>🔥 Catálogo (Tags/Estados/Reações)</h2>
+    <p class="hint">Vocabulário data-driven de docs/design/01, usado pelo combate acima.</p>
+    <div id="catalog-output"></div>
+  </section>
+
+  <section class="panel">
     <h2>📚 Registries de conteúdo</h2>
-    <p class="hint">Vazias no Marco 0 — populadas em lotes a partir do Marco 3/4.</p>
+    <p class="hint">Personagens/jutsus/itens etc. vazios no Marco 0 — populados em lotes a partir do Marco 3/4.</p>
     <div id="registries-output"></div>
   </section>
 

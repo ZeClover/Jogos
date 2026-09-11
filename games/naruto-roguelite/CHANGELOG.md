@@ -3,6 +3,45 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Marco 2 — Effect Engine
+
+### Adicionado
+
+- `src/data/catalog/tags.js` — 21 Tags canônicas (natureza, estilo,
+  entrega, efeito), registradas na Registry `tags`.
+- `src/data/catalog/statuses.js` — os 29 Estados do doc 01, como dado
+  puro (categoria, stacks, duração, remoção, `controlType`, `dot`).
+- `src/data/catalog/reactions.js` — 5 Reações concretas (Eletrificação,
+  Congelamento Facilitado, Propagação, Lama, Derrubado por Impacto).
+- `src/data/catalog/index.js` — barrel que popula as três Registries por
+  efeito colateral, em ordem segura.
+- `src/engine/combat/effects.js` — Effect Engine: `tryApplyState`,
+  `removeState`, `hasState`/`getActiveState`, `tickStates` (DoT +
+  duração + expiração), `resolveReactions` (com limite de 4 por ação),
+  `attackerBonusFromTargetStates` (bônus contra Imobilizado).
+- `combatant.js` ganhou `states[]` e `controlApplications` (Map).
+- `actions.js`: `JUTSU` aceita `tags`/`appliesStates`, aplica Estados e
+  resolve Reações ao acertar; bônus de acerto/crítico contra Imobilizado
+  em `ATAQUE_BASICO` e `JUTSU`.
+- `state.js`: `CombatState` aceita `statusCatalog`/`reactionCatalog`,
+  tica Estados no fim de cada rodada; corrigido para não iniciar uma
+  rodada nova se dano contínuo decidir o combate no fim da rodada
+  anterior.
+- Painel "Catálogo" e atualização do painel "Combate" no dev console
+  (Estados ativos, dano contínuo e Reações aparecem no log).
+- 30 novos testes (`tests/combat/effects.test.js`,
+  `tests/combat/effect_integration.test.js`, `tests/data/catalog.test.js`)
+  — total do projeto: 153 testes.
+- DECISIONS.md D015 registrando as decisões de escopo/fórmula do Effect
+  Engine.
+
+### Validado
+
+- `npm test`: 153/153 passando.
+- Dev console (painéis Combate + Catálogo) testado em Chromium headless
+  (Playwright): Queimando aplica/resiste/causa dano contínuo visível no
+  log, sem erros de página.
+
 ## Marco 1 — Combate Mínimo
 
 ### Adicionado
