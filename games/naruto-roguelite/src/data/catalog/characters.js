@@ -14,10 +14,14 @@
 // são recriados a partir desta ficha, nunca hardcoded em outro lugar.
 //
 // `loadout.ativas`/`suprema` só contêm jutsus que já têm ficha real no
-// catálogo (Marco 3). Os demais nomes que o doc 12 lista no loadout de
-// cada personagem mas que não têm ficha ainda ficam em `pendingAtivas`/
+// catálogo. Os demais nomes que o doc 12 lista no loadout de cada
+// personagem mas que não tinham ficha ficavam em `pendingAtivas`/
 // `pendingSuprema` — descritivos, não IDs, para não inventar mecânica sem
-// base (mesmo padrão do `assetBacklogP1` do Marco 0).
+// base (mesmo padrão do `assetBacklogP1` do Marco 0). O lote 03 de
+// Jutsus (D032, `jutsus.js`) fechou essa pendência para os 4 Genin: todo
+// nome que estava em `pendingAtivas`/`pendingSuprema` agora tem ficha
+// real e mora em `ativas`/`suprema` — os campos `pending*` não aparecem
+// mais em nenhum dos 4.
 
 import { characters } from '../index.js';
 
@@ -43,8 +47,7 @@ export const CHARACTER_DEFINITIONS = [
     exclusiveResource: { id: 'clones', name: 'Clones', max: 5 },
     passiveId: 'PASSIVE_CABECA_DURA_001',
     loadout: {
-      ativas: ['JUT_KAGE_BUNSHIN_001', 'JUT_RASENGAN_001'],
-      pendingAtivas: ['Combo Improvisado', 'Bunshin Feint'],
+      ativas: ['JUT_KAGE_BUNSHIN_001', 'JUT_RASENGAN_001', 'JUT_COMBO_IMPROVISADO_001', 'JUT_BUNSHIN_FEINT_001'],
       reacao: 'JUT_KAWARIMI_001',
       suprema: 'JUT_UZUMAKI_NARUTO_RENDAN_001',
       passivas: ['PASSIVE_CABECA_DURA_001'],
@@ -71,8 +74,7 @@ export const CHARACTER_DEFINITIONS = [
       critChance: 0.08,
     },
     loadout: {
-      ativas: ['JUT_KATON_GOKAKYU_001'],
-      pendingAtivas: ['Shuriken Combo', 'Wire Trap'],
+      ativas: ['JUT_KATON_GOKAKYU_001', 'JUT_SHURIKEN_COMBO_001', 'JUT_WIRE_TRAP_001'],
       reacao: 'JUT_KAWARIMI_001',
       suprema: 'JUT_SHISHI_RENDAN_001',
       passivas: [],
@@ -101,11 +103,9 @@ export const CHARACTER_DEFINITIONS = [
     },
     exclusiveResource: { id: 'foco', name: 'Foco', max: 3 },
     loadout: {
-      ativas: ['JUT_KAI_001', 'JUT_FIRST_AID_001'],
-      pendingAtivas: ['Chakra Focus', 'Precise Kunai'],
+      ativas: ['JUT_KAI_001', 'JUT_FIRST_AID_001', 'JUT_CHAKRA_FOCUS_001', 'JUT_PRECISE_KUNAI_001'],
       reacao: 'JUT_KAWARIMI_001',
-      suprema: null,
-      pendingSuprema: 'Inner Sakura',
+      suprema: 'JUT_INNER_SAKURA_001',
       passivas: [],
     },
     evolutionNotes: 'Evolução para Aprendiz Médica vira nova CharacterVersion em lote futuro.',
@@ -131,11 +131,9 @@ export const CHARACTER_DEFINITIONS = [
     },
     exclusiveResource: { id: 'planejamento', name: 'Planejamento', max: 5 },
     loadout: {
-      ativas: ['JUT_KAGEMANE_001', 'JUT_SHADOW_SETUP_001', 'JUT_ANALYZE_SHIKAMARU_001'],
-      pendingAtivas: ['Kunai Trap'],
+      ativas: ['JUT_KAGEMANE_001', 'JUT_SHADOW_SETUP_001', 'JUT_ANALYZE_SHIKAMARU_001', 'JUT_KUNAI_TRAP_001'],
       reacao: 'JUT_KAWARIMI_001',
-      suprema: null,
-      pendingSuprema: 'Kage Mane Complete Restraint',
+      suprema: 'JUT_KAGE_MANE_COMPLETE_RESTRAINT_001',
       passivas: [],
     },
     evolutionNotes: 'Evolução para Chūnin vira nova CharacterVersion em lote futuro.',

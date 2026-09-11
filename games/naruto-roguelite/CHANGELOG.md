@@ -3,6 +3,33 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Fichas reais para os 9 jutsus pendentes dos 4 Genin (fecha D017 #2)
+
+### Adicionado
+
+- `src/data/catalog/jutsus.js` — 9 fichas novas: Combo Improvisado/
+  Bunshin Feint (Naruto), Shuriken Combo/Wire Trap (Sasuke), Chakra
+  Focus/Precise Kunai/Inner Sakura (Sakura — suprema), Kunai Trap/Kage
+  Mane Complete Restraint (Shikamaru — suprema) — nomes citados
+  literalmente no doc 12, sem ficha em doc 13 até este lote; cada uma
+  reaproveita só efeitos/Estados já catalogados.
+- `src/data/catalog/characters.js` — os 4 Genin não têm mais
+  `pendingAtivas`/`pendingSuprema`; Sakura e Shikamaru ganham Suprema
+  de verdade pela primeira vez.
+- 1 novo teste (`characters_catalog.test.js`) + extensão da contagem de
+  Jutsus — total do projeto: 396 testes.
+- DECISIONS.md D032 (mecânica reaproveitada, Bunshin Feint não consome
+  o recurso Clones ainda — `spendResource` sem fiação em Jutsu —,
+  `pendingAtivas`/`pendingSuprema` removidos por completo).
+
+### Validado
+
+- `npm test`: 396/396 passando.
+- `run.html` testado em Chromium headless (Playwright): as 9 fichas
+  aparecem na opção de ação do personagem certo; Bunshin Feint, Inner
+  Sakura e Kage Mane Complete Restraint usados de verdade num combate;
+  sem erros de console.
+
 ## Marco 10 — Expansão (5º lote: as 5 Armas Lendárias restantes)
 
 ### Adicionado

@@ -615,9 +615,32 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   provisórios, sem mudança de código, diversifica atributos usados,
   CORPO/ACESSORIO/Economia de Armas continuam fora de escopo).
 
+### Concluído (Fichas reais para os 9 jutsus pendentes dos 4 Genin — fecha D017 #2)
+
+- **`jutsus.js`** ganha 9 fichas novas: Combo Improvisado/Bunshin Feint
+  (Naruto), Shuriken Combo/Wire Trap (Sasuke), Chakra Focus/Precise
+  Kunai/**Inner Sakura** (Sakura — suprema), Kunai Trap/**Kage Mane
+  Complete Restraint** (Shikamaru — suprema) — nomes citados
+  literalmente no doc 12, sem ficha em doc 13 até este lote; cada uma
+  reaproveita só efeitos/Estados já catalogados (nenhuma mecânica nova
+  no motor).
+- **`characters.js`**: os 4 Genin não têm mais `pendingAtivas`/
+  `pendingSuprema` — todo nome do doc 12 agora tem ficha real em
+  `ativas`/`suprema`. Sakura e Shikamaru ganham Suprema de verdade pela
+  primeira vez.
+- Nenhuma mudança de UI necessária — `getActionOptions` já iterava o
+  loadout genericamente.
+- 1 novo teste (`characters_catalog.test.js` — confirma ausência de
+  `pending*`) + extensão do teste de contagem de Jutsus — total do
+  projeto: 396 testes.
+- DECISIONS.md D032 (cada ficha reaproveita mecânica existente, Bunshin
+  Feint não consome o recurso Clones ainda — `spendResource` sem
+  fiação em Jutsu —, `pendingAtivas`/`pendingSuprema` removidos por
+  completo dos 4 Genin).
+
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **395/395
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **396/396
   passando**.
 - Dev console verificado no Chromium headless (Playwright), Marcos 0-5:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
@@ -726,6 +749,14 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   Equipamento; equipando Kabutowari com uma seed fixa, Taijutsu do
   Naruto sobe de 32 para 46 (+14, exatamente o `statBonus` declarado);
   sem erros de console.
+- **Fichas dos 9 jutsus pendentes dos Genin verificado no Chromium
+  headless (Playwright)**: as 9 fichas novas aparecem na opção de ação
+  do personagem certo (Combo Improvisado/Bunshin Feint no Naruto,
+  Shuriken Combo/Wire Trap no Sasuke, Chakra Focus/Precise Kunai/Inner
+  Sakura na Sakura, Kunai Trap/Kage Mane Complete Restraint no
+  Shikamaru); Bunshin Feint, Inner Sakura e Kage Mane Complete
+  Restraint de fato usados num combate real sem erro; sem erros de
+  console.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
@@ -733,7 +764,9 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
 Marco 10 — Expansão: 1º a 5º lotes (Itens consumíveis, Economia da Run
 — Ryō com ganho e gasto via nó LOJA, Equipamento persistente com as 9
 Armas Lendárias do doc completas) concluídos; salvar/carregar Run em
-andamento também concluído (fecha D020 #9); próximo lote a definir.
+andamento também concluído (fecha D020 #9); fichas reais para os 9
+jutsus pendentes dos 4 Genin também concluído (fecha D017 #2); próximo
+lote a definir.
 
 ## Pendente (próximos marcos/aprofundamentos, não começados)
 
@@ -771,7 +804,7 @@ sem pedido explícito do usuário).
 | Tipo | Atual | Meta |
 |---|---|---|
 | Personagens/versões | 4 | 500–800+ |
-| Jutsus | 17 | 1.000–1.500+ |
+| Jutsus | 26 | 1.000–1.500+ |
 | Passivas | 1 | 400–600+ |
 | Itens | 15 (6 consumíveis/ferramenta + 9 Armas) | 500+ |
 | Inimigos comuns | 4 (+ gerados proceduralmente) | — |
@@ -820,11 +853,16 @@ com as 4 primeiras Armas Lendárias do doc — D029) e o 5º lote (as 5
 Armas Lendárias restantes, completando as 9 do doc — D031) já foram
 entregues. Fora do Marco 10, **salvar/carregar uma Run em andamento
 também foi entregue** (D030), fechando a pendência D020 #9 aberta desde
-o Marco 7. Próximo lote a definir — candidatos: slots CORPO/ACESSORIO
+o Marco 7, e **as fichas reais para os 9 jutsus pendentes dos 4 Genin**
+também foram entregues (D032), fechando a pendência D017 #2 aberta
+desde o Marco 4 — Sakura e Shikamaru têm Suprema de verdade pela
+primeira vez. Próximo lote a definir — candidatos: slots CORPO/ACESSORIO
 de Equipamento (sem nome citado no doc ainda, precisa de mais base ou
 de uma decisão de nomear algo genérico), Economia de Armas (comprar/
-achar as Lendárias em vez de escolha livre), mais Personagens/Jutsus/
-Inimigos, ou o Gerador de Missão completo agora que Facções existem.
+achar as Lendárias em vez de escolha livre), Jutsu consumindo recurso
+exclusivo de verdade (`spendResource` já existe, sem fiação — D032
+#2), mais Personagens/Jutsus/Inimigos, ou o Gerador de Missão completo
+agora que Facções existem.
 
 Pendências explícitas que continuam em aberto de marcos anteriores:
 "recuar" voltando uma camada no mapa (D020 #9), persistência de
@@ -834,8 +872,9 @@ D028/D029, só o kit fixo ainda reseta por combate, D025 #5), RNG não
 perfeitamente contínua entre save/load de Run (D030 #3), passivas
 alternativas/skins de Maestria com ficha real (D022 #1), Pós-game e
 Economia Permanente com Legado/Tickets/Fragmentos (D022 #7), slots
-CORPO/ACESSORIO e Economia de Armas (D029 #6), Gerador de Missão
-completo do doc 04 (D026 #8). Nenhuma imagem real foi gerada — os
-placeholders SVG continuam em uso (PROMPT MESTRE §63: só gerar arte sob
-pedido explícito, e nenhuma ferramenta de geração de imagem está
+CORPO/ACESSORIO e Economia de Armas (D029 #6), Jutsu gastando recurso
+exclusivo (D032 #2), Gerador de Missão completo do doc 04 (D026 #8).
+Nenhuma imagem real foi gerada — os placeholders SVG continuam em uso
+(PROMPT MESTRE §63: só gerar arte sob pedido explícito, e nenhuma
+ferramenta de geração de imagem está
 disponível nesta sessão).

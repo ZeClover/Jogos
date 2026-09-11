@@ -1220,3 +1220,42 @@ loja, escolha livre por Run).
    de Equipamento precisaria de nomes novos (CORPO/ACESSORIO) ou de
    Economia (comprar/achar em vez de escolha livre), ambos pendências
    explícitas maiores que este lote.
+
+## D032 — Fichas reais para os 9 jutsus pendentes dos 4 Genin (fecha D017 #2)
+
+**Contexto:** desde o Marco 4 (D017 #2), `characters.js` guardava
+`pendingAtivas`/`pendingSuprema` — nomes de jutsu citados literalmente
+no doc 12 (loadout de cada Personagem) mas sem ficha mecânica em doc 13,
+pra não inventar mecânica sem base (CANON_RULES #30/#79). Eram 9 nomes
+no total: "Combo Improvisado"/"Bunshin Feint" (Naruto), "Shuriken
+Combo"/"Wire Trap" (Sasuke), "Chakra Focus"/"Precise Kunai"/"Inner
+Sakura" (Sakura, a última era a suprema pendente), "Kunai Trap"/"Kage
+Mane Complete Restraint" (Shikamaru, também suprema pendente).
+
+**Decisões:**
+
+1. **Cada ficha reaproveita só efeitos/categorias/Estados já
+   catalogados** — nenhuma mecânica nova no motor, mesmo espírito de
+   D016 (fichas do doc 13) e dos jutsus autorados para bosses (D018/
+   D024/D031): Combo Improvisado/Shuriken Combo/Precise Kunai/Kunai Trap
+   são golpes DAMAGE simples de preenchimento; Bunshin Feint aplica
+   Vulnerável (Clone distrai, o golpe de verdade acerta aberto); Wire
+   Trap aplica Imobilizado; Chakra Focus aplica Focado em si mesma
+   (mesmo padrão de Shadow Setup, Marco 3); Inner Sakura (suprema) usa
+   `ignoresGuard` como o Rasengan; Kage Mane Complete Restraint
+   (suprema) escala o Kagemane base pra Imobilizado garantido + chance
+   de Selar.
+2. **Bunshin Feint NÃO consome o recurso Clones** — doc09/D017 já
+   registravam que Jutsu ainda não tem um jeito de GASTAR um recurso
+   exclusivo (`spendResource` existe em `combatant.js` mas nenhum Jutsu
+   o usa; só `grantsResource` está com fiação real). Wirar isso exigiria
+   um campo novo (`requiresResource`) + lógica nova em `actions.js`, uma
+   mudança de motor fora do escopo deste lote (que é só autoria de
+   dado); fica pendência explícita.
+3. **`pendingAtivas`/`pendingSuprema` removidos dos 4 Genin** — os
+   campos somem por completo (não ficam vazios/null) já que não há mais
+   nada pendente para eles; `characters_catalog.test.js` ganhou um teste
+   positivo confirmando isso.
+4. **Nenhuma mudança de UI** — `getActionOptions` (`game.js`/`run.js`)
+   já iterava `loadout.ativas`/`suprema` genericamente; as 9 fichas
+   novas aparecem nas opções de ação sem nenhum código extra.

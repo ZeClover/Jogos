@@ -90,7 +90,7 @@ test('não há Reação com ID duplicado', () => {
 
 test('o catálogo de Jutsus (Vertical Slice + Kirigakure de Zabuza + bosses de Marco 9) foi registrado na Registry ao ser importado', () => {
   assert.equal(jutsus.size, JUTSU_DEFINITIONS.length);
-  assert.equal(JUTSU_DEFINITIONS.length, 17, '12 jutsus do doc 13 + Kirigakure no Jutsu (Marco 5, Zabuza) + Constrição Sufocante/Mordida Perfurante (Serpente) + Ferroada Paralisante/Investida das Pinças (Escorpião do Deserto)');
+  assert.equal(JUTSU_DEFINITIONS.length, 26, '12 jutsus do doc 13 + Kirigakure no Jutsu (Zabuza) + Constrição Sufocante/Mordida Perfurante (Serpente) + Ferroada Paralisante/Investida das Pinças (Escorpião do Deserto) + 9 fichas dos Genin pendentes desde o doc 12 (D032)');
 });
 
 test('todo Jutsu tem ID bem formado, rank/categoria/efeito/alcance válidos, sem duplicatas', () => {

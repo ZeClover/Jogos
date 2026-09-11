@@ -67,6 +67,14 @@ test('todo Personagem sem suprema catalogada declara pendingSuprema (não fica s
   }
 });
 
+test('os 4 Genin não têm mais pendingAtivas/pendingSuprema (D032 fechou a pendência D017 #2)', () => {
+  for (const def of CHARACTER_DEFINITIONS) {
+    assert.equal(def.loadout.pendingAtivas, undefined, `${def.id}: ainda tem pendingAtivas`);
+    assert.equal(def.loadout.pendingSuprema, undefined, `${def.id}: ainda tem pendingSuprema`);
+    assert.ok(def.loadout.suprema, `${def.id}: sem suprema real`);
+  }
+});
+
 test('toda passiva referenciada por um Personagem (passiveId ou loadout.passivas) existe no catálogo', () => {
   const passiveIds = new Set(PASSIVE_DEFINITIONS.map((d) => d.id));
   for (const def of CHARACTER_DEFINITIONS) {
