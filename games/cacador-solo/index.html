@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Caçador Solo</title>
+<link rel="stylesheet" href="../../style.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="cs-page">
+  <a href="../../index.html" class="back-link">&larr; Voltar para os jogos</a>
+
+  <div class="cs-header">
+    <h1>🌀 Caçador Solo</h1>
+    <p>Comande sua guilda: despache equipes pros portais ou mergulhe você mesmo.</p>
+  </div>
+
+  <div class="cs-frame">
+
+    <!-- Hub / Sala de Comando -->
+    <section id="screen-hub" class="cs-screen">
+      <div class="cs-topbar">
+        <span><span id="hub-class-icon">🔰</span> <strong id="hub-class-name">Recruta</strong></span>
+        <span>🎖️ Rank <strong id="hub-rank">E</strong></span>
+        <span>💰 <strong id="hub-gold">0</strong></span>
+        <span>✨ Bênçãos: <strong id="hub-blessings-count">0</strong></span>
+      </div>
+
+      <div class="cs-nav">
+        <button class="nav-btn" id="to-classes-btn">🎭 Classes</button>
+        <button class="nav-btn" id="to-shop-btn">🛒 Loja</button>
+        <button class="nav-btn" id="to-blessings-btn">✨ Bênçãos</button>
+      </div>
+
+      <h2 class="cs-subtitle">Quadro de Portais</h2>
+      <div class="portal-board" id="portal-board"></div>
+
+      <h2 class="cs-subtitle">Suas Equipes</h2>
+      <div class="team-roster" id="team-roster"></div>
+      <button class="action-btn" id="recruit-team-btn">Recrutar equipe (<span id="recruit-cost">60</span> 💰)</button>
+    </section>
+
+    <!-- Classes -->
+    <section id="screen-classes" class="cs-screen" hidden>
+      <h2 class="cs-title">Classes</h2>
+      <div class="classes-list" id="classes-list"></div>
+      <button class="action-btn secondary back-to-hub">⬅️ Voltar</button>
+    </section>
+
+    <!-- Mergulho pessoal -->
+    <section id="screen-dive" class="cs-screen" hidden>
+      <div class="cs-topbar">
+        <span id="dive-tier-name">Portal</span>
+        <span id="dive-floor-label">Andar 1</span>
+        <span>💰 <strong id="dive-run-gold">0</strong></span>
+      </div>
+      <div class="floor-track"><div class="floor-fill" id="dive-floor-fill"></div></div>
+
+      <div class="bars-row">
+        <div class="bar-block">
+          <div class="bar-label">❤️ HP <span id="player-hp-text"></span></div>
+          <div class="bar-track"><div class="bar-fill hp-fill" id="player-hp-fill"></div></div>
+        </div>
+        <div class="bar-block" id="resource-row">
+          <div class="bar-label"><span id="resource-label">Mana</span> <span id="player-mp-text"></span></div>
+          <div class="bar-track"><div class="bar-fill mp-fill" id="player-mp-fill"></div></div>
+        </div>
+      </div>
+
+      <div class="shadow-army-row" id="shadow-army-row" hidden>
+        <span class="army-label">🌑 Exército:</span>
+        <div class="shadow-army-strip" id="shadow-army-strip"></div>
+      </div>
+
+      <!-- Evento não-combate -->
+      <div id="event-area" class="event-area">
+        <p class="event-text" id="event-text">Explorando...</p>
+      </div>
+
+      <!-- Combate -->
+      <div id="combat-area" class="combat-area" hidden>
+        <div class="enemy-block">
+          <div class="enemy-name" id="enemy-name">Inimigo</div>
+          <div class="bar-track"><div class="bar-fill enemy-fill" id="enemy-hp-fill"></div></div>
+          <div class="enemy-hp-text" id="enemy-hp-text"></div>
+        </div>
+        <div class="class-badge" id="class-status-badge" hidden></div>
+        <div class="combat-log" id="combat-log"></div>
+        <div class="combat-actions" id="combat-actions"></div>
+      </div>
+
+      <!-- Escolha de andar -->
+      <div id="floor-choice" class="floor-choice" hidden>
+        <button class="action-btn" id="continue-btn">⬇️ Descer</button>
+        <button class="action-btn secondary" id="extract-btn">🌀 Extrair</button>
+      </div>
+    </section>
+
+    <!-- Resumo do mergulho -->
+    <section id="screen-summary" class="cs-screen" hidden>
+      <h2 class="cs-title" id="summary-title">Fim do Mergulho</h2>
+      <p class="cs-text" id="summary-text"></p>
+      <button class="action-btn" id="summary-continue-btn">Voltar à Guilda</button>
+    </section>
+
+    <!-- Loja -->
+    <section id="screen-shop" class="cs-screen" hidden>
+      <h2 class="cs-title">Loja</h2>
+      <p class="cs-text">💰 Ouro: <strong id="shop-gold">0</strong></p>
+      <h3 class="cs-subtitle">📈 Atributos</h3>
+      <div class="shop-rows" id="shop-upgrade-rows"></div>
+      <h3 class="cs-subtitle">✨ Habilidades da classe ativa</h3>
+      <div class="shop-rows" id="shop-skill-rows"></div>
+      <h3 class="cs-subtitle">🎒 Poções</h3>
+      <div class="shop-rows" id="shop-potion-rows"></div>
+      <button class="action-btn secondary back-to-hub">⬅️ Voltar</button>
+    </section>
+
+    <!-- Bênçãos -->
+    <section id="screen-blessings" class="cs-screen" hidden>
+      <h2 class="cs-title">Bênçãos de Rank</h2>
+      <div class="shadow-list" id="blessings-list"></div>
+      <button class="action-btn secondary back-to-hub">⬅️ Voltar</button>
+    </section>
+
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

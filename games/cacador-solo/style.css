@@ -1,0 +1,639 @@
+.cs-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+.cs-page .back-link {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  color: var(--accent-3);
+  font-weight: 600;
+}
+
+.cs-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.cs-header h1 {
+  margin: 0 0 0.25rem;
+  background: linear-gradient(135deg, #8a5cff, #3ce7ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.cs-header p {
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.cs-frame {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cs-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cs-screen[hidden] {
+  display: none;
+}
+
+.cs-title {
+  margin: 0;
+  text-align: center;
+  color: #8a5cff;
+}
+
+.cs-subtitle {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cs-text {
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.cs-topbar {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.cs-topbar strong {
+  color: #fff;
+}
+
+.cs-nav {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  flex: 1;
+  min-width: 100px;
+  border: none;
+  border-radius: 10px;
+  padding: 0.6rem 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.nav-btn:hover {
+  background: rgba(138, 92, 255, 0.2);
+}
+
+/* Portal board */
+
+.portal-board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.portal-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.portal-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.portal-name {
+  font-weight: 700;
+}
+
+.portal-status {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
+}
+
+.portal-status.open {
+  color: #4dff88;
+  background: rgba(77, 255, 136, 0.12);
+}
+
+.portal-status.busy {
+  color: #ffd23c;
+  background: rgba(255, 210, 60, 0.12);
+}
+
+.portal-status.success {
+  color: #4dff88;
+  background: rgba(77, 255, 136, 0.12);
+}
+
+.portal-status.fail {
+  color: #ff5c8a;
+  background: rgba(255, 92, 138, 0.12);
+}
+
+.portal-log {
+  min-height: 1.2rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.portal-log p {
+  margin: 0.15rem 0;
+}
+
+.portal-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.team-select {
+  flex: 1;
+  min-width: 140px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+}
+
+/* Teams */
+
+.team-roster {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.team-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+}
+
+.team-icon {
+  font-size: 1.4rem;
+}
+
+.team-info strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.team-info small {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+
+/* Classes screen */
+
+.classes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.class-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.6rem 0.85rem;
+}
+
+.class-row.active {
+  border-color: #8a5cff;
+}
+
+.class-row.locked {
+  opacity: 0.55;
+}
+
+.class-row-icon {
+  font-size: 1.6rem;
+}
+
+.class-row-info {
+  flex: 1;
+}
+
+.class-row-info strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.class-row-info small {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+
+.class-row button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.active-tag {
+  font-size: 0.75rem;
+  color: #8a5cff;
+  font-weight: 700;
+}
+
+/* Class select cards (unused fallback styling kept for shared look) */
+
+.class-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1rem;
+  text-align: left;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.class-card:hover {
+  border-color: #8a5cff;
+}
+
+.class-icon {
+  font-size: 2rem;
+}
+
+.class-name {
+  font-weight: 700;
+  margin: 0.3rem 0;
+}
+
+.class-desc {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin: 0 0 0.5rem;
+}
+
+.class-stats {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+/* Dive screen */
+
+.floor-track {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.floor-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #8a5cff, #3ce7ff);
+  transition: width 0.3s ease;
+}
+
+.bars-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.bar-block {
+  flex: 1;
+  min-width: 140px;
+}
+
+.bar-label {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-bottom: 0.25rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.bar-track {
+  height: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  transition: width 0.2s ease;
+}
+
+.hp-fill {
+  background: linear-gradient(90deg, #4dff88, #ffd23c);
+}
+
+.mp-fill {
+  background: linear-gradient(90deg, #3ce7ff, #8a5cff);
+}
+
+.mp-fill.fury-fill {
+  background: linear-gradient(90deg, #ff9d3c, #ff3b3b);
+}
+
+.enemy-fill {
+  background: linear-gradient(90deg, #ff5c8a, #ff3b3b);
+}
+
+.shadow-army-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(138, 92, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+}
+
+.army-label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.shadow-army-strip {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.army-chip {
+  font-size: 1.2rem;
+}
+
+.army-empty {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.event-area {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.25rem 1rem;
+  text-align: center;
+}
+
+.event-text {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.combat-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.enemy-block {
+  background: rgba(255, 92, 138, 0.06);
+  border: 1px solid rgba(255, 92, 138, 0.2);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  text-align: center;
+}
+
+.enemy-name {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.enemy-hp-text {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-top: 0.3rem;
+}
+
+.class-badge {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #3ce7ff;
+  font-weight: 600;
+}
+
+.combat-log {
+  min-height: 3.5rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.combat-log p {
+  margin: 0.15rem 0;
+}
+
+.combat-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.combat-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 0.7rem 0.6rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.combat-btn:disabled {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
+  cursor: not-allowed;
+}
+
+.combat-btn.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
+}
+
+.combat-btn.skill-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.combat-btn.skill-btn small {
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.floor-choice {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.floor-choice .action-btn {
+  margin-top: 0;
+  flex: 1;
+}
+
+.action-btn.secondary {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-dim) !important;
+}
+
+/* Shop */
+
+.shop-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.shop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+
+.shop-row .shop-info {
+  font-size: 0.9rem;
+}
+
+.shop-row .shop-info small {
+  display: block;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+
+.shop-row button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font-weight: 700;
+  font-size: 0.78rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+  cursor: pointer;
+  touch-action: manipulation;
+  flex-shrink: 0;
+}
+
+.shop-row button:disabled {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
+  cursor: not-allowed;
+}
+
+/* Blessings */
+
+.shadow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.shadow-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.6rem 0.85rem;
+}
+
+.shadow-row.locked {
+  opacity: 0.5;
+}
+
+.shadow-icon {
+  font-size: 1.6rem;
+}
+
+.shadow-info strong {
+  display: block;
+  font-size: 0.88rem;
+}
+
+.shadow-info small {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 480px) {
+  .cs-page {
+    padding: 1.25rem 0.85rem 3rem;
+  }
+
+  .cs-frame {
+    padding: 1rem;
+  }
+
+  .cs-topbar {
+    font-size: 0.8rem;
+  }
+
+  .combat-actions {
+    grid-template-columns: 1fr;
+  }
+}
