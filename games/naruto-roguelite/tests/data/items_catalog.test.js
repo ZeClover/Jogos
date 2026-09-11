@@ -15,7 +15,7 @@ const KNOWN_ATTRIBUTES = new Set(Object.keys(createAttributes()));
 
 test('o catálogo de Itens foi registrado ao ser importado', () => {
   assert.equal(items.size, ITEM_DEFINITIONS.length);
-  assert.equal(ITEM_DEFINITIONS.length, 10, 'lote 01 (6 consumíveis/ferramenta) + lote 04 (4 Armas Lendárias, D029)');
+  assert.equal(ITEM_DEFINITIONS.length, 15, 'lote 01 (6 consumíveis/ferramenta) + lotes 04+05 (as 9 Armas Lendárias do doc 03, D029/D031)');
 });
 
 test('todo Item tem ID bem formado e categoria conhecida, sem duplicatas', () => {
@@ -63,8 +63,8 @@ test('todo Item de combate (CONSUMIVEL/FERRAMENTA) tem um price positivo (Marco 
   }
 });
 
-test('todo Item de Equipamento (ARMA/CORPO/ACESSORIO) declara statBonus não vazio com atributos conhecidos (Marco 10, D029)', () => {
-  assert.equal(EQUIPMENT_ITEMS.length, 4, 'lote 04: as 4 primeiras Armas Lendárias citadas no doc 03');
+test('todo Item de Equipamento (ARMA/CORPO/ACESSORIO) declara statBonus não vazio com atributos conhecidos (Marco 10, D029/D031)', () => {
+  assert.equal(EQUIPMENT_ITEMS.length, 9, 'lotes 04+05: as 9 Armas Lendárias citadas no doc 03');
   for (const def of EQUIPMENT_ITEMS) {
     assert.ok(Array.isArray(def.statBonus) && def.statBonus.length > 0, `${def.id}: statBonus ausente ou vazio`);
     for (const { attribute, amount } of def.statBonus) {

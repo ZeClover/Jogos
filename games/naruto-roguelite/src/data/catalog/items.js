@@ -8,18 +8,18 @@
 // `ACTION_TYPES.ITEM`; desde D028 também têm `price` em Ryō e podem ser
 // comprados no nó LOJA.
 //
-// Lote 04 — ARMA (D029): as 4 primeiras "Armas Lendárias" citadas
-// literalmente no doc 03 ("Samehada, Kubikiribōchō, Kiba, Hiramekarei,
-// Nuibari, Kabutowari, Shibuki, Kusanagi, Gunbai") — nomes reais do doc,
-// não inventados, mas SEM entrada no Asset Manifest (diferente do Lote
-// 01), então os Content IDs aqui são novos (mesmo padrão de D016/D018
-// autorando Jutsus novos sem depender do Manifest). O doc diz que Armas
-// Lendárias "mudam estilo" — este lote implementa só um bônus/penalidade
-// fixo de atributo (`statBonus`), sem jutsu/mecânica nova; "mudar
-// estilo" de verdade fica pra quando houver base de design mais
-// detalhada. Equipamento é persistente (não se gasta), escolhido antes
-// da Run (ver `src/ui/run.js`) — CORPO/ACESSORIO ficam de fora deste
-// lote por não terem nenhum nome citado no doc (D029 #1).
+// Lote 04 + 05 — ARMA (D029/D031): as 9 "Armas Lendárias" citadas
+// literalmente no doc 03 por inteiro ("Samehada, Kubikiribōchō, Kiba,
+// Hiramekarei, Nuibari, Kabutowari, Shibuki, Kusanagi, Gunbai") — nomes
+// reais do doc, não inventados, mas SEM entrada no Asset Manifest
+// (diferente do Lote 01), então os Content IDs aqui são novos (mesmo
+// padrão de D016/D018 autorando Jutsus novos sem depender do Manifest).
+// O doc diz que Armas Lendárias "mudam estilo" — este lote implementa só
+// um bônus/penalidade fixo de atributo (`statBonus`), sem jutsu/mecânica
+// nova; "mudar estilo" de verdade fica pra quando houver base de design
+// mais detalhada. Equipamento é persistente (não se gasta), escolhido
+// antes da Run (ver `src/ui/run.js`) — CORPO/ACESSORIO ficam de fora
+// deste lote por não terem nenhum nome citado no doc (D029 #1).
 //
 // Campos consumidos pelo motor:
 //   Itens de combate (`actions.js#handleItem`):
@@ -145,6 +145,61 @@ export const ITEM_DEFINITIONS = [
       { attribute: 'velocidade', amount: -4 },
     ],
     note: 'Arma Lendária citada no doc 03 — o leque de guerra. Pesado e defensivo: +Defesa Física, -Velocidade. Provisório (D029).',
+  },
+  {
+    id: 'ITEM_KIBA_001',
+    name: 'Kiba',
+    category: 'ARMA',
+    tags: [],
+    statBonus: [
+      { attribute: 'velocidade', amount: 10 },
+      { attribute: 'defesaChakra', amount: -5 },
+    ],
+    note: 'Arma Lendária citada no doc 03 — as presas gêmeas do estilo Inuzuka. Golpes rápidos e ferozes: +Velocidade, -Defesa de Chakra (sem guarda pra Ninjutsu). Provisório (D031).',
+  },
+  {
+    id: 'ITEM_HIRAMEKAREI_001',
+    name: 'Hiramekarei',
+    category: 'ARMA',
+    tags: [],
+    statBonus: [
+      { attribute: 'defesaFisica', amount: 10 },
+      { attribute: 'velocidade', amount: -5 },
+    ],
+    note: 'Arma Lendária citada no doc 03 — a espada-escudo dos Sete Espadachins da Névoa. Postura defensiva pesada: +Defesa Física, -Velocidade. Provisório (D031).',
+  },
+  {
+    id: 'ITEM_NUIBARI_001',
+    name: 'Nuibari',
+    category: 'ARMA',
+    tags: [],
+    statBonus: [
+      { attribute: 'precisao', amount: 8 },
+      { attribute: 'evasao', amount: -4 },
+    ],
+    note: 'Arma Lendária citada no doc 03 — a "agulha de costura", precisa e metódica: +Precisão, -Evasão (pouca mobilidade ao mirar). Provisório (D031).',
+  },
+  {
+    id: 'ITEM_KABUTOWARI_001',
+    name: 'Kabutowari',
+    category: 'ARMA',
+    tags: [],
+    statBonus: [
+      { attribute: 'taijutsu', amount: 14 },
+      { attribute: 'precisao', amount: -5 },
+    ],
+    note: 'Arma Lendária citada no doc 03 — machado-espada pesado dos Sete Espadachins da Névoa. Golpes brutos: +Taijutsu, -Precisão (imprecisão em golpes tão largos). Provisório (D031).',
+  },
+  {
+    id: 'ITEM_SHIBUKI_001',
+    name: 'Shibuki',
+    category: 'ARMA',
+    tags: [],
+    statBonus: [
+      { attribute: 'genjutsu', amount: 10 },
+      { attribute: 'defesaFisica', amount: -5 },
+    ],
+    note: 'Arma Lendária citada no doc 03 — lâmina fina associada a técnicas ilusórias: +Genjutsu, -Defesa Física (fina demais pra aguentar impacto direto). Provisório (D031).',
   },
 ];
 

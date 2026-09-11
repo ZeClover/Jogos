@@ -3,6 +3,30 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Marco 10 — Expansão (5º lote: as 5 Armas Lendárias restantes)
+
+### Adicionado
+
+- `src/data/catalog/items.js` — as 5 Armas Lendárias que faltavam das 9
+  citadas no doc 03: Kiba (+Velocidade/-Defesa de Chakra), Hiramekarei
+  (+Defesa Física/-Velocidade), Nuibari (+Precisão/-Evasão), Kabutowari
+  (+Taijutsu/-Precisão), Shibuki (+Genjutsu/-Defesa Física) — mesmo
+  formato de D029, sem mudança de código (equipment.js/
+  characterBridge.js/painel "Equipamento" já eram genéricos).
+- Testes existentes (`items_catalog.test.js`) estendidos para os novos
+  totais (15 Itens, 9 de Equipamento).
+- DECISIONS.md D031 (as 5 Armas restantes, tradeoffs provisórios,
+  diversifica atributos usados, CORPO/ACESSORIO/Economia de Armas
+  continuam fora de escopo).
+
+### Validado
+
+- `npm test`: 395/395 passando.
+- `run.html` testado em Chromium headless (Playwright): as 5 novas
+  aparecem no seletor de Equipamento; equipando Kabutowari com seed
+  fixa, Taijutsu do Naruto sobe de 32 para 46 (+14); sem erros de
+  console.
+
 ## Salvar/carregar uma Run em andamento (fecha D020 #9)
 
 ### Adicionado

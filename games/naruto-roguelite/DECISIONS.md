@@ -1188,3 +1188,35 @@ apresentação"), só faltava a UI usar o slot `'run'`.
    assim que a nova Run chega no Mapa (primeiro autosave). Simplicidade
    deliberada: só existe 1 Run "ativa" por vez, mesmo espírito de só
    existir 1 slot `'run'` no `SaveManager`.
+
+## D031 — Marco 10 (Expansão): 5º lote, as 5 Armas Lendárias restantes do doc 03
+
+**Contexto:** D029 implementou as 4 primeiras Armas Lendárias
+("Samehada, Kubikiribōchō, Kusanagi, Gunbai") do total de 9 citadas
+literalmente no doc 03. Este lote fecha a lista inteira, sem abrir
+escopo novo — mesmo padrão exato de D029 (statBonus com tradeoff, sem
+loja, escolha livre por Run).
+
+**Decisões:**
+
+1. **As 5 Armas restantes**: Kiba (+Velocidade/-Defesa de Chakra —
+   presas gêmeas do estilo Inuzuka), Hiramekarei (+Defesa Física/
+   -Velocidade — espada-escudo dos Sete Espadachins), Nuibari
+   (+Precisão/-Evasão — "agulha de costura", metódica), Kabutowari
+   (+Taijutsu/-Precisão — machado-espada pesado dos Sete Espadachins),
+   Shibuki (+Genjutsu/-Defesa Física — lâmina fina associada a
+   ilusão). Tradeoffs e números provisórios, mesmo espírito de D029 #2.
+2. **Nenhuma mudança de código** — `items.js` só ganha mais 5 entradas
+   no mesmo formato; `equipment.js`, `characterBridge.js` e o painel
+   "Equipamento" de `run.js` já eram genéricos o bastante (iteram sobre
+   `items.all().filter(category === 'ARMA')`) para não precisar de
+   nenhum ajuste.
+3. **Diversifica os atributos usados** (Precisão, Evasão, Genjutsu, além
+   dos já usados em D029) — todos atributos primários/secundários já
+   mecanicamente ativos no motor (nenhum atributo "decorativo" sem
+   efeito real foi escolhido).
+4. **CORPO/ACESSORIO e Economia de Armas continuam fora de escopo** —
+   com as 9 Armas Lendárias do doc completas, o próximo aprofundamento
+   de Equipamento precisaria de nomes novos (CORPO/ACESSORIO) ou de
+   Economia (comprar/achar em vez de escolha livre), ambos pendências
+   explícitas maiores que este lote.

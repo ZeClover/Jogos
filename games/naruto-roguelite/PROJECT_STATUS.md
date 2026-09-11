@@ -598,6 +598,23 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   salvo, save apagado ao terminar a Run, sem confirmação de "abandonar"
   — sobrescrita simples ao começar uma Run nova).
 
+### Concluído (Marco 10 — Expansão, 5º lote: as 5 Armas Lendárias restantes)
+
+- **`items.js`** ganha as 5 Armas Lendárias que faltavam das 9 citadas
+  no doc 03: Kiba (+Velocidade/-Defesa de Chakra), Hiramekarei
+  (+Defesa Física/-Velocidade), Nuibari (+Precisão/-Evasão), Kabutowari
+  (+Taijutsu/-Precisão), Shibuki (+Genjutsu/-Defesa Física) — mesmo
+  formato exato de D029 (`statBonus` com tradeoff, sem `effect`/`price`).
+  Nenhuma mudança de código: `equipment.js`/`characterBridge.js`/painel
+  "Equipamento" de `run.js` já eram genéricos o bastante.
+- Catálogo de Itens completa as 9 Armas Lendárias do doc por inteiro.
+- Testes existentes (`items_catalog.test.js`) estendidos para os novos
+  totais (15 Itens, 9 de Equipamento) — total do projeto continua em
+  395 testes (só dados novos, sem função nova pra testar).
+- DECISIONS.md D031 (as 5 Armas restantes, tradeoffs e números
+  provisórios, sem mudança de código, diversifica atributos usados,
+  CORPO/ACESSORIO/Economia de Armas continuam fora de escopo).
+
 ## Validado
 
 - `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **395/395
@@ -704,14 +721,19 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   Dia 2 se mantém; Run jogada até a Vitória confirma que o save de Run é
   apagado (`localStorage` sem a chave) e "Continuar" some mesmo depois
   de "Jogar outra Run"; sem erros de console.
+- **As 5 Armas Lendárias restantes (Marco 10, 5º lote) verificado no
+  Chromium headless (Playwright)**: as 5 aparecem no seletor de
+  Equipamento; equipando Kabutowari com uma seed fixa, Taijutsu do
+  Naruto sobe de 32 para 46 (+14, exatamente o `statBonus` declarado);
+  sem erros de console.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
-Marco 10 — Expansão: 1º a 4º lotes (Itens consumíveis, Economia da Run
-— Ryō com ganho e gasto via nó LOJA, Equipamento persistente slot ARMA)
-concluídos; salvar/carregar Run em andamento também concluído (fecha
-D020 #9); próximo lote a definir.
+Marco 10 — Expansão: 1º a 5º lotes (Itens consumíveis, Economia da Run
+— Ryō com ganho e gasto via nó LOJA, Equipamento persistente com as 9
+Armas Lendárias do doc completas) concluídos; salvar/carregar Run em
+andamento também concluído (fecha D020 #9); próximo lote a definir.
 
 ## Pendente (próximos marcos/aprofundamentos, não começados)
 
@@ -751,7 +773,7 @@ sem pedido explícito do usuário).
 | Personagens/versões | 4 | 500–800+ |
 | Jutsus | 17 | 1.000–1.500+ |
 | Passivas | 1 | 400–600+ |
-| Itens | 10 (6 consumíveis/ferramenta + 4 Armas) | 500+ |
+| Itens | 15 (6 consumíveis/ferramenta + 9 Armas) | 500+ |
 | Inimigos comuns | 4 (+ gerados proceduralmente) | — |
 | Bosses/elites | 3 | 200–300+ |
 | Eventos | 0 | 300+ |
@@ -793,17 +815,16 @@ um eventual 4º Ato ficam como aprofundamento futuro, sem bloquear nada.
 Marco 10 — Expansão segue: o 1º lote (Itens consumíveis/ferramenta, 6
 itens, `ACTION_TYPES.ITEM` funcional — D025), o 2º lote (Economia da Run
 — ganho de Ryō — D027), o 3º lote (nó LOJA fechando o ciclo ganhar->
-gastar de Ryō — D028) e o 4º lote (Equipamento persistente, slot ARMA
-com as 4 primeiras Armas Lendárias do doc — D029) já foram entregues.
-Fora do Marco 10, **salvar/carregar uma Run em andamento também foi
-entregue** (D030), fechando a pendência D020 #9 aberta desde o Marco 7.
-Próximo lote a definir — candidatos: slots CORPO/ACESSORIO de
-Equipamento (sem nome citado no doc ainda, precisa de mais base ou de
-uma decisão de nomear algo genérico), Economia de Armas (comprar/achar
-as Lendárias em vez de escolha livre), as 5 Armas Lendárias restantes do
-doc (Kiba, Hiramekarei, Nuibari, Kabutowari, Shibuki), mais Personagens/
-Jutsus/Inimigos, ou o Gerador de Missão completo agora que Facções
-existem.
+gastar de Ryō — D028), o 4º lote (Equipamento persistente, slot ARMA
+com as 4 primeiras Armas Lendárias do doc — D029) e o 5º lote (as 5
+Armas Lendárias restantes, completando as 9 do doc — D031) já foram
+entregues. Fora do Marco 10, **salvar/carregar uma Run em andamento
+também foi entregue** (D030), fechando a pendência D020 #9 aberta desde
+o Marco 7. Próximo lote a definir — candidatos: slots CORPO/ACESSORIO
+de Equipamento (sem nome citado no doc ainda, precisa de mais base ou
+de uma decisão de nomear algo genérico), Economia de Armas (comprar/
+achar as Lendárias em vez de escolha livre), mais Personagens/Jutsus/
+Inimigos, ou o Gerador de Missão completo agora que Facções existem.
 
 Pendências explícitas que continuam em aberto de marcos anteriores:
 "recuar" voltando uma camada no mapa (D020 #9), persistência de
