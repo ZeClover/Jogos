@@ -3,6 +3,40 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Marco 10 — Expansão (4º lote: Equipamento persistente — slot ARMA)
+
+### Adicionado
+
+- `src/data/catalog/items.js` — 4 Armas Lendárias (categoria ARMA):
+  Kubikiribōchō, Kusanagi, Samehada, Gunbai — os 4 primeiros nomes da
+  lista literal do doc 03; Content IDs novos (sem entrada no Asset
+  Manifest, diferente do lote 01). Cada uma com `statBonus`
+  (+1 atributo/-1 atributo, tradeoff real).
+- `src/engine/combat/equipment.js` — `applyEquipmentBonuses`: soma o
+  `statBonus` de cada Item de Equipamento no bloco de atributos,
+  aplicado 1 vez na montagem do Combatente (não é ação de combate).
+- `src/engine/combat/characterBridge.js` — `createCombatantFromCharacter`
+  ganha o parâmetro `equippedItems` (fichas já resolvidas pela UI).
+- `src/ui/run.js` — painel "Equipamento" na Introdução: 1 seletor de
+  Arma por membro do esquadrão, livre e sem custo; o bônus aparece
+  automaticamente em qualquer lugar que já lia `actor.attributes`.
+- 12 novos testes (`tests/combat/equipment.test.js`, extensão de
+  `tests/combat/characterBridge.test.js` e
+  `tests/data/items_catalog.test.js`) — total do projeto: 394 testes.
+- DECISIONS.md D029 (só slot ARMA com as 4 primeiras Armas Lendárias
+  reais do doc, "muda estilo" simplificado para bônus fixo com
+  tradeoff, aplicado 1 vez na montagem do Combatente, escolha livre por
+  Run sem Economia de Armas, não vendível no nó LOJA, CORPO/ACESSORIO/
+  Economia de Armas fora de escopo).
+
+### Validado
+
+- `npm test`: 394/394 passando.
+- `run.html` testado em Chromium headless (Playwright): baseline do
+  Ataque Básico do Naruto confere Taijutsu 32 (sem arma); equipando
+  Kubikiribōchō com a mesma seed, o mesmo combate mostra Taijutsu 44
+  (32+12, exatamente o `statBonus` da arma); sem erros de console.
+
 ## Marco 10 — Expansão (3º lote: nó LOJA fecha o ciclo do Ryō)
 
 ### Adicionado

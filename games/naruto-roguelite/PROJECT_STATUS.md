@@ -543,9 +543,38 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   compartilhado, UI simples sem carrinho/confirmação, visitar a loja
   consome 1 dia, Equipamento persistente continua fora de escopo).
 
+### Concluído (Marco 10 — Expansão, 4º lote: Equipamento persistente — slot ARMA)
+
+- **4 Armas Lendárias** (`items.js`, categoria ARMA): Kubikiribōchō,
+  Kusanagi, Samehada, Gunbai — os 4 primeiros nomes da lista literal do
+  doc 03 ("Samehada, Kubikiribōchō, Kiba, Hiramekarei, Nuibari,
+  Kabutowari, Shibuki, Kusanagi, Gunbai"); Content IDs novos (sem
+  entrada no Asset Manifest, diferente do lote 01) — mesmo padrão de
+  Jutsus autorados sem depender do Manifest (D016/D018).
+- **"Muda estilo" (doc03) vira um `statBonus` fixo com tradeoff**: cada
+  arma dá +1 atributo e -1 atributo (ex: Kubikiribōchō +Taijutsu/
+  -Velocidade) — sem jutsu/mecânica nova.
+- **`src/engine/combat/equipment.js#applyEquipmentBonuses`**: aplicado 1
+  vez na montagem do Combatente (não é ação de combate); chamado por
+  `createCombatantFromCharacter`'s novo parâmetro `equippedItems`
+  (fichas já resolvidas pela UI — Engine continua sem conhecer a
+  Registry de Itens).
+- **UI**: painel "Equipamento" na Introdução do Modo Run — 1 seletor de
+  Arma por membro do esquadrão, livre e sem custo (sem Economia de
+  Armas ainda); o bônus aparece automaticamente em qualquer lugar que já
+  lia `actor.attributes` (ex: detalhe do Ataque Básico), sem UI extra.
+- 12 novos testes (`tests/combat/equipment.test.js`, extensão de
+  `tests/combat/characterBridge.test.js` e
+  `tests/data/items_catalog.test.js`) — total do projeto: 394 testes.
+- DECISIONS.md D029 (só slot ARMA/4 Armas Lendárias reais do doc, "muda
+  estilo" simplificado para bônus fixo com tradeoff, aplicado 1 vez na
+  montagem do Combatente, escolha livre por Run sem Economia de Armas,
+  não vendível no nó LOJA, CORPO/ACESSORIO/Economia de
+  Armas/mecânica-por-arma de verdade fora de escopo).
+
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **385/385
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **394/394
   passando**.
 - Dev console verificado no Chromium headless (Playwright), Marcos 0-5:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
@@ -634,13 +663,20 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   para confirmar que SÓ ele mostra "Kunai (3x)" (2 do kit fixo + 1
   comprado) — os outros 3 continuam com "Kunai (2x)"; sem erros de
   console.
+- **Equipamento persistente — slot ARMA (Marco 10, 4º lote) verificado
+  no Chromium headless (Playwright)**: painel "Equipamento" aparece na
+  Introdução com as 4 Armas Lendárias disponíveis; baseline do Ataque
+  Básico do Naruto confere Taijutsu 32 (valor da ficha, sem arma);
+  equipando Kubikiribōchō e repetindo a mesma seed, o mesmo combate
+  mostra Taijutsu 44 (32+12, exatamente o `statBonus` da arma) no turno
+  do Naruto; sem erros de console.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
-Marco 10 — Expansão: 1º, 2º e 3º lotes (Itens consumíveis, Economia da
-Run — Ryō com ganho e gasto completos via nó LOJA) concluídos; próximo
-lote a definir.
+Marco 10 — Expansão: 1º a 4º lotes (Itens consumíveis, Economia da Run
+— Ryō com ganho e gasto via nó LOJA, Equipamento persistente slot ARMA)
+concluídos; próximo lote a definir.
 
 ## Pendente (próximos marcos/aprofundamentos, não começados)
 
@@ -649,8 +685,9 @@ lote a definir.
   existem (D026), mas isso ainda não é o Gerador de Missão inteiro; um
   4º Ato/Região é sempre possível depois, sem pressa (CANON_RULES —
   "qualidade > quantidade").
-- Marco 10 — Expansão: próximos lotes de conteúdo — Equipamento
-  persistente (ARMA/CORPO/ACESSORIO recalculando atributos), Economia
+- Marco 10 — Expansão: próximos lotes de conteúdo — slots CORPO/
+  ACESSORIO de Equipamento (sem nome citado no doc ainda, precisa de
+  base), Economia de Armas (compra/loot/raridade das Lendárias), Economia
   Permanente pós-game (D022 #7), mais Personagens/Jutsus/Inimigos, etc.
 
 ## Bugs conhecidos
@@ -679,7 +716,7 @@ sem pedido explícito do usuário).
 | Personagens/versões | 4 | 500–800+ |
 | Jutsus | 17 | 1.000–1.500+ |
 | Passivas | 1 | 400–600+ |
-| Itens | 6 | 500+ |
+| Itens | 10 (6 consumíveis/ferramenta + 4 Armas) | 500+ |
 | Inimigos comuns | 4 (+ gerados proceduralmente) | — |
 | Bosses/elites | 3 | 200–300+ |
 | Eventos | 0 | 300+ |
@@ -702,8 +739,9 @@ Missão/Regiões com o primeiro lote do Marco 7 (4/1, Marco 9 soma a 2ª e
 3ª Região); Facções com o vocabulário completo do doc 06 de uma vez (14,
 Marco 9 — mesmo espírito de Tags/Estados: nomeado por inteiro no doc,
 não "em lote"); Itens com o primeiro lote do Marco 10 (6 consumíveis/
-ferramentas, reaproveitando os Content IDs do Marco 0) — próximos lotes
-maiores vêm em Konoha Genins/etc. (PROMPT MESTRE §78). Tags/Estados/
+ferramentas, reaproveitando os Content IDs do Marco 0), somando o 4º
+lote (4 Armas Lendárias citadas no doc 03, Content IDs novos) — próximos
+lotes maiores vêm em Konoha Genins/etc. (PROMPT MESTRE §78). Tags/Estados/
 Reações já são o vocabulário completo do doc 01 — não crescem "em lote"
 do mesmo jeito.)
 
@@ -719,20 +757,23 @@ um eventual 4º Ato ficam como aprofundamento futuro, sem bloquear nada.
 
 Marco 10 — Expansão segue: o 1º lote (Itens consumíveis/ferramenta, 6
 itens, `ACTION_TYPES.ITEM` funcional — D025), o 2º lote (Economia da Run
-— ganho de Ryō — D027) e o 3º lote (nó LOJA fechando o ciclo ganhar->
-gastar de Ryō — D028) já foram entregues; a Economia da Run está
-completa no escopo em que existe hoje (consumíveis/ferramenta, sem
-Equipamento). Próximo lote a definir — candidatos: Equipamento
-persistente do doc 03 (ARMA/CORPO/ACESSORIO recalculando atributos),
-mais Personagens/Jutsus/Inimigos, ou o Gerador de Missão completo agora
-que Facções existem.
+— ganho de Ryō — D027), o 3º lote (nó LOJA fechando o ciclo ganhar->
+gastar de Ryō — D028) e o 4º lote (Equipamento persistente, slot ARMA
+com as 4 primeiras Armas Lendárias do doc — D029) já foram entregues.
+Próximo lote a definir — candidatos: slots CORPO/ACESSORIO de
+Equipamento (sem nome citado no doc ainda, precisa de mais base ou de
+uma decisão de nomear algo genérico), Economia de Armas (comprar/achar
+as Lendárias em vez de escolha livre), as 5 Armas Lendárias restantes do
+doc (Kiba, Hiramekarei, Nuibari, Kabutowari, Shibuki), mais Personagens/
+Jutsus/Inimigos, ou o Gerador de Missão completo agora que Facções
+existem.
 
 Pendências explícitas que continuam em aberto de marcos anteriores:
 salvar/carregar uma Run em andamento (D020 #9), "recuar" voltando uma
 camada no mapa (D020 #9), persistência de cooldowns/Estados entre nós de
-uma mesma run (D019 #4/D020 #6 — o inventário comprado já persiste
-durante a Run desde D028, só o kit fixo ainda reseta por combate, D025
-#5), passivas alternativas/skins de Maestria com ficha real (D022 #1),
-Pós-game e Economia Permanente com Legado/Tickets/Fragmentos (D022 #7),
-Equipamento persistente (D025 #6), Gerador de Missão completo do doc 04
-(D026 #8).
+uma mesma run (D019 #4/D020 #6 — o inventário comprado e o Equipamento
+já persistem durante a Run desde D028/D029, só o kit fixo ainda reseta
+por combate, D025 #5), passivas alternativas/skins de Maestria com
+ficha real (D022 #1), Pós-game e Economia Permanente com Legado/
+Tickets/Fragmentos (D022 #7), slots CORPO/ACESSORIO e Economia de Armas
+(D029 #6), Gerador de Missão completo do doc 04 (D026 #8).

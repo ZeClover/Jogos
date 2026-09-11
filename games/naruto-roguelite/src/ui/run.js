@@ -79,6 +79,7 @@ const R = {
   runEndSummary: null,
   regionId: DEFAULT_REGION_ID,
   shopBuyerId: null,
+  equipment: {}, // { [characterId]: armaItemId|null } (Marco 10, D029) — escolhido na Introdução, dura a Run inteira.
 };
 
 function escapeHtml(str) {
@@ -104,6 +105,7 @@ function buildSquad(snapshot) {
   const ids = snapshot ? snapshot.map((s) => s.id) : SQUAD_IDS;
   const combatants = ids.map((id) => createCombatantFromCharacter(characters.get(id), {
     extraInventory: R.run?.purchasedInventory?.[id],
+    equippedItems: [items.get(R.equipment[id])].filter(Boolean),
   }));
   if (snapshot) applySquadSnapshot(combatants, snapshot);
   return combatants;
@@ -604,6 +606,31 @@ function renderAccountPanel() {
   `;
 }
 
+/** Equipamento persistente (Marco 10, D029): 1 arma opcional por membro do esquadrão, escolhida antes de gerar o mapa. */
+function renderEquipmentPanel(defs) {
+  const armaOptions = items.all().filter((d) => d.category === 'ARMA');
+  const rows = defs.map((def) => {
+    const options = [
+      `<option value="">Nenhuma</option>`,
+      ...armaOptions.map((arma) => `<option value="${arma.id}" ${R.equipment[def.id] === arma.id ? 'selected' : ''}>${escapeHtml(arma.name)}</option>`),
+    ].join('');
+    return `
+      <div style="display:flex;gap:8px;align-items:center;margin:4px 0;flex-wrap:wrap">
+        <label for="equip-arma-${def.id}" class="vs-hint" style="min-width:110px">${escapeHtml(def.name)}:</label>
+        <select id="equip-arma-${def.id}" data-equip-character="${def.id}"
+                style="background:#fff;border:1px solid var(--panel-border);color:var(--ink);border-radius:6px;padding:6px 8px;font-family:inherit">
+          ${options}
+        </select>
+      </div>
+    `;
+  }).join('');
+  return `
+    <h3 style="margin-top:14px">Equipamento (Arma, opcional)</h3>
+    <p class="vs-hint">Armas Lendárias mudam atributos (com tradeoff) — dura a Run inteira, sem custo. Ver DECISIONS.md D029.</p>
+    ${rows}
+  `;
+}
+
 function renderIntroScreen() {
   const region = regions.get(R.regionId);
   const defs = SQUAD_IDS.map((id) => characters.get(id));
@@ -642,6 +669,7 @@ function renderIntroScreen() {
                       color:var(--ink);border-radius:6px;padding:8px 10px;font-family:inherit" />
       </div>
       ${threatOptions}
+      ${renderEquipmentPanel(defs)}
       <button class="vs-btn" data-start-run>Gerar Mapa e Começar</button>
       <p class="vs-hint" style="margin-top:14px">Prefere o roteiro fixo já validado? <a href="play.html">Jogar o Vertical Slice</a>.</p>
       ${renderAccountPanel()}
@@ -877,6 +905,11 @@ function handleChange(event) {
   }
   if (event.target.id === 'shop-buyer-select') {
     R.shopBuyerId = event.target.value;
+    render();
+  }
+  const characterId = event.target.dataset.equipCharacter;
+  if (characterId) {
+    R.equipment[characterId] = event.target.value || null;
     render();
   }
 }

@@ -1089,3 +1089,55 @@ para o nó LOJA, fecha o ciclo do Ryō".
    fora de escopo** — este lote só fecha o ciclo de Ryō para os Itens
    que já existem; nenhuma mudança de slot/loadout/recálculo de
    atributos foi feita.
+
+## D029 — Marco 10 (Expansão): 4º lote, Equipamento persistente (slot ARMA)
+
+**Contexto:** doc 03 lista "Slots padrão: 1 arma, 1 ferramenta ninja, 1
+corpo, 1 acessório, 1 consumível" e cita 9 Armas Lendárias por nome
+("Samehada, Kubikiribōchō, Kiba, Hiramekarei, Nuibari, Kabutowari,
+Shibuki, Kusanagi, Gunbai") que "mudam estilo". `ITEM_CATEGORIES`
+(enums.js) já listava ARMA/CORPO/ACESSORIO desde D025 #1, mas sem
+mecânica real. Diferente do Lote 01 (D025), o Asset Manifest do Marco 0
+NÃO tem nenhum Content ID de Item de equipamento pré-declarado.
+
+**Decisões:**
+
+1. **Só o slot ARMA neste lote, usando as 4 primeiras Armas Lendárias do
+   doc** (Kubikiribōchō, Kusanagi, Samehada, Gunbai) — nomes reais do
+   doc 03, não inventados, mas com Content IDs novos (`ITEM_
+   KUBIKIRIBOCHO_001` etc.), diferente do padrão de reaproveitar IDs do
+   Manifest (D025 #2) — mesmo espírito de D016/D018 autorando Jutsus
+   novos sem depender do Manifest. CORPO/ACESSORIO ficam de fora: o doc
+   não nomeia nenhum item desses, e inventar nomes novos sem nenhuma
+   base seria fabricar conteúdo (CANON_RULES #30/#79).
+2. **"Muda estilo" (doc03) vira só um bônus/penalidade FIXO de atributo
+   (`statBonus: [{ attribute, amount }]`)** — sem jutsu novo, sem
+   recurso novo, sem mudança de loadout. Cada arma tem 1 bônus + 1
+   penalidade (tradeoff real, doc09 — "nenhum melhor jutsu/personagem
+   universal"), números provisórios (mesmo espírito de D012/D017/D020/
+   D022/D025/D027/D028): Kubikiribōchō +Taijutsu/-Velocidade (zanbatō
+   pesado), Kusanagi +Velocidade/-Defesa Física (lâmina ágil), Samehada
+   +Ninjutsu/-Defesa de Chakra (arriscado depender da espada que come
+   Chakra), Gunbai +Defesa Física/-Velocidade (leque pesado).
+3. **Aplicado 1 vez, na montagem do Combatente — não é uma ação de
+   combate** (diferente de Item consumível, D025 #3): novo módulo
+   `src/engine/combat/equipment.js#applyEquipmentBonuses(attributes,
+   itemDefs)`, chamado por `characterBridge.js#createCombatantFromCharacter`
+   através do novo parâmetro `equippedItems` (array de FICHAS já
+   resolvidas pela UI — a Engine continua sem conhecer a Registry de
+   Itens, mesmo padrão de `extraInventory`/D028 #3 e do resto da
+   Engine/Data separation, CANON_RULES).
+4. **Escolha de arma por Run, sem Economia/loja/desbloqueio** — UI
+   (`run.js`) ganha um painel "Equipamento" na Introdução com 1 seletor
+   por membro do esquadrão (`R.equipment`, estado só de UI, não
+   persistido em `runState.js` nem `accountState.js`); qualquer Arma
+   Lendária pode ser escolhida livremente, sem custo, sem raridade, sem
+   condição de desbloqueio — mesmo espírito provisório de
+   `DEFAULT_STARTING_KIT` (D025 #4): honesto sobre não ter Economia de
+   Armas ainda, revisável quando houver.
+5. **Armas Lendárias NÃO são vendíveis no nó LOJA** (D028) — não têm
+   `price` nem `effect`; o nó LOJA continua exclusivo para os itens
+   CONSUMIVEL/FERRAMENTA de D025/D028.
+6. **CORPO/ACESSORIO, Economia de Armas (compra/loot/raridade), e
+   "mudar estilo" de verdade (jutsu/mecânica nova por arma) continuam
+   fora de escopo** — pendências explícitas para lotes futuros.

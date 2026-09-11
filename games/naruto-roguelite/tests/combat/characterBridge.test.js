@@ -94,3 +94,16 @@ test('createCombatantFromCharacter sem extraInventory se comporta como antes (s�
   assert.equal(c.inventory.ITEM_KUNAI_BASIC_001, 2);
   assert.equal(c.inventory.ITEM_EXPLOSIVE_TAG_001, undefined);
 });
+
+test('createCombatantFromCharacter aplica o statBonus de equippedItems (Marco 10, D029) sobre os atributos', () => {
+  const c = createCombatantFromCharacter(NARUTO_FIXTURE, {
+    equippedItems: [{ statBonus: [{ attribute: 'taijutsu', amount: 12 }, { attribute: 'velocidade', amount: -3 }] }],
+  });
+  assert.equal(c.attributes.taijutsu, 32 + 12);
+  assert.equal(c.attributes.velocidade, 10 - 3); // default de velocidade (attributes.js) menos a penalidade
+});
+
+test('createCombatantFromCharacter sem equippedItems mantém os atributos sem alteração', () => {
+  const c = createCombatantFromCharacter(NARUTO_FIXTURE);
+  assert.equal(c.attributes.taijutsu, 32);
+});

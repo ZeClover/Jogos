@@ -5,6 +5,7 @@
 
 import { createAttributes } from './attributes.js';
 import { createCombatant } from './combatant.js';
+import { applyEquipmentBonuses } from './equipment.js';
 
 /** @typedef {import('../types.js').CharacterVersion} CharacterVersion */
 
@@ -26,17 +27,24 @@ const DEFAULT_STARTING_KIT = Object.freeze({
  * @param {string} [options.position] - POSITIONS.* (default CENTRO, ver combatant.js).
  * @param {Record<string, number>} [options.extraInventory] - itens comprados no nó LOJA
  *   desta Run (Marco 10, D028, `run.purchasedInventory[characterId]`), somados por cima do kit fixo.
+ * @param {object[]} [options.equippedItems] - fichas de Item (`items.js`, categoria ARMA/CORPO/
+ *   ACESSORIO) já RESOLVIDAS por quem chama (a Engine não conhece a Registry de Itens, D029)
+ *   — o bônus de atributo de cada uma (`statBonus`) é somado 1 vez ao montar o Combatente.
  */
-export function createCombatantFromCharacter(characterDef, { id, position, extraInventory } = {}) {
+export function createCombatantFromCharacter(characterDef, {
+  id, position, extraInventory, equippedItems,
+} = {}) {
   const inventory = { ...DEFAULT_STARTING_KIT };
   for (const [itemId, qty] of Object.entries(extraInventory ?? {})) {
     inventory[itemId] = (inventory[itemId] ?? 0) + qty;
   }
+  const attributes = createAttributes(characterDef.stats);
+  applyEquipmentBonuses(attributes, equippedItems ?? []);
   return createCombatant({
     id: id ?? characterDef.id,
     name: characterDef.name,
     position,
-    attributes: createAttributes(characterDef.stats),
+    attributes,
     resource: characterDef.exclusiveResource
       ? {
         id: characterDef.exclusiveResource.id,
