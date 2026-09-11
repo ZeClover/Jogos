@@ -17,3 +17,4 @@ export * from './enemies.js';
 export * from './bosses.js';
 export * from './missions.js';
 export * from './regions.js';
+export * from './items.js';

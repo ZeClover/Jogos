@@ -10,7 +10,7 @@
 
 import '../data/catalog/index.js';
 import {
-  characters, enemies, bosses, jutsus, statuses, reactions, regions,
+  characters, enemies, bosses, jutsus, statuses, reactions, regions, items,
 } from '../data/index.js';
 import { SeedManager, generateSeedString } from '../engine/seed.js';
 import { SaveManager } from '../engine/save.js';
@@ -175,6 +175,20 @@ function getActionOptions(actor) {
     }
   }
 
+  for (const [itemId, count] of Object.entries(actor.inventory)) {
+    const def = items.get(itemId);
+    if (!def) continue;
+    options.push({
+      kind: 'ITEM',
+      itemId,
+      label: `${def.name} (${count}x)`,
+      detail: `${def.category} · ${def.effect}`,
+      slot: 'PRINCIPAL',
+      targetKind: targetKindForRange(def.range ?? 'RANGED'),
+      disabled: count <= 0,
+    });
+  }
+
   options.push({
     kind: 'DEFENDER', label: 'Defender', detail: 'Reduz o próximo dano recebido', slot: 'PRINCIPAL', targetKind: 'NONE',
   });
@@ -189,12 +203,13 @@ function getActionOptions(actor) {
 }
 
 function optionKey(opt) {
-  return `${opt.kind}|${opt.jutsuId ?? ''}|${opt.position ?? ''}`;
+  return `${opt.kind}|${opt.jutsuId ?? ''}|${opt.itemId ?? ''}|${opt.position ?? ''}`;
 }
 
 function buildActionPayload(option, targetId) {
   if (option.kind === 'ATAQUE_BASICO') return { type: ACTION_TYPES.ATAQUE_BASICO, targetId };
   if (option.kind === 'JUTSU') return { type: ACTION_TYPES.JUTSU, jutsuId: option.jutsuId, targetId };
+  if (option.kind === 'ITEM') return { type: ACTION_TYPES.ITEM, itemId: option.itemId, targetId };
   if (option.kind === 'DEFENDER') return { type: ACTION_TYPES.DEFENDER };
   if (option.kind === 'MOVER') return { type: ACTION_TYPES.MOVER, position: option.position };
   return null;
@@ -301,6 +316,7 @@ function startBattle(node) {
     statusCatalog: statuses,
     reactionCatalog: reactions.all(),
     jutsuCatalog: jutsus,
+    itemCatalog: items,
   });
   R.screen = 'BATTLE';
   maybeRunAI();
@@ -466,11 +482,16 @@ function formatLogLines() {
     const { actorId, action, result } = event;
     if (!result.applied) return null;
     const who = actorName(actorId);
-    const label = action.jutsuId ? (jutsus.get(action.jutsuId)?.name ?? action.jutsuId) : (ACTION_LABEL[action.type] ?? action.type);
+    const label = action.jutsuId
+      ? (jutsus.get(action.jutsuId)?.name ?? action.jutsuId)
+      : action.itemId
+        ? (items.get(action.itemId)?.name ?? action.itemId)
+        : (ACTION_LABEL[action.type] ?? action.type);
 
     if (result.armed) return { text: `  ${who} arma ${label}` };
     if (result.evaded) return { text: `  ${who} usa ${label} em ${actorName(action.targetId)} -> evadido com Kawarimi!` };
     if (result.removedStates) return { text: `  ${who} usa ${label} -> limpa [${result.removedStates.join(', ') || 'nada'}]` };
+    if (result.chakraRestored !== undefined) return { text: `  ${who} usa ${label} em ${actorName(action.targetId)} -> restaura ${result.chakraRestored} de Chakra` };
     if (result.healed !== undefined) return { text: `  ${who} usa ${label} em ${actorName(action.targetId)} -> cura ${result.healed}` };
     if (action.type === ACTION_TYPES.DEFENDER) return { text: `  ${who} se defende (+${result.guard} de guarda)` };
     if (action.type === ACTION_TYPES.MOVER) return { text: `  ${who} muda para ${POSITION_LABEL[result.position]}` };

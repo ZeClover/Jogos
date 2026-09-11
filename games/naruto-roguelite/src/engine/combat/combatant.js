@@ -17,9 +17,12 @@ import { POSITIONS, ACTION_BUDGET_PER_ROUND } from '../enums.js';
  *   recurso exclusivo do personagem (ex: Clones do Naruto — CANON_RULES
  *   #Personagens). `current` default 0 (a maioria dos recursos se constrói
  *   durante a luta, não começa cheio — ver DECISIONS.md D017).
+ * @param {Record<string, number>} [params.inventory] - quantidade de cada
+ *   Item (Marco 10, `ITEM_*`) que o combatente carrega — `{ [itemId]: quantidade }`.
+ *   Sem loja/loot ainda (D025), é só o "kit ninja" inicial do personagem.
  */
 export function createCombatant({
-  id, name = id, position = POSITIONS.CENTRO, attributes, resource = null,
+  id, name = id, position = POSITIONS.CENTRO, attributes, resource = null, inventory = {},
 }) {
   if (!id) throw new Error('createCombatant: "id" é obrigatório');
   if (!attributes) throw new Error('createCombatant: "attributes" é obrigatório');
@@ -41,7 +44,20 @@ export function createCombatant({
     cooldowns: new Map(),
     pendingReaction: null,
     resource: resource ? { current: 0, ...resource } : null,
+    inventory: { ...inventory },
   };
+}
+
+/** Confere se o combatente ainda tem ao menos 1 unidade de `itemId`. */
+export function hasItem(combatant, itemId) {
+  return (combatant.inventory[itemId] ?? 0) > 0;
+}
+
+/** Consome 1 unidade de `itemId`. Devolve se conseguiu (false se não tinha nenhuma). */
+export function consumeItem(combatant, itemId) {
+  if (!hasItem(combatant, itemId)) return false;
+  combatant.inventory[itemId] -= 1;
+  return true;
 }
 
 export function isAlive(combatant) {

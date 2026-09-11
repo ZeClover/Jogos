@@ -101,6 +101,13 @@ export const JUTSU_RANGES = Object.freeze([
   'MELEE', 'RANGED', 'AREA', 'ALLY', 'SELF',
 ]);
 
+// Efeito mecânico de um Item consumível (Marco 10, mesmo espírito de
+// JUTSU_EFFECTS/D016) — `RESTORE_CHAKRA` é exclusivo de Item: nenhum
+// Jutsu do catálogo restaura Chakra ainda, ver DECISIONS.md D025.
+export const ITEM_EFFECTS = Object.freeze([
+  'DAMAGE', 'HEAL', 'RESTORE_CHAKRA', 'CLEANSE', 'UTILITY',
+]);
+
 // Níveis de IA inimiga (Marco 5). Ver CANON_RULES.md #82 — avançada usa
 // foco, proteção, posicionamento; bosses têm perfil próprio (ai.js).
 export const AI_LEVELS = Object.freeze([
@@ -135,6 +142,17 @@ export const MISSION_OBJECTIVE_TYPES = Object.freeze([
   'RECONHECIMENTO', 'DEFESA', 'SOBREVIVENCIA', 'SABOTAGEM', 'RECUPERACAO',
   'INVESTIGACAO', 'CACA', 'FUGA', 'DUELO', 'PROTECAO', 'BATALHA', 'INVASAO',
   'INTERCEPTACAO', 'RASTREAMENTO',
+]);
+
+// Categorias de Item (Marco 10, docs/design/03_ITENS_EQUIPAMENTOS_ECONOMIA.md).
+// Vocabulário completo do doc; só CONSUMIVEL tem mecânica real via
+// ACTION_TYPES.ITEM por ora — ARMA/CORPO/ACESSORIO (equipamento
+// persistente, recalculando atributos) e os demais (scrolls, summoning/
+// transformation/boss items, loot especial) ficam para quando houver um
+// sistema de equipar/loadout real — ver DECISIONS.md D025.
+export const ITEM_CATEGORIES = Object.freeze([
+  'ARMA', 'FERRAMENTA', 'CORPO', 'ACESSORIO', 'CONSUMIVEL', 'SCROLL',
+  'SUMMONING_ITEM', 'TRANSFORMATION_ITEM', 'BOSS_ITEM', 'SPECIAL_LOOT', 'MISSION_LOOT',
 ]);
 
 // Status de uma Run em andamento (Marco 7).

@@ -3,6 +3,50 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Marco 10 — Expansão (1º lote: Itens consumíveis)
+
+### Adicionado
+
+- `src/data/catalog/items.js` — catálogo de Itens: 6 consumíveis/
+  ferramentas (Kunai, Shuriken, Bomba de Fumaça, Selo Explosivo, Pílula
+  do Soldado, Antídoto), reaproveitando os Content IDs já pré-declarados
+  no Asset Manifest do Marco 0 (nenhum nome novo inventado).
+- `src/engine/enums.js` — `ITEM_CATEGORIES` (vocabulário completo do doc
+  03) e `ITEM_EFFECTS` (`DAMAGE`/`HEAL`/`RESTORE_CHAKRA`/`CLEANSE`/
+  `UTILITY`); `RESTORE_CHAKRA` é novo e exclusivo de Item.
+- `src/engine/combat/actions.js` — `handleItem`: implementa
+  `ACTION_TYPES.ITEM`, fechando o stub `NOT_IMPLEMENTED_YET` aberto desde
+  o Marco 1 (D014). Reaproveita os efeitos genéricos de Jutsu (`DAMAGE`,
+  `HEAL`, `CLEANSE`, `UTILITY`) e adiciona `RESTORE_CHAKRA`; valida
+  alcance e consome 1 unidade do inventário antes de aplicar o efeito.
+- `src/engine/combat/combatant.js` — campo `inventory` no Combatente +
+  `hasItem`/`consumeItem`.
+- `src/engine/combat/characterBridge.js` — `DEFAULT_STARTING_KIT`: kit
+  ninja padrão (2 Kunai, 1 Bomba de Fumaça, 1 Pílula do Soldado, 1
+  Antídoto) concedido a todo Personagem, provisório até haver
+  Economia/loja/loadout real.
+- `src/ui/game.js`/`src/ui/run.js`: itens do inventário aparecem como
+  opções de ação no HUD de combate, com rótulo de quantidade e feedback
+  de log dedicado (dano/cura/Chakra restaurado/Estados removidos).
+- 19 novos testes (`tests/combat/inventory.test.js`,
+  `tests/data/items_catalog.test.js`, extensão de
+  `tests/combat/actions.test.js` e `tests/combat/characterBridge.test.js`)
+  — total do projeto: 353 testes.
+- DECISIONS.md D025 (escopo travado em consumível/ferramenta de uso
+  único, reaproveitamento dos 6 Content IDs do Marco 0, `handleItem`
+  reaproveitando efeitos de Jutsu + `RESTORE_CHAKRA` novo, kit fixo por
+  Personagem em vez de Economia, inventário não persistente entre
+  combates, Equipamento/Economia da Run/Economia Permanente/Armas
+  Lendárias fora de escopo deste lote).
+
+### Validado
+
+- `npm test`: 353/353 passando.
+- `play.html` testado em Chromium headless (Playwright): Kunai usado num
+  combate real (Bandido) aparece com quantidade, aplica dano corretamente
+  (HP 55→41), consome 1 unidade do inventário, turno avança normalmente;
+  sem erros de console.
+
 ## Marco 9 — Protótipo 3 Atos (Gerador + 2ª Região + Boss autorado)
 
 ### Adicionado

@@ -8,6 +8,16 @@ import { createCombatant } from './combatant.js';
 
 /** @typedef {import('../types.js').CharacterVersion} CharacterVersion */
 
+// Kit ninja padrão (Marco 10) — todo Personagem carrega isso ao entrar em
+// combate. Sem Economia/loja/loadout de itens ainda (D025), é um kit fixo
+// igual para todos, não uma escolha do jogador nem algo comprado/achado.
+const DEFAULT_STARTING_KIT = Object.freeze({
+  ITEM_KUNAI_BASIC_001: 2,
+  ITEM_SMOKE_BOMB_001: 1,
+  ITEM_SOLDIER_PILL_001: 1,
+  ITEM_ANTIDOTE_001: 1,
+});
+
 /**
  * Cria um Combatente a partir de uma ficha de Personagem.
  * @param {CharacterVersion} characterDef
@@ -28,6 +38,7 @@ export function createCombatantFromCharacter(characterDef, { id, position } = {}
         max: characterDef.exclusiveResource.max,
       }
       : null,
+    inventory: { ...DEFAULT_STARTING_KIT },
   });
 }
 

@@ -15,9 +15,10 @@
 **MARCO 6 — VERTICAL SLICE: concluído e validado.**
 **MARCO 7 — RUN / MISSÕES / MAPA: concluído e validado.**
 **MARCO 8 — PROGRESSÃO: concluído e validado.**
-**MARCO 9 — PROTÓTIPO 3 ATOS: em aprofundamento (gerador procedural + 2ª Região + boss autorado da Floresta da Morte concluídos e validados).**
+**MARCO 9 — PROTÓTIPO 3 ATOS: pausado por decisão do usuário (gerador procedural + 2ª Região + boss autorado da Floresta da Morte concluídos e validados; 3º Ato e Facções ficam para depois do Marco 10).**
+**MARCO 10 — EXPANSÃO: em andamento (1º lote: Itens consumíveis, ver abaixo).**
 
-Próximo: **MARCO 10 — Expansão** (ou continuar aprofundando o Marco 9 com mais Atos/Regiões antes de avançar — ver "Próximo passo").
+Próximo: continuar o Marco 10 (mais lotes de conteúdo) — depois retomar as pendências do Marco 9 (3ª Região/Ato, Facções+Reputação) por pedido explícito do usuário.
 
 ## Visão geral do projeto
 
@@ -415,9 +416,48 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   novos reaproveitando Estados já catalogados, stats mais Taijutsu/menos
   Chakra que Zabuza, `bossId` real substituindo o Mini-Boss gerado).
 
+### Concluído (Marco 10 — Expansão, 1º lote: Itens consumíveis)
+
+- **Catálogo de Itens** (`src/data/catalog/items.js`): 6 itens
+  consumíveis/ferramentas reaproveitando os Content IDs já pré-declarados
+  no Asset Manifest do Marco 0 (Kunai, Shuriken, Bomba de Fumaça, Selo
+  Explosivo, Pílula do Soldado, Antídoto) — nenhum nome novo inventado,
+  ver DECISIONS.md D025 #2 (testado explicitamente contra o Asset
+  Manifest em `items_catalog.test.js`).
+- **`ACTION_TYPES.ITEM` implementado** (`handleItem` em
+  `src/engine/combat/actions.js`): fecha o stub `NOT_IMPLEMENTED_YET`
+  aberto desde o Marco 1 (D014). Reaproveita os 4 efeitos genéricos já
+  existentes de Jutsu (`DAMAGE` via `resolveAttack`, `HEAL`, `CLEANSE`,
+  `UTILITY` via `applyJutsuEffects`) + um efeito novo exclusivo de Item,
+  `RESTORE_CHAKRA` (nenhum Jutsu do catálogo restaura Chakra ainda,
+  D025 #3). Valida alcance (`isValidRangeTarget`) e consome 1 unidade do
+  inventário (`consumeItem`) antes de aplicar o efeito.
+- **Inventário do Combatente** (`src/engine/combat/combatant.js`): novo
+  campo `inventory: Record<itemId, quantidade>` + `hasItem`/`consumeItem`.
+- **Kit ninja padrão** (`characterBridge.js#DEFAULT_STARTING_KIT`): todo
+  Personagem entra em combate com o mesmo kit fixo (2 Kunai, 1 Bomba de
+  Fumaça, 1 Pílula do Soldado, 1 Antídoto) — sem Economia/loja/loadout de
+  itens ainda, é provisório e documentado (D025 #4). Inventário NÃO
+  persiste entre combates de uma Run (reseta a cada `CombatState` novo,
+  diferente de HP/Chakra/recurso via `campaign.js` — D025 #5).
+- **UI jogável** (`game.js` e `run.js`): itens do inventário aparecem
+  como opções de ação normais no HUD de combate (rótulo com quantidade
+  restante), com feedback de log dedicado para dano/cura/Chakra
+  restaurado/Estados removidos.
+- 19 novos testes (`tests/combat/inventory.test.js`,
+  `tests/data/items_catalog.test.js`, extensão de
+  `tests/combat/actions.test.js` e `tests/combat/characterBridge.test.js`)
+  — total do projeto: 353 testes.
+- DECISIONS.md D025 (escopo travado em itens consumíveis/ferramenta de
+  uso único, reaproveitamento dos 6 Content IDs do Marco 0, `handleItem`
+  reaproveitando os efeitos de Jutsu + `RESTORE_CHAKRA` novo, kit fixo por
+  Personagem em vez de Economia, inventário não persistente entre
+  combates, Equipamento/Economia da Run/Economia Permanente/Armas Lendárias
+  explicitamente fora de escopo deste lote).
+
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **334/334
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **353/353
   passando**.
 - Dev console verificado no Chromium headless (Playwright), Marcos 0-5:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
@@ -473,19 +513,26 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   a Serpente da Floresta da Morte real (não mais o Mini-Boss gerado);
   vitória confirmada com o nome certo do boss na tela final; sem erros
   de página.
+- **Itens (Marco 10, 1º lote) verificado no Chromium headless
+  (Playwright)**: em `play.html`, Kunai usado num combate real (Bandido)
+  aparece como opção de ação com quantidade, aplica dano corretamente
+  (HP 55→41), consome 1 unidade do inventário, turno avança normalmente;
+  sem nenhum erro de console.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
-Nenhum item em andamento — Marcos 0-9 (passos concluídos até agora)
-fechados.
+Marco 10 — Expansão: 1º lote (Itens consumíveis) concluído; mais lotes
+de conteúdo a definir.
 
 ## Pendente (próximos marcos/aprofundamentos, não começados)
 
-- Marco 9 — Protótipo 3 Atos: mais Atos/Regiões, Gerador de Missão
+- Marco 9 — Protótipo 3 Atos (retomar após este lote do Marco 10, por
+  pedido explícito do usuário): 3º Ato/Região, Gerador de Missão
   completo (facção/complicação/modificador/recompensa/flags do doc 04 —
   depende de Facções, doc 06, ainda não implementado)
-- Marco 10 — Expansão
+- Marco 10 — Expansão: próximos lotes de conteúdo (Equipamento/Economia
+  da Run, mais Personagens/Jutsus/Inimigos, etc.)
 
 ## Bugs conhecidos
 
@@ -513,7 +560,7 @@ sem pedido explícito do usuário).
 | Personagens/versões | 4 | 500–800+ |
 | Jutsus | 15 | 1.000–1.500+ |
 | Passivas | 1 | 400–600+ |
-| Itens | 0 | 500+ |
+| Itens | 6 | 500+ |
 | Inimigos comuns | 4 (+ gerados proceduralmente) | — |
 | Bosses/elites | 2 | 200–300+ |
 | Eventos | 0 | 300+ |
@@ -531,23 +578,30 @@ boss da Floresta da Morte); Inimigos/Bosses com o primeiro lote do País
 das Ondas (4/1, Marco 5), Marco 9 soma o 2º Boss (Serpente) e passa a
 gerar inimigos comuns/elite proceduralmente para a Floresta da Morte;
 Templates de Missão/Regiões com o primeiro lote do Marco 7 (4/1, Marco 9
-soma a 2ª Região) — próximos lotes maiores vêm em Konoha Genins/Suna/etc.
-(PROMPT MESTRE §78). Tags/Estados/Reações já são o vocabulário completo
-do doc 01 — não crescem "em lote" do mesmo jeito.)
+soma a 2ª Região); Itens com o primeiro lote do Marco 10 (6 consumíveis/
+ferramentas, reaproveitando os Content IDs do Marco 0) — próximos lotes
+maiores vêm em Konoha Genins/Suna/etc. (PROMPT MESTRE §78). Tags/Estados/
+Reações já são o vocabulário completo do doc 01 — não crescem "em lote"
+do mesmo jeito.)
 
 ## Próximo passo
 
-O Marco 9 já cobriu o Gerador procedural de Inimigo, a Floresta da Morte
-como 2ª Região/Ato Ascensão (D023) e um Boss autorado de verdade para
-ela — a Serpente da Floresta da Morte, fechando a pendência D023 #3
-(D024). O "Protótipo 3 Atos" completo ainda pede mais: possivelmente um
-3º Ato, e o Gerador de Missão completo do doc 04 (facção/complicação/
-modificador/recompensa/flags — precisa do sistema de Facções, doc 06,
-ainda não implementado). Continuar aprofundando o Marco 9 nessa direção
-antes de ir para o **Marco 10 — Expansão** (CANON_RULES — "não expandir
-antes de validar"). Pendências explícitas que continuam em aberto de
-marcos anteriores: salvar/carregar uma Run em andamento (D020 #9),
-"recuar" voltando uma camada no mapa (D020 #9), persistência de
-cooldowns/Estados entre nós de uma mesma run (D019 #4/D020 #6), passivas
+O Marco 10 — Expansão entregou seu 1º lote: Itens consumíveis/ferramenta
+(6 itens, `ACTION_TYPES.ITEM` funcional, fechando o stub D014 aberto
+desde o Marco 1) — ver D025. Duas frentes seguem em aberto, por decisão
+explícita do usuário:
+
+1. **Continuar o Marco 10** com mais lotes de conteúdo (Equipamento/
+   Economia da Run do doc 03, mais Personagens/Jutsus/Inimigos, etc.).
+2. **Retomar as pendências do Marco 9** — Protótipo 3 Atos — deixadas em
+   pausa antes deste lote: um 3º Ato/Região, e/ou o sistema de Facções e
+   Reputação (doc 06), que por sua vez destrava o Gerador de Missão
+   completo do doc 04 (facção/complicação/modificador/recompensa/flags).
+
+Pendências explícitas que continuam em aberto de marcos anteriores:
+salvar/carregar uma Run em andamento (D020 #9), "recuar" voltando uma
+camada no mapa (D020 #9), persistência de cooldowns/Estados/inventário
+entre nós de uma mesma run (D019 #4/D020 #6/D025 #5), passivas
 alternativas/skins de Maestria com ficha real (D022 #1), Pós-game e
-Economia Permanente com Legado/Tickets/Fragmentos (D022 #7).
+Economia Permanente com Legado/Tickets/Fragmentos (D022 #7), Equipamento
+persistente e Economia da Run/Permanente (D025 #6/#7).

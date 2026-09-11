@@ -867,3 +867,65 @@ comum com HP maior"). Este é o passo que fecha essa pendência.
    sem qualquer mudança de código (só o dado da Região mudou) — o
    Mini-Boss gerado (D023 #3) permanece disponível para qualquer Região
    futura sem boss autorado ainda.
+
+## D025 — Marco 10 (Expansão): primeiro lote de Itens, escopo consumível-only
+
+**Contexto:** `docs/design/03_ITENS_EQUIPAMENTOS_ECONOMIA.md` descreve um
+sistema grande — slots de equipamento (arma/ferramenta/corpo/acessório/
+consumível), Economia da Run (Ryō, materiais), lojas, Economia Permanente
+(Legado/Tickets/Fragmentos), roletas. `ACTION_TYPES.ITEM` era um stub
+`NOT_IMPLEMENTED_YET` desde o Marco 1 (D014). O Asset Manifest do Marco 0
+já tinha 6 Content IDs de Item reais e prontos (`ITEM_KUNAI_BASIC_001`,
+`ITEM_SHURIKEN_BASIC_001`, `ITEM_SMOKE_BOMB_001`,
+`ITEM_EXPLOSIVE_TAG_001`, `ITEM_SOLDIER_PILL_001`, `ITEM_ANTIDOTE_001`) —
+"peças validadas" (doc09) esperando uma ficha mecânica.
+
+**Decisões:**
+
+1. **Escopo travado em itens CONSUMÍVEL/FERRAMENTA de uso único em
+   combate** — fecha o stub de `ACTION_TYPES.ITEM` (D014) sem abrir o
+   sistema inteiro de uma vez. Equipamento persistente (ARMA/CORPO/
+   ACESSORIO recalculando atributos, "Build = personagem + jutsu +
+   passiva + equipamento...") fica fora: exigiria um sistema de loadout/
+   equipar (tela própria, recálculo de atributos) que não existe e não
+   tem urgência sem Economia para adquirir equipamento variado ainda.
+   `ITEM_CATEGORIES` (enums.js) já lista o vocabulário completo do doc,
+   mesmo padrão de D015 #1/D020 #1 — só CONSUMIVEL/FERRAMENTA têm
+   mecânica real.
+2. **Os 6 itens usam exatamente os Content IDs já reservados no Marco
+   0** — nenhum nome novo inventado; a ficha mecânica (effect/power/
+   range) foi escolhida para combinar com o que cada item já sugeria
+   (Kunai/Shuriken = dano à distância; Bomba de Fumaça = Oculto, mesmo
+   Estado do Kirigakure; Selo Explosivo = dano maior; Pílula do Soldado
+   = restaura Chakra, uso canônico de "soldier pill"; Antídoto = limpa
+   Estados curáveis, mesmo efeito de Kai).
+3. **`handleItem` (actions.js) reaproveita os mesmos 5 efeitos genéricos
+   de Jutsu (D016) + um novo, `RESTORE_CHAKRA`** — nenhum Jutsu do
+   catálogo restaura Chakra ainda, então não havia como reaproveitar um
+   efeito existente para a Pílula do Soldado; um efeito novo e mínimo
+   (`target.chakra = min(max, chakra + amount)`) foi mais simples que
+   forçar isso em cima de HEAL (que é sempre HP). Diferente de Jutsu,
+   ITEM não tem custo de Chakra nem cooldown — o "custo" é consumir 1
+   unidade do inventário (`combatant.inventory`, `hasItem`/`consumeItem`
+   em `combatant.js`).
+4. **Inventário é um "kit ninja" fixo por Personagem, não comprado nem
+   encontrado** (`characterBridge.js#DEFAULT_STARTING_KIT`) — sem
+   Economia/loja/loot ainda, dar um kit fixo igual pra todos é honesto
+   sobre o que existe; simplificação explícita, revisável quando houver
+   Ryō/lojas de verdade. Inimigos/bosses não ganham inventário (default
+   `{}` em `createCombatant`) — eles não usam Item nenhum, `ai.js` nunca
+   escolhe `ACTION_TYPES.ITEM`.
+5. **Inventário NÃO persiste entre encontros de uma Run/Vertical Slice**
+   — cada `CombatState` novo usa `createCombatantFromCharacter` de novo,
+   que sempre concede o kit cheio. Diferente de HP/Chakra/recurso
+   exclusivo (D019 #4, carregados via `campaign.js`), o inventário reseta
+   a cada combate — simplificação deliberada para não estender
+   `snapshotSquad`/`applySquadSnapshot` neste lote; documentar como
+   pendência caso vire relevante (ex: itens raros que deveriam ser
+   escassos numa Run inteira).
+6. **Economia da Run (Ryō/materiais), lojas (nó LOJA, D020 #1 ainda
+   pendente), Economia Permanente (Legado/Tickets/Fragmentos, D022 #7) e
+   Armas Lendárias continuam inteiramente fora de escopo** — este lote
+   só prova que o motor de Item funciona de ponta a ponta (catálogo real
+   + `ACTION_TYPES.ITEM` + UI jogável), não tenta resolver a Economia
+   inteira do doc 03 de uma vez.

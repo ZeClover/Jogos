@@ -65,3 +65,18 @@ test('isSquadWithinBudget aceita orçamento customizado', () => {
   assert.equal(isSquadWithinBudget([NARUTO_FIXTURE, SASUKE_FIXTURE], 3), false);
   assert.equal(isSquadWithinBudget([NARUTO_FIXTURE, SASUKE_FIXTURE], 4), true);
 });
+
+test('createCombatantFromCharacter concede o kit ninja padrão (Marco 10, D025) — igual para qualquer Personagem', () => {
+  const naruto = createCombatantFromCharacter(NARUTO_FIXTURE);
+  const sasuke = createCombatantFromCharacter(SASUKE_FIXTURE);
+  assert.deepEqual(naruto.inventory, sasuke.inventory);
+  assert.ok(naruto.inventory.ITEM_KUNAI_BASIC_001 >= 1);
+  assert.ok(naruto.inventory.ITEM_SOLDIER_PILL_001 >= 1);
+});
+
+test('createCombatantFromCharacter dá inventários independentes por combatente (mutar um não afeta o outro)', () => {
+  const a = createCombatantFromCharacter(NARUTO_FIXTURE, { id: 'a' });
+  const b = createCombatantFromCharacter(NARUTO_FIXTURE, { id: 'b' });
+  a.inventory.ITEM_KUNAI_BASIC_001 = 0;
+  assert.notEqual(b.inventory.ITEM_KUNAI_BASIC_001, 0);
+});

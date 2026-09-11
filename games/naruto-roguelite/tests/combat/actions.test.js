@@ -6,21 +6,26 @@ import { createCombatant, applyDamage } from '../../src/engine/combat/combatant.
 import { resolveAction } from '../../src/engine/combat/actions.js';
 import { ACTION_TYPES, ACTION_SLOTS, POSITIONS } from '../../src/engine/enums.js';
 
-function makeState({ teamA, teamB, seed = 'seed-actions' }) {
+function makeState({
+  teamA, teamB, seed = 'seed-actions', itemCatalog = new Map(),
+}) {
   const all = [...teamA, ...teamB];
   return {
     combatants: new Map(all.map((c) => [c.id, c])),
     rng: createRngStream(seed, 'combat'),
     teamAIds: teamA.map((c) => c.id),
     teamBIds: teamB.map((c) => c.id),
+    itemCatalog,
     sideIds(id) {
       return this.teamAIds.includes(id) ? this.teamAIds : this.teamBIds;
     },
   };
 }
 
-function fighter(id, overrides = {}, position = POSITIONS.FRENTE) {
-  return createCombatant({ id, position, attributes: createAttributes(overrides) });
+function fighter(id, overrides = {}, position = POSITIONS.FRENTE, inventory = {}) {
+  return createCombatant({
+    id, position, attributes: createAttributes(overrides), inventory,
+  });
 }
 
 // Certeiro/nunca-erra e nunca-crítico, para tornar os testes de dano determinísticos
@@ -185,15 +190,95 @@ test('TROCAR rejeita alvo do time inimigo ou morto', () => {
   assert.equal(resolveAction(state, a, { type: ACTION_TYPES.TROCAR, allyId: aliadoMorto.id }).reason, 'INVALID_ALLY');
 });
 
-test('ITEM/PREPARAR/INTERAGIR retornam NOT_IMPLEMENTED_YET sem consumir turno', () => {
+test('PREPARAR/INTERAGIR retornam NOT_IMPLEMENTED_YET sem consumir turno', () => {
   const actor = fighter('a', {}, POSITIONS.CENTRO);
   const state = makeState({ teamA: [actor], teamB: [fighter('b', {}, POSITIONS.FRENTE)] });
 
-  for (const type of [ACTION_TYPES.ITEM, ACTION_TYPES.PREPARAR, ACTION_TYPES.INTERAGIR]) {
+  for (const type of [ACTION_TYPES.PREPARAR, ACTION_TYPES.INTERAGIR]) {
     const result = resolveAction(state, actor, { type });
     assert.equal(result.applied, false);
     assert.equal(result.reason, 'NOT_IMPLEMENTED_YET');
   }
+});
+
+// --- ITEM (Marco 10) -------------------------------------------------------
+
+const FIXTURE_KUNAI = {
+  id: 'ITEM_FIXTURE_KUNAI_001', effect: 'DAMAGE', combatCategory: 'TAIJUTSU', power: 20, accuracy: 1, range: 'RANGED',
+};
+const FIXTURE_PILL = {
+  id: 'ITEM_FIXTURE_PILL_001', effect: 'RESTORE_CHAKRA', power: 30, range: 'ALLY',
+};
+const FIXTURE_ANTIDOTE = {
+  id: 'ITEM_FIXTURE_ANTIDOTE_001', effect: 'CLEANSE', range: 'ALLY',
+};
+const FIXTURE_ITEM_CATALOG = new Map([
+  [FIXTURE_KUNAI.id, FIXTURE_KUNAI],
+  [FIXTURE_PILL.id, FIXTURE_PILL],
+  [FIXTURE_ANTIDOTE.id, FIXTURE_ANTIDOTE],
+]);
+
+test('ITEM desconhecido (sem itemId, ou itemId fora do catálogo) é rejeitado com UNKNOWN_ITEM', () => {
+  const actor = fighter('a', {}, POSITIONS.CENTRO);
+  const state = makeState({ teamA: [actor], teamB: [fighter('b', {}, POSITIONS.FRENTE)], itemCatalog: FIXTURE_ITEM_CATALOG });
+
+  assert.equal(resolveAction(state, actor, { type: ACTION_TYPES.ITEM }).reason, 'UNKNOWN_ITEM');
+  assert.equal(resolveAction(state, actor, { type: ACTION_TYPES.ITEM, itemId: 'ITEM_FANTASMA_001' }).reason, 'UNKNOWN_ITEM');
+});
+
+test('ITEM que o ator não carrega no inventário é rejeitado com ITEM_NOT_IN_INVENTORY, sem consumir turno', () => {
+  const actor = fighter('a', {}, POSITIONS.CENTRO, {}); // inventário vazio
+  const target = fighter('b', {}, POSITIONS.FRENTE);
+  const state = makeState({ teamA: [actor], teamB: [target], itemCatalog: FIXTURE_ITEM_CATALOG });
+
+  const result = resolveAction(state, actor, { type: ACTION_TYPES.ITEM, itemId: FIXTURE_KUNAI.id, targetId: target.id });
+  assert.equal(result.applied, false);
+  assert.equal(result.reason, 'ITEM_NOT_IN_INVENTORY');
+  assert.equal(actor.actionBudget[ACTION_SLOTS.PRINCIPAL], 1);
+});
+
+test('ITEM de dano (Kunai) acerta, causa dano e consome 1 unidade do inventário', () => {
+  const actor = fighter('a', { ...ALWAYS_HIT, ...NEVER_CRIT }, POSITIONS.CENTRO, { [FIXTURE_KUNAI.id]: 2 });
+  const target = fighter('b', { defesaFisica: 0 }, POSITIONS.FRENTE);
+  const state = makeState({ teamA: [actor], teamB: [target], itemCatalog: FIXTURE_ITEM_CATALOG });
+
+  const result = resolveAction(state, actor, { type: ACTION_TYPES.ITEM, itemId: FIXTURE_KUNAI.id, targetId: target.id });
+  assert.equal(result.applied, true);
+  assert.equal(result.success, true);
+  assert.equal(result.damage, 20);
+  assert.equal(actor.inventory[FIXTURE_KUNAI.id], 1, 'consome 1 unidade, não zera o resto do estoque');
+});
+
+test('ITEM de dano não gasta Chakra do ator (diferente de Jutsu)', () => {
+  const actor = fighter('a', {
+    ...ALWAYS_HIT, ...NEVER_CRIT, chakraMax: 50,
+  }, POSITIONS.CENTRO, { [FIXTURE_KUNAI.id]: 1 });
+  const target = fighter('b', { defesaFisica: 0 }, POSITIONS.FRENTE);
+  const state = makeState({ teamA: [actor], teamB: [target], itemCatalog: FIXTURE_ITEM_CATALOG });
+
+  resolveAction(state, actor, { type: ACTION_TYPES.ITEM, itemId: FIXTURE_KUNAI.id, targetId: target.id });
+  assert.equal(actor.chakra, 50);
+});
+
+test('ITEM RESTORE_CHAKRA (Pílula do Soldado) restaura Chakra do alvo sem passar do máximo', () => {
+  const actor = fighter('a', { chakraMax: 100 }, POSITIONS.CENTRO, { [FIXTURE_PILL.id]: 1 });
+  applyDamage(actor, 0); // hp intacto; ajustamos chakra manualmente abaixo
+  actor.chakra = 80;
+  const state = makeState({ teamA: [actor], teamB: [fighter('b', {}, POSITIONS.FRENTE)], itemCatalog: FIXTURE_ITEM_CATALOG });
+
+  const result = resolveAction(state, actor, { type: ACTION_TYPES.ITEM, itemId: FIXTURE_PILL.id, targetId: actor.id });
+  assert.equal(result.applied, true);
+  assert.equal(result.chakraRestored, 30);
+  assert.equal(actor.chakra, 100, 'não deveria passar do chakraMax (80+30=110 -> capado em 100)');
+});
+
+test('ITEM CLEANSE (Antídoto) usa o mesmo cleanseCurableStates de Kai, sem custo de Chakra', () => {
+  const actor = fighter('a', {}, POSITIONS.CENTRO, { [FIXTURE_ANTIDOTE.id]: 1 });
+  const state = makeState({ teamA: [actor], teamB: [fighter('b', {}, POSITIONS.FRENTE)], itemCatalog: FIXTURE_ITEM_CATALOG });
+
+  const result = resolveAction(state, actor, { type: ACTION_TYPES.ITEM, itemId: FIXTURE_ANTIDOTE.id, targetId: actor.id });
+  assert.equal(result.applied, true);
+  assert.deepEqual(result.removedStates, []); // sem catálogo de Estados no fixture, nada pra remover — só confere que não quebra
 });
 
 test('tipo de ação desconhecido é rejeitado com UNKNOWN_ACTION_TYPE', () => {

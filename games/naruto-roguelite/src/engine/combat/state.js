@@ -21,9 +21,11 @@ export class CombatState {
    * @param {object[]} [params.reactionCatalog] - definições de Reação (src/data/catalog/reactions.js).
    * @param {Map} [params.jutsuCatalog] - id -> ficha de Jutsu (src/data/catalog/jutsus.js).
    *   Sem isso, ações JUTSU com `jutsuId` são rejeitadas com UNKNOWN_JUTSU.
+   * @param {Map} [params.itemCatalog] - id -> ficha de Item (src/data/catalog/items.js, Marco 10).
+   *   Sem isso, ações ITEM são rejeitadas com UNKNOWN_ITEM.
    */
   constructor({
-    teamA, teamB, seedManager, statusCatalog = new Map(), reactionCatalog = [], jutsuCatalog = new Map(),
+    teamA, teamB, seedManager, statusCatalog = new Map(), reactionCatalog = [], jutsuCatalog = new Map(), itemCatalog = new Map(),
   }) {
     if (!teamA?.length || !teamB?.length) {
       throw new Error('CombatState: teamA e teamB precisam ter ao menos 1 combatente');
@@ -35,6 +37,7 @@ export class CombatState {
     this.statusCatalog = statusCatalog;
     this.reactionCatalog = reactionCatalog;
     this.jutsuCatalog = jutsuCatalog;
+    this.itemCatalog = itemCatalog;
     this.round = 0;
     this.turnOrder = [];
     this.turnIndex = 0;

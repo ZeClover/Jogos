@@ -24,12 +24,16 @@
 // Marco 4 (Personagens): um cast de JUTSU bem-sucedido (`result.success`)
 // que carrega `grantsResource` na ficha do catálogo soma ao recurso
 // exclusivo do próprio ator (Clones, Planejamento...), ver DECISIONS.md D017.
+//
+// Marco 10 (Itens): ITEM consome 1 unidade de `combatant.inventory` (sem
+// custo de Chakra/cooldown) e reaproveita os mesmos 5 efeitos genéricos
+// de Jutsu + `RESTORE_CHAKRA` (exclusivo de Item) — ver DECISIONS.md D025.
 
 import {
-  ACTION_SLOTS, ACTION_TYPES, POSITIONS, JUTSU_EFFECTS,
+  ACTION_SLOTS, ACTION_TYPES, POSITIONS, JUTSU_EFFECTS, ITEM_EFFECTS,
 } from '../enums.js';
 import {
-  isAlive, applyDamage, applyHeal, gainResource,
+  isAlive, applyDamage, applyHeal, gainResource, hasItem, consumeItem,
 } from './combatant.js';
 import { isValidRangeTarget } from './positions.js';
 import {
@@ -276,6 +280,77 @@ function handleTrocar(state, actor, action) {
   };
 }
 
+/**
+ * ITEM (Marco 10): usa 1 unidade de `action.itemId` do inventário do
+ * próprio ator (`combatant.inventory`, ver D025) contra `action.targetId`.
+ * Sem custo de Chakra e sem cooldown — o "custo" é ter o item em mãos.
+ * Mesmos 5 efeitos genéricos de Jutsu (D016), + `RESTORE_CHAKRA`
+ * (exclusivo de Item, D025).
+ */
+function handleItem(state, actor, action) {
+  const itemDef = action.itemId ? state.itemCatalog?.get(action.itemId) : null;
+  if (!action.itemId || !itemDef) return { applied: false, reason: 'UNKNOWN_ITEM' };
+  if (!hasItem(actor, action.itemId)) return { applied: false, reason: 'ITEM_NOT_IN_INVENTORY' };
+
+  const target = state.combatants.get(action.targetId);
+  if (!target || !isAlive(target)) return { applied: false, reason: 'INVALID_TARGET' };
+
+  const effectType = itemDef.effect;
+  if (!ITEM_EFFECTS.includes(effectType)) return { applied: false, reason: 'INVALID_EFFECT' };
+
+  const range = itemDef.range ?? 'RANGED';
+  const sideMembers = state.sideIds(target.id).map((id) => state.combatants.get(id));
+  if (!isValidRangeTarget({
+    actor, target, range, sideMembers,
+  })) {
+    return { applied: false, reason: 'OUT_OF_RANGE' };
+  }
+
+  consumeItem(actor, action.itemId);
+
+  if (effectType === 'DAMAGE') {
+    const attack = resolveAttack({
+      state,
+      actor,
+      target,
+      range,
+      category: itemDef.combatCategory ?? 'TAIJUTSU',
+      power: itemDef.power ?? 0,
+      guard: target.guard,
+      baseAccuracy: itemDef.accuracy ?? 0.9,
+      tags: itemDef.tags ?? [],
+    });
+    return { ...attack, itemConsumed: action.itemId };
+  }
+  if (effectType === 'HEAL') {
+    const healAmount = itemDef.power ?? 0;
+    const targetHp = applyHeal(target, healAmount);
+    return {
+      applied: true, success: true, healed: healAmount, targetHp, targetId: target.id, itemConsumed: action.itemId,
+    };
+  }
+  if (effectType === 'RESTORE_CHAKRA') {
+    const amount = itemDef.power ?? 0;
+    target.chakra = Math.min(target.attributes.chakraMax, target.chakra + amount);
+    return {
+      applied: true, success: true, chakraRestored: amount, targetChakra: target.chakra, targetId: target.id, itemConsumed: action.itemId,
+    };
+  }
+  if (effectType === 'CLEANSE') {
+    const removedStates = cleanseCurableStates(target, state.statusCatalog);
+    return {
+      applied: true, success: true, removedStates, targetId: target.id, itemConsumed: action.itemId,
+    };
+  }
+  // UTILITY: só aplica appliesStates/Reações (ex: Bomba de Fumaça em si mesmo).
+  const { appliedStates, reactions } = applyJutsuEffects({
+    state, actor, target, action: itemDef,
+  });
+  return {
+    applied: true, success: true, appliedStates, reactions, targetId: target.id, itemConsumed: action.itemId,
+  };
+}
+
 function notImplementedYet() {
   return { applied: false, reason: 'NOT_IMPLEMENTED_YET' };
 }
@@ -286,7 +361,7 @@ const HANDLERS = {
   [ACTION_TYPES.DEFENDER]: handleDefender,
   [ACTION_TYPES.MOVER]: handleMover,
   [ACTION_TYPES.TROCAR]: handleTrocar,
-  [ACTION_TYPES.ITEM]: notImplementedYet,
+  [ACTION_TYPES.ITEM]: handleItem,
   [ACTION_TYPES.PREPARAR]: notImplementedYet,
   [ACTION_TYPES.INTERAGIR]: notImplementedYet,
 };
