@@ -20,12 +20,16 @@
 // `effect` (DAMAGE default | HEAL | CLEANSE | ARM_REACTION | UTILITY, ver
 // DECISIONS.md D016). Ataques single-target (ATAQUE_BASICO e JUTSU do tipo
 // DAMAGE) agora podem ser evitados por uma reação armada (Kawarimi).
+//
+// Marco 4 (Personagens): um cast de JUTSU bem-sucedido (`result.success`)
+// que carrega `grantsResource` na ficha do catálogo soma ao recurso
+// exclusivo do próprio ator (Clones, Planejamento...), ver DECISIONS.md D017.
 
 import {
   ACTION_SLOTS, ACTION_TYPES, POSITIONS, JUTSU_EFFECTS,
 } from '../enums.js';
 import {
-  isAlive, applyDamage, applyHeal,
+  isAlive, applyDamage, applyHeal, gainResource,
 } from './combatant.js';
 import { isValidRangeTarget } from './positions.js';
 import {
@@ -175,6 +179,7 @@ function handleJutsu(state, actor, action) {
   actor.chakra -= cost;
   if (action.jutsuId) setCooldown(actor, action.jutsuId, effective.cooldown ?? 0);
 
+  let result;
   if (effectType === 'DAMAGE') {
     const attack = resolveAttack({
       state,
@@ -194,47 +199,48 @@ function handleJutsu(state, actor, action) {
         state, actor, target, action: effective,
       }));
     }
-    return {
+    result = {
       ...attack, chakraSpent: cost, appliedStates, reactions,
     };
-  }
-
-  if (effectType === 'HEAL') {
+  } else if (effectType === 'HEAL') {
     const mustRoll = effective.accuracy !== undefined && effective.accuracy < 1;
     const hit = mustRoll ? rollHit(effective.accuracy, state.rng) : true;
     if (!hit) {
-      return {
+      result = {
         applied: true, success: false, hit: false, chakraSpent: cost, targetId: target.id,
       };
+    } else {
+      const healAmount = effective.power ?? 0;
+      const targetHp = applyHeal(target, healAmount);
+      result = {
+        applied: true, success: true, hit: true, healed: healAmount, targetHp, chakraSpent: cost, targetId: target.id,
+      };
     }
-    const healAmount = effective.power ?? 0;
-    const targetHp = applyHeal(target, healAmount);
-    return {
-      applied: true, success: true, hit: true, healed: healAmount, targetHp, chakraSpent: cost, targetId: target.id,
-    };
-  }
-
-  if (effectType === 'CLEANSE') {
+  } else if (effectType === 'CLEANSE') {
     const removedStates = cleanseCurableStates(target, state.statusCatalog);
-    return {
+    result = {
       applied: true, success: true, removedStates, chakraSpent: cost, targetId: target.id,
     };
-  }
-
-  if (effectType === 'ARM_REACTION') {
+  } else if (effectType === 'ARM_REACTION') {
     armReaction(actor, { jutsuId: action.jutsuId ?? null, sourceId: actor.id });
-    return {
+    result = {
       applied: true, success: true, armed: true, chakraSpent: cost, targetId: target.id,
+    };
+  } else {
+    // UTILITY: só aplica appliesStates/Reações (ex: buff em si mesmo), sem dano/cura/limpeza.
+    const { appliedStates, reactions } = applyJutsuEffects({
+      state, actor, target, action: effective,
+    });
+    result = {
+      applied: true, success: true, appliedStates, reactions, chakraSpent: cost, targetId: target.id,
     };
   }
 
-  // UTILITY: só aplica appliesStates/Reações (ex: buff em si mesmo), sem dano/cura/limpeza.
-  const { appliedStates, reactions } = applyJutsuEffects({
-    state, actor, target, action: effective,
-  });
-  return {
-    applied: true, success: true, appliedStates, reactions, chakraSpent: cost, targetId: target.id,
-  };
+  if (result.success && jutsuDef?.grantsResource) {
+    result.resourceGained = gainResource(actor, jutsuDef.grantsResource.amount);
+  }
+
+  return result;
 }
 
 function handleDefender(state, actor) {

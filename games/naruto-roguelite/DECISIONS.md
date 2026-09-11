@@ -364,3 +364,62 @@ handler `JUTSU` do Marco 1/2 só sabia causar dano.
    em E/D/C/B/A/S/Kinjutsu/EX; "Especial" no doc 13 lê como descrição da
    natureza da ação (ação especial de utilidade), não uma nova categoria
    de poder.
+
+## D017 — Personagens (Marco 4): stats provisórios, loadout honesto, recurso genérico
+
+**Contexto:** `docs/design/12_PERSONAGENS_VERTICAL_SLICE.md` dá fichas
+reais para os 4 Genin, mas de forma condensada: só HP/Chakra (+ Controle
+de Chakra da Sakura) são números explícitos; os outros atributos
+primários e vários jutsus citados no loadout de cada personagem não têm
+ficha em `docs/design/13` (que só cobriu 12 jutsus, não todos os
+nomeados no loadout dos 4 Genin).
+
+**Decisões:**
+
+1. **Atributos além de HP/Chakra/Controle de Chakra são uma distribuição
+   provisória**, derivada do `role` que o doc dá para cada personagem
+   (ex: Sasuke "Burst/Precisão/Execução" -> velocidade e precisão mais
+   altas; Shikamaru "Controle/Planejamento" -> velocidade baixa,
+   resistência mental alta). A alternativa — deixar todos nos defaults
+   genéricos da engine — foi rejeitada: violaria CANON_RULES #93/#95
+   diretamente ("cada versão precisa ter identidade", "não pode ser
+   número diferente só") para as primeiras 4 fichas de personagem do
+   projeto. Revisável no Marco 9 sem quebrar nada — `characters.js` é a
+   única fonte, `characterBridge.js` sempre lê dali.
+2. **Loadout só lista jutsus com ficha real** (`loadout.ativas`/
+   `suprema`); nomes do doc 12 sem ficha (ex: "Combo Improvisado" do
+   Naruto, "Inner Sakura" da Sakura) viram `pendingAtivas`/
+   `pendingSuprema` — strings descritivas, não IDs inventados. Mesmo
+   padrão do `assetBacklogP1` do Marco 0: documentar o que falta em vez
+   de fabricar uma ficha rasa só para preencher o slot. Testado
+   (`characters_catalog.test.js`) para garantir que todo personagem sem
+   suprema real declara o pendente, nunca fica silenciosamente incompleto.
+3. **Recurso exclusivo é um campo genérico único** no combatente
+   (`resource: { id, name, max, current }`, `gainResource`/
+   `spendResource` em `combatant.js`), não um sistema por personagem.
+   Começa em `current: 0` — a maioria dos recursos (Clones, Planejamento)
+   se constrói durante a luta, não vem cheia.
+4. **`grantsResource` na ficha do jutsu é a única ponte entre jutsu e
+   recurso.** Kage Bunshin (`+2 Clones`) e Analyze (`+1 Planejamento`)
+   ganham esse campo porque o doc afirma isso literalmente ("gera 2
+   clones", "gera Planejamento"); o valor de Analyze (1) é uma escolha
+   conservadora para uma ação de custo 0, sem base textual para um número
+   maior. **O que os recursos fazem além de existir e acumular** (ex:
+   Rasengan consumir Clones para bônus, o que Foco/Pressão Uchiha
+   habilitam) continua fora de escopo — sem essas regras descritas em
+   lugar nenhum do pacote de design, implementá-las agora seria inventar
+   balanceamento do zero. `spendResource` já existe pronta para quando
+   essas regras aparecerem.
+5. **Passiva "Cabeça-Dura" catalogada com `effect: null`.** É a única
+   passiva nomeada no doc 12; as fichas de Sasuke/Sakura/Shikamaru
+   Genin não citam passiva nenhuma, então elas ficam sem `passiveId` —
+   não inventamos passivas genéricas para "completar" o quarteto.
+6. **`characterBridge.js` (não `combatant.js`) sabe o que é uma
+   `CharacterVersion`** — `combatant.js` continua genérico (não lê
+   `loadout`/`role`/etc.), só ganha o campo `resource` opcional. Mesma
+   separação Engine/Data que `jutsu.js` já seguia com fichas de Jutsu.
+7. **Custo de Esquadrão**: `computeSquadCost`/`isSquadWithinBudget`
+   (orçamento padrão 12, CANON_RULES #18) implementados agora como
+   utilidade pura, mesmo sem uma tela de montagem de equipe ainda
+   (isso é Marco 7) — é barato de fazer certo desde já e evita
+   reinventar a soma depois.

@@ -1,13 +1,12 @@
 // Dev console dos Marcos 0 (Fundação), 1 (Combate Mínimo), 2 (Effect
-// Engine) e 3 (Jutsus).
+// Engine), 3 (Jutsus) e 4 (Personagens).
 //
 // Isto NÃO é a UI final do jogo (essa vem em marcos futuros, guiada pela
 // Style Bible Visual). É uma página de diagnóstico que prova, no navegador,
 // que a engine core funciona: RNG/Seed determinística, registries de
 // conteúdo, validadores, save/load e um combate de exemplo com Tags/
-// Estados/Reações/Jutsus reais do catálogo rodando de ponta a ponta.
-// Nenhum personagem aqui é conteúdo real do jogo (isso é Marco 4) — mas os
-// jutsus usados já são as fichas reais do Vertical Slice.
+// Estados/Reações/Jutsus/Personagens reais do catálogo rodando de ponta a
+// ponta (o Naruto do combate abaixo é CHAR_NARUTO_GENIN_001 de verdade).
 
 import { SeedManager, generateSeedString } from '../engine/seed.js';
 import {
@@ -18,13 +17,14 @@ import { Registry } from '../engine/registry.js';
 import { summarizeRegistries, registries } from '../data/index.js';
 import '../data/catalog/index.js';
 import {
-  tags, statuses, reactions, jutsus,
+  tags, statuses, reactions, jutsus, passives, characters,
 } from '../data/index.js';
 import {
   assetManifest, assetBacklogP1, summarizeManifestByStatus, resolveAssetSrc,
 } from '../content/asset_manifest.js';
 import { createAttributes } from '../engine/combat/attributes.js';
 import { createCombatant } from '../engine/combat/combatant.js';
+import { createCombatantFromCharacter, computeSquadCost } from '../engine/combat/characterBridge.js';
 import { CombatState } from '../engine/combat/state.js';
 import { ACTION_TYPES, POSITIONS } from '../engine/enums.js';
 
@@ -214,17 +214,16 @@ function makeDemoFighter(id, name, overrides, position) {
 }
 
 /**
- * Combate 1v1 de demonstração — não é conteúdo real do jogo (personagens
- * de verdade chegam no Marco 4), mas o Naruto aqui usa fichas REAIS do
- * catálogo de Jutsus (Marco 3): Katon: Gōkakyū (dano + tenta Queimando) e,
- * quando o Chakra não alcança, arma Kawarimi para tentar evitar o próximo
- * golpe do bandido antes de partir para o Ataque Básico.
+ * Combate 1v1 de demonstração usando o Naruto Genin REAL do catálogo
+ * (Marco 4: CHAR_NARUTO_GENIN_001, com HP/Chakra/recurso Clones da ficha)
+ * contra um bandido genérico. Naruto usa o loadout real do personagem:
+ * Rasengan quando o Chakra alcança, Kage Bunshin para construir Clones
+ * quando não, Kawarimi para se defender quando o Chakra está baixo, senão
+ * Ataque Básico.
  */
 function runDemoCombat(seed) {
-  const naruto = makeDemoFighter('demo-naruto', 'Naruto (demo)', {
-    taijutsu: 32, ninjutsu: 38, defesaFisica: 18, defesaChakra: 16,
-    velocidade: 22, precisao: 8, chakraMax: 118, regenChakra: 6,
-  }, POSITIONS.FRENTE);
+  const narutoDef = characters.get('CHAR_NARUTO_GENIN_001');
+  const naruto = createCombatantFromCharacter(narutoDef, { id: 'demo-naruto', position: POSITIONS.FRENTE });
   const bandido = makeDemoFighter('demo-bandido', 'Bandido (demo)', {
     taijutsu: 20, defesaFisica: 12, velocidade: 14, hpMax: 90, resistenciaEstado: 10,
   }, POSITIONS.FRENTE);
@@ -245,8 +244,10 @@ function runDemoCombat(seed) {
     const targetId = actorId === naruto.id ? bandido.id : naruto.id;
 
     let action;
-    if (actorId === naruto.id && actor.chakra >= 18) {
-      action = { type: ACTION_TYPES.JUTSU, jutsuId: 'JUT_KATON_GOKAKYU_001', targetId };
+    if (actorId === naruto.id && actor.chakra >= 28) {
+      action = { type: ACTION_TYPES.JUTSU, jutsuId: 'JUT_RASENGAN_001', targetId };
+    } else if (actorId === naruto.id && actor.chakra >= 16 && !actor.cooldowns.has('JUT_KAGE_BUNSHIN_001')) {
+      action = { type: ACTION_TYPES.JUTSU, jutsuId: 'JUT_KAGE_BUNSHIN_001', targetId: actor.id };
     } else if (actorId === naruto.id && actor.chakra >= 10 && !actor.pendingReaction) {
       action = {
         type: ACTION_TYPES.JUTSU, jutsuId: 'JUT_KAWARIMI_001', targetId: actor.id,
@@ -259,7 +260,9 @@ function runDemoCombat(seed) {
     guard += 1;
   }
 
-  return { state, naruto, bandido };
+  return {
+    state, naruto, bandido,
+  };
 }
 
 function describeStateResult(entries, label) {
@@ -303,6 +306,9 @@ function renderCombat() {
         return `  ${actorId} usa ${label} em ${action.targetId} -> ${result.damage} de dano`
           + `${result.isCrit ? ' (crítico!)' : ''} (alvo em ${result.targetHp} HP)${statesTxt}${reactionsTxt}`;
       }
+      if (result.resourceGained !== undefined) {
+        return `  ${actorId} usa ${label} -> recurso em ${result.resourceGained}`;
+      }
       return `  ${actorId} usa ${label}`;
     }
     return `  ${event.type}`;
@@ -314,7 +320,7 @@ function renderCombat() {
 
   mount('combat-output', `
     <p>
-      <span class="pill ok">✓ ${naruto.name} (HP ${naruto.hp}/${naruto.attributes.hpMax}, Chakra ${naruto.chakra}/${naruto.attributes.chakraMax})</span>
+      <span class="pill ok">✓ ${naruto.name} (HP ${naruto.hp}/${naruto.attributes.hpMax}, Chakra ${naruto.chakra}/${naruto.attributes.chakraMax}, ${naruto.resource.name} ${naruto.resource.current}/${naruto.resource.max})</span>
       <span class="pill ${state.winner() === 'B' ? 'ok' : 'warn'}">${bandido.name} (HP ${bandido.hp}/${bandido.attributes.hpMax})</span>
       <span class="pill ok">vencedor: time ${state.winner()} · ${state.round} rodada(s)</span>
     </p>
@@ -348,6 +354,43 @@ function renderCatalog() {
   `);
 }
 
+// --- Personagens (Marco 4) ------------------------------------------------
+
+function renderCharacters() {
+  const rows = characters.all().map((def) => {
+    const passiveName = def.passiveId ? passives.get(def.passiveId)?.name : '—';
+    const resourceTxt = def.exclusiveResource ? `${def.exclusiveResource.name} (máx ${def.exclusiveResource.max})` : '—';
+    const ativasTxt = def.loadout.ativas.map((id) => jutsus.get(id)?.name ?? id).join(', ');
+    const supremaTxt = def.loadout.suprema
+      ? (jutsus.get(def.loadout.suprema)?.name ?? def.loadout.suprema)
+      : `— (pendente: ${def.loadout.pendingSuprema ?? '?'})`;
+    return `
+      <tr>
+        <td>${escapeHtml(def.name)} <span style="color:var(--muted)">(${escapeHtml(def.version)})</span></td>
+        <td>${def.squadCost}</td>
+        <td>${escapeHtml(def.rank)}</td>
+        <td>${def.stats.hpMax ?? '—'} / ${def.stats.chakraMax ?? '—'}</td>
+        <td>${escapeHtml(resourceTxt)}</td>
+        <td>${escapeHtml(ativasTxt)}</td>
+        <td>${escapeHtml(supremaTxt)}</td>
+        <td>${escapeHtml(passiveName ?? '—')}</td>
+      </tr>
+    `;
+  }).join('');
+
+  mount('characters-output', `
+    <p class="hint">
+      Custo de Esquadrão total: ${computeSquadCost(characters.all())} / 12 (orçamento padrão).
+    </p>
+    <table>
+      <thead>
+        <tr><th>Personagem</th><th>Custo</th><th>Rank</th><th>HP/Chakra</th><th>Recurso</th><th>Ativas</th><th>Suprema</th><th>Passiva</th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `);
+}
+
 // --- Init ----------------------------------------------------------------
 
 document.getElementById('seed-reroll').addEventListener('click', () => {
@@ -361,6 +404,7 @@ document.getElementById('combat-seed-input').addEventListener('change', renderCo
 renderRng();
 renderRegistries();
 renderCatalog();
+renderCharacters();
 renderAssets();
 renderValidators();
 renderSave();

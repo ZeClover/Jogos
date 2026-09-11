@@ -10,9 +10,9 @@
 **MARCO 1 — COMBATE MÍNIMO: concluído e validado.**
 **MARCO 2 — EFFECT ENGINE: concluído e validado.**
 **MARCO 3 — JUTSUS: concluído e validado.**
+**MARCO 4 — PERSONAGENS: concluído e validado.**
 
-Próximo: **MARCO 4 — Personagens** (recursos exclusivos, passivas,
-loadouts — fichas reais dos 4 Genin do Vertical Slice).
+Próximo: **MARCO 5 — Inimigos e IA**.
 
 ## Visão geral do projeto
 
@@ -62,11 +62,12 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
 - **Dev console** (`index.html` + `src/ui/devconsole.js`): página de
   diagnóstico que carrega a engine via ES Modules no browser e exercita
   ao vivo RNG/Seed, registries, Asset Manifest, validadores e save/load.
-- **Testes automatizados**: 181 casos (`node --test`, zero dependências)
+- **Testes automatizados**: 211 casos (`node --test`, zero dependências)
   cobrindo Marco 0 (ids, rng, seed, registry, validators, save, asset
   manifest, data registries), Marco 1 (atributos, dano/defesa/acerto,
   posições/alcance, ordem de turno, ações, CombatState ponta a ponta),
-  Marco 2 (Effect Engine) e Marco 3 (Jutsus — ver abaixo).
+  Marco 2 (Effect Engine), Marco 3 (Jutsus) e Marco 4 (Personagens — ver
+  abaixo).
 
 ### Concluído (Marco 1 — Combate Mínimo)
 
@@ -171,27 +172,54 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   `jutsuId` (Gōkakyū, Kawarimi quando o Chakra está baixo); painel de
   Catálogo lista as 12 fichas.
 
+### Concluído (Marco 4 — Personagens)
+
+- **Catálogo de Personagens** (`src/data/catalog/characters.js`): os 4
+  Genin do Vertical Slice (`docs/design/12`) — Naruto, Sasuke, Sakura,
+  Shikamaru — com squadCost/rank/role/HP/Chakra do doc, distribuição de
+  atributos provisória guiada pelo `role` (DECISIONS.md D017 #1),
+  recurso exclusivo (Clones/Pressão Uchiha/Foco/Planejamento), loadout
+  com Kawarimi como reação nos 4. `loadout.ativas`/`suprema` só contêm
+  jutsus com ficha real; nomes do doc sem ficha viram `pendingAtivas`/
+  `pendingSuprema` (D017 #2) — nenhum jutsu ou passiva foi inventado
+  para preencher slot.
+- **Catálogo de Passivas** (`src/data/catalog/passives.js`): só
+  Cabeça-Dura (Naruto), a única passiva nomeada no doc 12, com
+  `effect: null` (mecânica não especificada — D017 #5).
+- **Recurso exclusivo genérico** (`combatant.js`): `resource: { id, name,
+  max, current }` + `gainResource`/`spendResource`; jutsus com
+  `grantsResource` na ficha (Kage Bunshin +2 Clones, Analyze +1
+  Planejamento) alimentam automaticamente ao acertar (D017 #4).
+- **Ponte dado→motor** (`src/engine/combat/characterBridge.js`):
+  `createCombatantFromCharacter` (monta um Combatente completo a partir
+  da ficha), `computeSquadCost`/`isSquadWithinBudget` (orçamento padrão
+  12, CANON_RULES #18).
+- **Dev console**: novo painel "Personagens" com os 4 Genin (custo, rank,
+  HP/Chakra, recurso, ativas, suprema, passiva, incl. marcadores
+  "pendente"); combate de demonstração agora usa o Naruto Genin REAL
+  (`CHAR_NARUTO_GENIN_001`) com seu loadout de verdade (Rasengan/Kage
+  Bunshin/Kawarimi) em vez de um fixture ad-hoc.
+
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **181/181
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **211/211
   passando**.
-- Dev console verificado no Chromium headless (Playwright), Marcos 0-3:
+- Dev console verificado no Chromium headless (Playwright), Marcos 0-4:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
   200 (único 404 é o `favicon.ico` padrão do navegador), botões "Salvar
   demo"/"Limpar" fazem round-trip de save corretamente, seção de
   validadores detecta as 4 classes de problema esperadas, painel de
-  Combate roda um 1v1 completo usando Gōkakyū/Kawarimi reais do
-  catálogo, painel de Catálogo mostra 21 Tags/29 Estados/5 Reações/12
-  Jutsus.
+  Combate roda um 1v1 completo com o Naruto Genin real (Rasengan/Kage
+  Bunshin/Clones aparecendo no HUD e no log), painel de Personagens
+  mostra os 4 Genin com Custo de Esquadrão total 8/12.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
-Nenhum item em andamento — Marcos 0-3 fechados.
+Nenhum item em andamento — Marcos 0-4 fechados.
 
 ## Pendente (próximos marcos, não começados)
 
-- Marco 4 — Personagens (recursos, passivas, loadouts)
 - Marco 5 — Inimigos e IA
 - Marco 6 — Vertical Slice (Naruto/Sasuke/Sakura/Shikamaru Genin, País das
   Ondas, Zabuza) — é quando o hub principal (`/index.html`) deve passar a
@@ -224,9 +252,9 @@ sem pedido explícito do usuário).
 
 | Tipo | Atual | Meta |
 |---|---|---|
-| Personagens/versões | 0 | 500–800+ |
+| Personagens/versões | 4 | 500–800+ |
 | Jutsus | 12 | 1.000–1.500+ |
-| Passivas | 0 | 400–600+ |
+| Passivas | 1 | 400–600+ |
 | Itens | 0 | 500+ |
 | Bosses/elites | 0 | 200–300+ |
 | Eventos | 0 | 300+ |
@@ -237,20 +265,23 @@ sem pedido explícito do usuário).
 | Estados | 29 | — (vocabulário fechado) |
 | Reações | 5 | — (cresce conforme combinações fizerem sentido) |
 
-(Personagens/Itens/etc. esperados em 0 até o Marco 4+, em lotes, conforme
-CANON_RULES.md "qualidade > quantidade". Jutsus começou com o lote do
-Vertical Slice (12) — próximos lotes maiores vêm quando houver mais
-personagens para equipá-los. Tags/Estados/Reações já são o vocabulário
-completo do doc 01 — não crescem "em lote" do mesmo jeito.)
+(Itens/Bosses/Inimigos/etc. esperados em 0 até o Marco 5+, em lotes,
+conforme CANON_RULES.md "qualidade > quantidade". Personagens/Jutsus/
+Passivas começaram com o lote do Vertical Slice (4/12/1) — próximos lotes
+maiores vêm em Konoha Genins/Suna/etc. (PROMPT MESTRE §78). Tags/Estados/
+Reações já são o vocabulário completo do doc 01 — não crescem "em lote"
+do mesmo jeito.)
 
 ## Próximo passo
 
-Iniciar **Marco 4 — Personagens**: fichas reais dos 4 Genin do Vertical
-Slice (Naruto, Sasuke, Sakura, Shikamaru — `docs/design/12`), cada um com
-loadout real (4 Ativas + 1 Reação + 1 Suprema + até 3 passivas, usando os
-jutsus já catalogados), recurso exclusivo (Clones do Naruto, Planejamento
-do Shikamaru — os primeiros a existir de verdade, destravando as
-simplificações documentadas em D016 #7 para Kage Bunshin/Rasengan/Uzumaki
-Naruto Rendan/Analyze), Custo de Esquadrão e passivas. É também a hora de
-revisitar a relação Power↔atributo do atacante (D012) com dados reais de
-personagem.
+Iniciar **Marco 5 — Inimigos e IA**: arquétipos de inimigo do País das
+Ondas (bandidos/mercenários genéricos, ver `docs/design/15` P0 —
+COMBAT_ENEMY_WAVES_BANDIT_001/MERCENARY_001 já têm prompt visual pronto)
+e o primeiro boss, Zabuza Momochi (`docs/design/05`), com fases,
+telegraphs e resistência adaptativa a controle (já suportada desde o
+Marco 2). IA em níveis (básica/intermediária/elite/boss) que decide
+ações via `resolveAction`/`CombatState` — a mesma interface que humano/
+teste já usam, sem duplicar o loop de combate. Bom momento também para
+rodar os primeiros combates 4v1 (esquadrão completo dos 4 Genin, Custo
+8/12, contra um inimigo) para começar a validar o Combate Mínimo além de
+1v1.

@@ -1,0 +1,42 @@
+// Ponte entre fichas de Personagem (dado, src/data/catalog/characters.js)
+// e o Combatente de runtime (combatant.js). Simétrico a jutsu.js — o
+// combate não conhece "CharacterVersion", só sabe montar um Combatante a
+// partir de atributos/recurso.
+
+import { createAttributes } from './attributes.js';
+import { createCombatant } from './combatant.js';
+
+/** @typedef {import('../types.js').CharacterVersion} CharacterVersion */
+
+/**
+ * Cria um Combatente a partir de uma ficha de Personagem.
+ * @param {CharacterVersion} characterDef
+ * @param {object} [options]
+ * @param {string} [options.id] - id do combatente em combate (default: o próprio characterDef.id).
+ * @param {string} [options.position] - POSITIONS.* (default CENTRO, ver combatant.js).
+ */
+export function createCombatantFromCharacter(characterDef, { id, position } = {}) {
+  return createCombatant({
+    id: id ?? characterDef.id,
+    name: characterDef.name,
+    position,
+    attributes: createAttributes(characterDef.stats),
+    resource: characterDef.exclusiveResource
+      ? {
+        id: characterDef.exclusiveResource.id,
+        name: characterDef.exclusiveResource.name,
+        max: characterDef.exclusiveResource.max,
+      }
+      : null,
+  });
+}
+
+/** Soma o Custo de Esquadrão de uma lista de fichas de Personagem (CANON_RULES #Personagens). */
+export function computeSquadCost(characterDefs) {
+  return characterDefs.reduce((total, def) => total + def.squadCost, 0);
+}
+
+/** Confere se a lista de fichas cabe no orçamento (padrão 12, CANON_RULES #18). */
+export function isSquadWithinBudget(characterDefs, budget = 12) {
+  return computeSquadCost(characterDefs) <= budget;
+}

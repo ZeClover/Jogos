@@ -15,13 +15,15 @@
 //   ignoresGuard  true = ignora a guarda de Defender do alvo ("quebra guarda")
 //   appliesStates [{ stateId, chance, stacks?, duration?, guaranteed? }]
 //   tags        Tag IDs — natureza/estilo/efeito, também usados por Reações
+//   grantsResource { amount } — soma ao recurso exclusivo do PRÓPRIO ator ao
+//     acertar/resolver com sucesso (ver DECISIONS.md D017); só tem efeito
+//     se o combatente tiver `resource` (characterBridge.js, Marco 4).
 //
-// Simplificações desta versão (ver DECISIONS.md D016): sinergia com
-// Clones (Rasengan, Uzumaki Naruto Rendan), bônus de Sharingan (Chidori),
-// manutenção por rodada (Kagemane), geração de recurso exclusivo (Kage
-// Bunshin=Clones, Analyze=Planejamento) e resolução multi-alvo de AoE
-// (Gōkakyū) dependem de sistemas que chegam no Marco 4 (Personagens/
-// Recursos) — os números de dano/custo/cooldown já são os finais do doc.
+// Simplificações ainda pendentes (ver DECISIONS.md D016/D017): sinergia de
+// Rasengan/Uzumaki Naruto Rendan com número de Clones ativos, bônus de
+// Sharingan (Chidori), manutenção por rodada (Kagemane) e resolução
+// multi-alvo de AoE (Gōkakyū) — os números de dano/custo/cooldown já são
+// os finais do doc mesmo assim.
 
 import { jutsus } from '../index.js';
 
@@ -36,7 +38,8 @@ export const JUTSU_DEFINITIONS = [
     cooldown: 1,
     range: 'SELF',
     effect: 'UTILITY',
-    note: 'Gera 2 clones (máx. 5) — recurso exclusivo "Clones" do Naruto, mecânica de posse/uso chega no Marco 4.',
+    grantsResource: { amount: 2 },
+    note: 'Gera 2 Clones (máx. 5, recurso exclusivo do Naruto). O que os Clones fazem além de existir (ex: sinergia com Rasengan) é decisão pendente — ver DECISIONS.md D017.',
   },
   {
     id: 'JUT_RASENGAN_001',
@@ -185,7 +188,8 @@ export const JUTSU_DEFINITIONS = [
     cooldown: 0,
     effect: 'UTILITY',
     special: true,
-    note: '"Revela informação e gera Planejamento" — Arquivo Ninja (Marco 7+) e recurso "Planejamento" do Shikamaru (Marco 4) ainda não existem; cataloga a ficha com custo/slot corretos sem efeito mecânico extra por enquanto.',
+    grantsResource: { amount: 1 },
+    note: '"Revela informação" ainda depende do Arquivo Ninja (Marco 7+), que não existe. "Gera Planejamento" já concede 1 ponto do recurso exclusivo do Shikamaru — número provisório e conservador para uma ação de custo 0 (ver DECISIONS.md D017).',
   },
 ];
 

@@ -3,6 +3,44 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Marco 4 — Personagens
+
+### Adicionado
+
+- `src/data/catalog/characters.js` — os 4 Genin do Vertical Slice (doc
+  12): Naruto, Sasuke, Sakura, Shikamaru, com squadCost/rank/role/HP/
+  Chakra do doc, recurso exclusivo, loadout (Kawarimi como reação nos 4).
+- `src/data/catalog/passives.js` — Cabeça-Dura (Naruto), única passiva
+  nomeada no doc 12.
+- `combatant.js`: campo `resource` (`{id, name, max, current}`) +
+  `gainResource`/`spendResource`.
+- `actions.js`: `handleJutsu` aplica `jutsuDef.grantsResource` ao próprio
+  ator quando o cast tem sucesso (Kage Bunshin +2 Clones, Analyze +1
+  Planejamento).
+- `src/engine/combat/characterBridge.js` — `createCombatantFromCharacter`,
+  `computeSquadCost`, `isSquadWithinBudget`.
+- `types.js`: `CharacterVersion` estendido (`role`, `pendingAtivas`/
+  `pendingSuprema`, `evolutionNotes`); novo typedef `Passive`.
+- Dev console: painel "Personagens" (custo, rank, HP/Chakra, recurso,
+  loadout com marcadores "pendente"); combate de demonstração passa a
+  usar o Naruto Genin real (`CHAR_NARUTO_GENIN_001`) com seu loadout de
+  verdade.
+- 30 novos testes (`tests/combat/resource.test.js`,
+  `tests/combat/characterBridge.test.js`,
+  `tests/combat/character_integration.test.js`,
+  `tests/data/characters_catalog.test.js`) — total do projeto: 211 testes.
+- DECISIONS.md D017 (stats provisórios guiados por role, loadout honesto
+  com pendingAtivas/pendingSuprema, recurso exclusivo genérico, passiva
+  sem mecânica ainda, Custo de Esquadrão).
+
+### Validado
+
+- `npm test`: 211/211 passando.
+- Dev console testado em Chromium headless (Playwright): painel de
+  Personagens mostra os 4 Genin (Custo de Esquadrão 8/12), combate roda
+  com o Naruto real usando Rasengan/Kage Bunshin/Clones, sem erros de
+  página.
+
 ## Marco 3 — Jutsus
 
 ### Adicionado

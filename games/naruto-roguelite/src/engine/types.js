@@ -15,11 +15,15 @@
  * @property {string} version - ex: "Genin"
  * @property {number} squadCost - custo de esquadrão (orçamento padrão de equipe ~12)
  * @property {string} rank
- * @property {object} stats - HP, Chakra, Taijutsu, Ninjutsu, Genjutsu, DefesaFisica, DefesaChakra, ControleChakra, Velocidade, Precisao, Evasao, ResistenciaMental
+ * @property {string[]} [role] - papel narrativo/tático (ex: ["Pressão","Dano","Setup"])
+ * @property {object} stats - overrides parciais de createAttributes() — HP, Chakra, Taijutsu, Ninjutsu, Genjutsu, DefesaFisica, DefesaChakra, ControleChakra, Velocidade, Precisao, Evasao, ResistenciaMental
  * @property {string[]} [tags]
- * @property {{ id: string, max: number }} [exclusiveResource] - ex: Clones do Naruto
- * @property {{ ativas: string[], reacao: string, suprema: string, passivas: string[] }} loadout
+ * @property {{ id: string, name?: string, max: number }} [exclusiveResource] - ex: Clones do Naruto
+ * @property {{ ativas: string[], pendingAtivas?: string[], reacao: string, suprema: string|null, pendingSuprema?: string, passivas: string[] }} loadout -
+ *   `ativas`/`suprema` só contêm IDs de jutsus já catalogados; `pendingAtivas`/
+ *   `pendingSuprema` são nomes de jutsus citados no design mas ainda sem ficha (ver DECISIONS.md D017)
  * @property {string} [passiveId]
+ * @property {string} [evolutionNotes] - referências a versões/transformações futuras, não fabricadas ainda
  */
 
 /**
@@ -40,6 +44,14 @@
  * @property {number} [cooldown]
  * @property {string[]} [inflictsStates]
  * @property {string[]} [conditions]
+ */
+
+/**
+ * @typedef {object} Passive
+ * @property {string} id - ex: "PASSIVE_CABECA_DURA_001"
+ * @property {string} name
+ * @property {string} [description]
+ * @property {object|null} effect - null enquanto a mecânica não for definida (ver DECISIONS.md D017)
  */
 
 /**

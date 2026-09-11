@@ -10,12 +10,13 @@
 
 <header class="dev-header">
   <h1>🍥 Naruto Roguelite</h1>
-  <span class="badge">Marco 3 — Jutsus</span>
+  <span class="badge">Marco 4 — Personagens</span>
   <span id="boot-status"><span class="pill warn">carregando engine…</span></span>
   <p>
     Console de diagnóstico da engine, não a UI final do jogo. Prova que RNG/Seed,
     registries de conteúdo, validadores, save/load, combate por turnos, Tags/
-    Estados/Reações e agora fichas reais de Jutsu (Vertical Slice) funcionam.
+    Estados/Reações, fichas reais de Jutsu e agora os 4 Genin do Vertical Slice
+    (com recurso exclusivo, loadout e Custo de Esquadrão) funcionam.
     Ver <code>PROJECT_STATUS.md</code> para o estado completo do projeto e
     <code>docs/design/</code> para a documentação oficial.
   </p>
@@ -41,14 +42,15 @@
   </section>
 
   <section class="panel" style="grid-column: 1 / -1">
-    <h2>⚔️ Combate + Effect Engine + Jutsus (Marcos 1-3)</h2>
+    <h2>⚔️ Combate + Effect Engine + Jutsus + Personagens (Marcos 1-4)</h2>
     <p class="hint">
-      Combate 1v1 de demonstração (não é conteúdo real — personagens de verdade
-      chegam no Marco 4) rodando via <code>CombatState</code>: turnos ordenados
-      por Velocidade, dano com mitigação por Defesa, Chakra que persiste e
-      regenera entre rodadas, Estados/Reações data-driven, e agora fichas REAIS
-      do catálogo de Jutsus (Katon: Gōkakyū tenta Queimando; Kawarimi arma uma
-      esquiva quando o Chakra não alcança para outro Gōkakyū).
+      Combate 1v1 rodando via <code>CombatState</code> com o Naruto Genin REAL
+      do catálogo (<code>CHAR_NARUTO_GENIN_001</code> — HP/Chakra/recurso Clones
+      da ficha) contra um bandido genérico: turnos ordenados por Velocidade,
+      dano com mitigação por Defesa, Estados/Reações data-driven, e o loadout
+      real do personagem — Rasengan quando o Chakra alcança, Kage Bunshin para
+      construir Clones (recurso exclusivo) quando não, Kawarimi para se
+      defender quando está baixo.
     </p>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
       <input id="combat-seed-input" type="text" placeholder="seed do combate"
@@ -67,9 +69,18 @@
     <div id="catalog-output"></div>
   </section>
 
+  <section class="panel" style="grid-column: 1 / -1">
+    <h2>🍥 Personagens (Vertical Slice)</h2>
+    <p class="hint">
+      Os 4 Genin de docs/design/12 — loadout mostra só jutsus com ficha real (Marco 3);
+      "pendente" marca nomes do doc ainda sem ficha (ver DECISIONS.md D017).
+    </p>
+    <div id="characters-output"></div>
+  </section>
+
   <section class="panel">
     <h2>📚 Registries de conteúdo</h2>
-    <p class="hint">Jutsus populados no Marco 3 (Vertical Slice); personagens/itens/etc. ainda vazios, chegam no Marco 4+.</p>
+    <p class="hint">Jutsus (Marco 3) e Personagens/Passivas (Marco 4) populados; itens/inimigos/etc. ainda vazios.</p>
     <div id="registries-output"></div>
   </section>
 
