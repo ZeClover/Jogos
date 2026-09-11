@@ -3,6 +3,44 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Marco 6 — Vertical Slice
+
+### Adicionado
+
+- `play.html` + `src/ui/game.js` + `play.css` — primeira UI jogável real
+  do projeto (dev console continua só diagnóstico, D011); tema
+  "pergaminho/dossiê ninja" seguindo a Style Bible (doc 14). Consome o
+  mesmo motor de combate dos Marcos 1-5 sem duplicar regra nenhuma.
+- `src/data/vertical_slice.js` — `VERTICAL_SLICE_ENCOUNTERS`: roteiro
+  fixo de 3 combates (Emboscada na Estrada, Mercenários de Gatō, Zabuza),
+  fora do sistema de Missões/Mapa (isso é Marco 7).
+- `src/engine/combat/campaign.js` — `snapshotSquad`/`applySquadSnapshot`/
+  `survivingIds`: carrega HP/Chakra/recurso exclusivo do esquadrão entre
+  os 3 combates; quem cai (HP 0) fica de fora dos combates seguintes.
+- Fluxo completo: tela de Esquadrão (os 4 Genin, Custo 8/12) -> Batalha
+  (turno do jogador por clique ação->alvo; inimigos resolvidos
+  automaticamente por `chooseAction`, IA do Marco 5) -> Vitória do
+  Vertical Slice ou Derrota, com opção de jogar de novo.
+- `/index.html` (hub do site): novo card "Naruto Roguelite" linkando
+  para `games/naruto-roguelite/play.html` — cumpre DECISIONS.md D007.
+- 11 novos testes (`tests/combat/campaign.test.js`,
+  `tests/data/vertical_slice.test.js`) — total do projeto: 250 testes.
+  A UI jogável (`game.js`) é toda DOM — validada via Playwright, sem
+  testes Node.
+- DECISIONS.md D019 (UI separada do dev console, roteiro fixo fora de
+  Missões/Mapa, campanha só com HP/Chakra/recurso entre combates,
+  esquadrão fixo sem tela de seleção, posições iniciais uniformes,
+  fallback de Defender, renderização por string com listener delegado).
+
+### Validado
+
+- `npm test`: 250/250 passando.
+- `play.html` testado em Chromium headless (Playwright): jogado de ponta
+  a ponta (ação->alvo, Ataque Básico e um Jutsu real) através dos 3
+  combates até a tela de Vitória final, sem erros de console; HP/Chakra
+  do esquadrão confirmadamente carregando entre combates; IA dos
+  inimigos agindo sozinha, turno sempre avançando.
+
 ## Marco 5 — Inimigos e IA
 
 ### Adicionado

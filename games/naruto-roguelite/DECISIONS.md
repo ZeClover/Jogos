@@ -491,3 +491,85 @@ comportamento em prosa (névoa, tática de emboscada, etc.).
    Sensorial ignora a penalidade de Oculto), testado
    (`enemies_bosses_catalog.test.js`) só quanto à presença/não-vazio, não
    quanto ao conteúdo exato do texto.
+
+## D019 — Vertical Slice (Marco 6): UI real, roteiro fixo, campanha sem Marco 7
+
+**Contexto:** PROMPT MESTRE §54 define o Vertical Slice como "primeiro
+objetivo jogável completo": os 4 Genin, País das Ondas, Zabuza. Mas
+"jogável" pressupõe uma UI real controlada por humano (D011 — o dev
+console é só diagnóstico) e uma sequência de combates que carregue
+estado entre eles — nenhum dos dois é "Combate" (Marco 1-5) puro, e nenhum
+dos dois é o sistema de Missões/Mapa completo (Marco 7).
+
+**Decisões:**
+
+1. **Nova UI jogável separada do dev console**: `play.html` +
+   `src/ui/game.js` + `play.css`, todos novos — `index.html`/
+   `devconsole.js`/`style.css` continuam intocados como página de
+   diagnóstico (D011). `play.css` segue a Style Bible (doc 14) — "ninja
+   dossier / pergaminho moderno / RPG tático" — paleta clara de
+   pergaminho/madeira/selo, deliberadamente diferente do tema escuro do
+   dev console.
+2. **Roteiro fixo do Vertical Slice, não um sistema de Missões/Mapa.**
+   `src/data/vertical_slice.js` (`VERTICAL_SLICE_ENCOUNTERS`) é uma lista
+   plana de 3 combates (Emboscada na Estrada -> Mercenários de Gatō ->
+   Zabuza) referenciando IDs reais de `enemies`/`bosses`. Deliberadamente
+   NÃO vive em `src/data/catalog/` nem ganha um prefixo de ID formal
+   (`ENCOUNTER_*`) — não é um "tipo de conteúdo" com Registry própria
+   (CANON_RULES D008), é o roteiro específico desta demo, para não
+   antecipar o desenho real de nós de mapa/ramificação/recompensa que é
+   trabalho do Marco 7. Validado (`tests/data/vertical_slice.test.js`) só
+   quanto a referências resolvidas e estrutura básica, não quanto a
+   "regras de missão" que ainda não existem.
+3. **Bandidos/Mercenários dos 2 primeiros encontros são um encontro
+   composto (2 inimigos), não um "arquétipo de emboscada" novo** — reusa
+   o catálogo de Inimigos do Marco 5 tal como está; a "dificuldade
+   crescente" do roteiro vem só da composição de inimigos por combate,
+   sem inventar stats novos.
+4. **Estado do esquadrão carrega entre combates (HP/Chakra/recurso
+   exclusivo), mas SEM persistência real de "run"** (isso é Marco 7/
+   save de run). `src/engine/combat/campaign.js`
+   (`snapshotSquad`/`applySquadSnapshot`) é a única ponte: tira uma foto
+   dos sobreviventes ao fim de um combate e a aplica sobre os
+   combatentes recém-criados do próximo. Combatente com HP 0 não entra
+   no snapshot — fica de fora dos combates seguintes (permadeath dentro
+   da mesma sessão do slice). Cooldowns/Estados NÃO são carregados
+   (resetam a cada novo `CombatState`) — simplificação deliberada: o
+   motor não tem uma noção de "tempo entre combates" (viagem, descanso)
+   que justificaria decidir se um cooldown deveria persistir ou não;
+   carregar só HP/Chakra/recurso já cria peso tático real (chegar
+   machucado ou sem Chakra no Zabuza) sem inventar essa regra.
+5. **Sem tela de seleção de esquadrão** — o Vertical Slice sempre usa os
+   4 Genin (Custo 8/12, já validado no Marco 4). `computeSquadCost`/
+   `isSquadWithinBudget` (D017 #7) já existem prontos para quando o
+   Marco 7 precisar de uma tela real de montagem de esquadrão com
+   escolha; construir essa UI agora, sem outros personagens
+   disponíveis, seria antecipar trabalho sem uso real.
+6. **Posição inicial padrão (Centro) para os 4 Genin**, em vez de uma
+   formação tática pré-definida por `role`. `MOVER` (Marco 1) já está
+   exposto como ação jogável — o jogador decide a formação durante o
+   combate. Motivo prático: `resolveAttack` só permite MELEE contra a
+   linha de frente OCUPADA do alvo (positions.js); uma formação mista
+   fixa faria a IA genérica (Marco 5, que não é ciente de alcance) errar
+   Ataques Básicos com frequência sempre que mirasse alguém fora da
+   linha de frente — caindo no fallback Defender do passo 8 mais do que
+   deveria. Times de inimigo continuam só na linha Frente pelo mesmo
+   motivo.
+7. **`chooseAction` decide toda ação de inimigo na UI, sem exceção** —
+   igual ao dev console (Marco 5): a UI só sabe qual `aiLevel`/
+   `aiProfile` usar (lido da própria ficha de Inimigo/Boss), nunca
+   decide a ação em si. Cada turno de IA tem um atraso fixo de 500ms
+   (`AI_STEP_DELAY_MS`) só para dar ritmo visual — não é parte da regra
+   de jogo.
+8. **Fallback de Defender quando a ação escolhida pela IA falha**
+   (chakra insuficiente, cooldown, fora de alcance) — mesmo padrão do
+   dev console (Marco 5), trocado de "Ataque Básico" para "Defender" por
+   ser incondicionalmente válido (sem exigir alvo/alcance), garantindo
+   que o turno sempre avança sem duplicar a lógica de escolha de alvo.
+9. **Renderização por string HTML completa a cada mudança de estado**
+   (sem framework, sem virtual DOM) com um único listener delegado de
+   clique em `#app` — consistente com a abordagem já usada no dev
+   console (`mount()`/re-render total). Ações do jogador usam
+   `data-option-index` (índice na lista de opções recalculada a cada
+   render, determinística para o mesmo estado) e `data-target-id`
+   (clique no card do combatente-alvo) em vez de formulários.

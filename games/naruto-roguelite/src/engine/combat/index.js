@@ -12,3 +12,4 @@ export * from './state.js';
 export * from './characterBridge.js';
 export * from './ai.js';
 export * from './enemyBridge.js';
+export * from './campaign.js';

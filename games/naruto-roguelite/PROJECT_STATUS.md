@@ -12,8 +12,9 @@
 **MARCO 3 — JUTSUS: concluído e validado.**
 **MARCO 4 — PERSONAGENS: concluído e validado.**
 **MARCO 5 — INIMIGOS E IA: concluído e validado.**
+**MARCO 6 — VERTICAL SLICE: concluído e validado.**
 
-Próximo: **MARCO 6 — Vertical Slice**.
+Próximo: **MARCO 7 — Run / Missões / Mapa**.
 
 ## Visão geral do projeto
 
@@ -63,12 +64,13 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
 - **Dev console** (`index.html` + `src/ui/devconsole.js`): página de
   diagnóstico que carrega a engine via ES Modules no browser e exercita
   ao vivo RNG/Seed, registries, Asset Manifest, validadores e save/load.
-- **Testes automatizados**: 239 casos (`node --test`, zero dependências)
+- **Testes automatizados**: 250 casos (`node --test`, zero dependências)
   cobrindo Marco 0 (ids, rng, seed, registry, validators, save, asset
   manifest, data registries), Marco 1 (atributos, dano/defesa/acerto,
   posições/alcance, ordem de turno, ações, CombatState ponta a ponta),
-  Marco 2 (Effect Engine), Marco 3 (Jutsus), Marco 4 (Personagens) e
-  Marco 5 (Inimigos e IA — ver abaixo).
+  Marco 2 (Effect Engine), Marco 3 (Jutsus), Marco 4 (Personagens),
+  Marco 5 (Inimigos e IA) e Marco 6 (campanha/roteiro — ver abaixo; a UI
+  jogável em si não tem testes Node, é validada via Playwright).
 
 ### Concluído (Marco 1 — Combate Mínimo)
 
@@ -241,9 +243,43 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   tempo finito, Zabuza entra em Oculto ao alcançar a Fase 2 dentro de um
   combate real, mesma seed produz o mesmo desfecho.
 
+### Concluído (Marco 6 — Vertical Slice)
+
+- **UI jogável real** (`play.html` + `src/ui/game.js` + `play.css`):
+  primeira tela de jogo de verdade do projeto — diferente do dev console
+  de diagnóstico (D011). Tema visual "ninja dossier/pergaminho" seguindo
+  a Style Bible (doc 14, ver DECISIONS.md D019 #1). Usa o MESMO motor de
+  combate dos Marcos 1-5 (`CombatState`/`resolveAction`/`chooseAction`) —
+  a UI só lê estado e monta ações, nenhuma regra de jogo duplicada.
+- **Roteiro do Vertical Slice** (`src/data/vertical_slice.js`):
+  `VERTICAL_SLICE_ENCOUNTERS` — 3 combates lineares (Emboscada na
+  Estrada -> Mercenários de Gatō -> Zabuza), fora do sistema de
+  Missões/Mapa real (Marco 7, D019 #2).
+- **Campanha entre combates** (`src/engine/combat/campaign.js`):
+  `snapshotSquad`/`applySquadSnapshot`/`survivingIds` — carrega HP/
+  Chakra/recurso exclusivo dos sobreviventes de um combate para o
+  próximo; quem cai fica de fora dos combates seguintes (D019 #4).
+- **Fluxo de jogo completo**: tela de Esquadrão (os 4 Genin, Custo 8/12,
+  sem seleção — D019 #5) -> 3 telas de Batalha (turno do jogador com
+  escolha de ação/alvo por clique; turnos de inimigo resolvidos
+  automaticamente por `chooseAction` com pequeno atraso visual, D019
+  #7/#8) -> tela de Vitória do Vertical Slice ou Derrota, com "jogar de
+  novo".
+- **Hub principal** (`/index.html`, raiz do site): novo card "Naruto
+  Roguelite" linkando para `games/naruto-roguelite/play.html` — primeira
+  vez que este jogo fica visível para quem visita o site (D007 cumprida).
+- 11 novos testes (`tests/combat/campaign.test.js`,
+  `tests/data/vertical_slice.test.js`) — total do projeto: 250 testes. A
+  UI jogável em si (`game.js`) não tem testes Node (é toda DOM) — validada
+  via Playwright (ver Validado).
+- DECISIONS.md D019 (UI separada do dev console, roteiro fixo fora de
+  Missões/Mapa, campanha sem persistência de run real, sem seleção de
+  esquadrão, posições iniciais uniformes, IA/fallback consistentes com o
+  Marco 5, renderização por string HTML com listener delegado).
+
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **239/239
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **250/250
   passando**.
 - Dev console verificado no Chromium headless (Playwright), Marcos 0-5:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
@@ -257,17 +293,24 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   roda um combate completo Naruto-real vs Zabuza-real controlado por IA
   até um vencedor, com o log mostrando Zabuza usando Ataque Básico na
   Fase 1 e Kirigakure no Jutsu ao entrar na Fase 2.
+- **UI jogável (`play.html`) verificada no Chromium headless
+  (Playwright)**: tela de Esquadrão renderiza os 4 Genin com HP/Chakra/
+  recurso corretos; "Iniciar Missão" entra no 1º combate; jogado de
+  ponta a ponta clicando ação->alvo (Ataque Básico e um Jutsu real
+  testados) através dos 3 combates até a tela de Vitória final
+  ("País das Ondas protegido!"), sem nenhum erro de console (só o 404
+  esperado do `favicon.ico`); confirmado que HP/Chakra do esquadrão
+  realmente carrega de um combate para o outro (snapshot); confirmado
+  que a IA dos inimigos age sozinha e o turno sempre avança mesmo
+  quando a ação preferida falha.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
 
-Nenhum item em andamento — Marcos 0-5 fechados.
+Nenhum item em andamento — Marcos 0-6 fechados.
 
 ## Pendente (próximos marcos, não começados)
 
-- Marco 6 — Vertical Slice (Naruto/Sasuke/Sakura/Shikamaru Genin, País das
-  Ondas, Zabuza) — é quando o hub principal (`/index.html`) deve passar a
-  linkar para este jogo (ver DECISIONS.md D007)
 - Marco 7 — Run / Missões / Mapa
 - Marco 8 — Progressão
 - Marco 9 — Protótipo 3 Atos
@@ -320,9 +363,14 @@ jeito.)
 
 ## Próximo passo
 
-Iniciar **Marco 6 — Vertical Slice**: juntar tudo o que os Marcos 1-5
-construíram (Combate, Effect Engine, Jutsus, Personagens, Inimigos/IA) em
-uma experiência jogável de ponta a ponta — os 4 Genin, o cenário do País
-das Ondas, o boss Zabuza — com UI real seguindo a Style Bible (não mais o
-dev console de diagnóstico, ver DECISIONS.md D011). É também quando o hub
-principal (`/index.html`) deve passar a linkar para este jogo (D007).
+Iniciar **Marco 7 — Run / Missões / Mapa**: o roteiro fixo do Vertical
+Slice (`src/data/vertical_slice.js`, D019 #2) vira o primeiro caso de uso
+real de um sistema de Missões/Mapa de verdade — nós de mapa, ramificação,
+templates de missão (doc 04), resultados parciais/desastre (`MISSION_RESULTS`
+já existe em `enums.js` desde o Marco 0), e uma run real com save entre
+sessões (a "campanha" hoje só vive na memória da aba, `campaign.js`
+D019 #4). Também é quando decidir se cooldowns/Estados devem ou não
+persistir entre combates de uma mesma run (D019 #4 deixou isso de fora
+deliberadamente) e se vale introduzir uma tela real de seleção de
+esquadrão (D019 #5) agora que há um motivo concreto (mais regiões, mais
+personagens disponíveis no roster).

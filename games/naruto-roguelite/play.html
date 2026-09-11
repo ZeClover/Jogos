@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Naruto Roguelite — País das Ondas</title>
+<link rel="stylesheet" href="play.css" />
+</head>
+<body>
+
+<header class="vs-header">
+  <h1>🍥 Naruto Roguelite</h1>
+  <span class="vs-subtitle">Vertical Slice — País das Ondas</span>
+</header>
+
+<main class="vs-main" id="app">
+  <div class="vs-scroll"><p class="vs-hint">Carregando…</p></div>
+</main>
+
+<script type="module">
+  import('./src/ui/game.js').catch((err) => {
+    document.getElementById('app').innerHTML =
+      '<div class="vs-scroll"><p class="vs-hint">✗ Falha ao carregar o jogo — ver console.</p></div>';
+    console.error(err);
+  });
+</script>
+
+</body>
+</html>
