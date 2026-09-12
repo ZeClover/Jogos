@@ -3,6 +3,47 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Primeira leva de arte real (127 imagens) substitui os placeholders SVG
+
+### Adicionado
+
+- `assets/<categoria>/<assetId>.png` — 127 imagens enviadas pelo usuário
+  (geradas fora desta sessão; eu não gero imagem, PROMPT MESTRE §63),
+  cobrindo personagens (retratos/full body/combate), o boss Zabuza,
+  jutsus (ícone+arte), cenários, inimigos, itens, ícones de Estado/
+  elemento/facção, UI (frames, nós de mapa, recursos, raridades,
+  roleta, mapa) e efeitos de transformação.
+- `src/content/asset_manifest.js` — `GENERATED_ASSET_IDS` (Set estático)
+  marca as 127 entradas como `status: 'generated'`; 60 itens do
+  `assetBacklogP1` promovidos a entradas formais (agora com `contentId`
+  quando a entidade de catálogo já existe); 2 entradas novas de ícone de
+  facção (`ICON_FACTION_KONOHA_001`/`ICON_FACTION_KIRI_001`); os 4
+  sprites `COMBAT_ENEMY_*` ganharam `contentId` retroativo agora que as
+  entidades `ENEMY_*` existem (Marco 5). `assetBacklogP1` fica vazio.
+  Novo helper `findAssetIdByContent(contentId, category)`.
+- `src/ui/game.js` — retrato real na tela de Esquadrão e retrato pequeno
+  em cada card de combatente em Batalha (tenta COMBAT → ART → PORTRAIT,
+  pois o boss só tem ART/PORTRAIT); `PORTRAIT_COLORS`/`PORTRAIT_EMOJI`
+  removidos.
+- `src/ui/run.js` — ícone real por tipo de nó no Mapa da Run
+  (`UI_NODE_*`, DESCANSO mapeado pra `UI_NODE_HOSPITAL_001`).
+- `play.css` — `.vs-portrait`/`.vs-combatant-portrait`/`.vs-node-icon`
+  ajustados para `<img>` real (`object-fit`) em vez do bloco de cor +
+  emoji anterior.
+- DECISIONS.md D034.
+
+### Validado
+
+- `npm test`: 399/399 passando (2 testes de `asset_manifest.test.js`
+  reescritos — a premissa "nenhuma imagem gerada" do Marco 0 não é mais
+  verdade).
+- `play.html`, `run.html` e `index.html` (dev console) testados em
+  Chromium headless (Playwright): retratos dos 4 Genin aparecem na tela
+  de Esquadrão e nos cards de combate em Batalha; ícones de nó (Mercador/
+  Missão) aparecem no Mapa da Run; galeria do Asset Manifest no dev
+  console mostra 127/127 `generated`; nenhum erro de console/rede além
+  de um 404 de favicon.ico (sem relação com os assets).
+
 ## Jutsu passa a poder gastar o recurso exclusivo do ator (`requiresResource`)
 
 ### Adicionado

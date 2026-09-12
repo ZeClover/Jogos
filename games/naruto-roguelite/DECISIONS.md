@@ -1292,3 +1292,77 @@ não exige" até este lote fechar a lacuna.
    só concedendo recurso; nenhuma sinergia adicional (ex: Rasengan
    escalando com Clones ativos, D016/D017) foi implementada — esse
    lote só fecha o "gastar", não abre escopo novo de sinergia.
+
+## D034 — Primeira leva de arte real (127 imagens) substitui os placeholders SVG
+
+**Contexto:** desde o Marco 0 todo `assetManifest` resolvia para um SVG
+colorido com o Asset ID como legenda (`placeholderDataUri`) — nenhuma
+imagem tinha sido gerada, por decisão deliberada (PROMPT MESTRE #63: eu
+não gero arte sem pedido explícito, e esta sessão não tem ferramenta de
+geração de imagem). O usuário gerou as 127 imagens fora desta sessão
+(prompts tirados dos que já estavam no manifesto para as entradas P0, e
+gerados por conta própria — mas seguindo o mesmo esquema de Asset ID —
+para os itens que só tinham nome em `assetBacklogP1`) e enviou tudo em
+lotes (backgrounds, personagens, boss, efeitos, inimigos, e por fim um
+pacote consolidado com o restante + um `asset_manifest.md` de conferência
+com as 127 entradas). Nenhuma imagem foi gerada por mim.
+
+**Decisões:**
+
+1. **Arquivos vivem em `assets/<categoria>/<assetId>.png`** — a mesma
+   convenção de `path` que `entry()` já calculava desde o Marco 0
+   (`assets/${category.toLowerCase()}/${assetId}.png`); não precisou
+   mudar o esquema, só criar as pastas e copiar os arquivos.
+2. **`GENERATED_ASSET_IDS` (Set estático em `asset_manifest.js`)** marca
+   quais Asset IDs têm arquivo real; `entry()` usa isso pra decidir
+   `status: 'generated'` em vez de checar o filesystem (o módulo roda
+   também no navegador, onde não há `fs`). As 67 entradas P0 que já
+   existiam formalmente tiveram 100% de cobertura — todas os arquivos
+   enviados batem exatamente com os Asset IDs já declarados.
+3. **60 itens do `assetBacklogP1` promovidos a entradas formais** —
+   19 retratos extras de personagem, 6 backgrounds de região, 9 efeitos
+   de transformação, 5 ícones de elemento, 10 ícones de Estado extra, 6
+   molduras de raridade, 2 assets de roleta e 1 de mapa. Isso não é
+   inventar conteúdo (CANON_RULES.md #50): o nome, grupo e categoria já
+   estavam declarados no backlog desde o Marco 0 — só o registro formal
+   (Asset ID como entrada de verdade, com `path`/`status`) é novo, e só
+   acontece porque a arte já existe. `contentId` foi preenchido quando
+   a entidade de catálogo correspondente já existe hoje (ex:
+   `BG_REGION_SUNA_001` → `REG_SUNA_001`, `ICON_ELEMENT_KATON_001` →
+   `TAG_KATON_001`, os 10 ícones de Estado extra → seus `STATUS_*_001`
+   canônicos) e deixado `null` com `note` explicando quando não existe
+   ainda (os 19 personagens extras não têm ficha `CHAR_` formal; 4 das 6
+   regiões não têm `REG_` formal; `ICON_STATUS_POISONED_001` não tem
+   Estado canônico correspondente no vocabulário do doc 01 — ficou sem
+   `contentId`, sinalizado explicitamente em vez de forçar uma ligação
+   errada).
+4. **2 entradas novas que nunca estiveram no manifesto nem no backlog**:
+   `ICON_FACTION_KONOHA_001`/`ICON_FACTION_KIRI_001`. O conteúdo
+   (`FACTION_KONOHA_001`/`FACTION_KIRI_001`) já existe desde o Marco 9
+   (D026), mas o Asset Manifest nunca tinha entrada de ícone de facção —
+   fechada agora que a arte chegou.
+5. **4 sprites `COMBAT_ENEMY_*` ganharam `contentId` retroativo** — as
+   entidades `ENEMY_WAVES_BANDIT_001` etc. só nasceram no Marco 5, depois
+   do manifesto original ter sido escrito; o `note` "entidade a criar no
+   Marco 5" foi trocado pelo `contentId` de verdade agora que a ligação é
+   trivial de fazer.
+6. **`assetBacklogP1` fica vazio** (não removido — a lista continua
+   existindo para os próximos itens P1 que aparecerem sem Asset ID
+   ainda).
+7. **`findAssetIdByContent(contentId, category)`** (novo helper em
+   `asset_manifest.js`) resolve o Asset ID de uma categoria ligado a um
+   `contentId` de catálogo — usado pelas telas jogáveis em vez de
+   hardcodar Asset IDs.
+8. **Telas jogáveis passam a mostrar arte real**: `game.js` (Vertical
+   Slice) — retrato grande na tela de Esquadrão e retrato pequeno em
+   cada card de combatente (tenta COMBAT → ART → PORTRAIT nessa ordem,
+   pois o boss Zabuza só tem ART/PORTRAIT, sem sprite COMBAT); `run.js`
+   (Modo Run) — ícone de tipo de nó no mapa (`UI_NODE_*`, com DESCANSO
+   mapeado pra `UI_NODE_HOSPITAL_001`). Onde não há arte pra um
+   `contentId` (personagens P1 sem ficha, etc.), cai no mesmo
+   `placeholderDataUri` de sempre — nunca quebra.
+9. **2 testes do Marco 0 em `asset_manifest.test.js` foram reescritos**
+   porque a premissa deles ("nenhuma imagem gerada ainda") deixou de ser
+   verdade — passam a afirmar o oposto (`summary.generated ===
+   assetManifest.length`, `resolveAssetSrc` retorna o `path` real em vez
+   de placeholder).

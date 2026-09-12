@@ -812,18 +812,20 @@ Nenhum.
 
 ## Assets faltantes
 
-Nenhuma imagem foi gerada ainda (por design — PROMPT MESTRE §63: não gerar
-sem pedido explícito do usuário).
+**Nenhuma — as 127 imagens do Asset Manifest chegaram e foram integradas
+(D034).** O usuário gerou a arte fora desta sessão (eu não gero imagem —
+PROMPT MESTRE §63) e enviou tudo em lotes; todas as 127 entradas do
+manifesto (as 67 P0 originais + 60 promovidas do backlog P1 + 2 ícones de
+facção novos) estão `status: 'generated'`, com arquivo real em
+`assets/<categoria>/<assetId>.png`. `assetBacklogP1` está vazio.
 
-- **67 entradas P0** com Asset ID + prompt visual completo, status
-  `prompt_ready`, prontas para o usuário gerar e devolver para integração
-  (personagens do vertical slice, Zabuza, jutsus iniciais, cenários do
-  País das Ondas, inimigos genéricos, itens, ícones de estado, UI).
-- **58 itens no backlog P1** (personagens/regiões/transformações/elementos
-  secundários) — só têm nome; viram entrada formal quando o conteúdo
-  correspondente for autorado.
-- Ver `src/content/asset_manifest.js` para a lista completa e
-  `resolveAssetSrc()` para os placeholders usados enquanto isso.
+Telas jogáveis (`game.js`, `run.js`) já usam a arte real (retratos,
+sprites de combate, ícones de nó de mapa) via `resolveAssetSrc`/
+`findAssetIdByContent`, com fallback automático pro placeholder SVG de
+sempre para qualquer `contentId` sem arte ligada (ex: os 19 personagens
+P1 sem ficha `CHAR_` formal ainda).
+
+Ver `src/content/asset_manifest.js` para a lista completa.
 
 ## Escala atual vs. meta de longo prazo
 
@@ -901,8 +903,9 @@ perfeitamente contínua entre save/load de Run (D030 #3), passivas
 alternativas/skins de Maestria com ficha real (D022 #1), Pós-game e
 Economia Permanente com Legado/Tickets/Fragmentos (D022 #7), slots
 CORPO/ACESSORIO e Economia de Armas (D029 #6), Gerador de Missão
-completo do doc 04 (D026 #8). Nenhuma imagem real foi gerada — os
-placeholders SVG continuam em uso (PROMPT MESTRE §63: só gerar arte sob
-pedido explícito, e nenhuma
-ferramenta de geração de imagem está
-disponível nesta sessão).
+completo do doc 04 (D026 #8).
+
+**As 127 imagens do Asset Manifest chegaram e foram integradas (D034)** —
+ver "Assets faltantes" acima. Os placeholders SVG continuam existindo no
+código (`placeholderDataUri`) como fallback pra qualquer `contentId`
+futuro sem arte ligada, mas deixaram de ser o que aparece nas telas hoje.

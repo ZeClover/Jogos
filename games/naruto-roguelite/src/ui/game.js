@@ -20,22 +20,25 @@ import { isAlive } from '../engine/combat/combatant.js';
 import { snapshotSquad, applySquadSnapshot } from '../engine/combat/campaign.js';
 import { ACTION_TYPES, POSITIONS } from '../engine/enums.js';
 import { VERTICAL_SLICE_ENCOUNTERS } from '../data/vertical_slice.js';
+import { findAssetIdByContent, resolveAssetSrc, placeholderDataUri } from '../content/asset_manifest.js';
 
 const SQUAD_IDS = [
   'CHAR_NARUTO_GENIN_001', 'CHAR_SASUKE_GENIN_001', 'CHAR_SAKURA_GENIN_001', 'CHAR_SHIKAMARU_GENIN_001',
 ];
-const PORTRAIT_COLORS = {
-  CHAR_NARUTO_GENIN_001: '#e8912d',
-  CHAR_SASUKE_GENIN_001: '#2f3b52',
-  CHAR_SAKURA_GENIN_001: '#c8567a',
-  CHAR_SHIKAMARU_GENIN_001: '#5a6b4a',
-};
-const PORTRAIT_EMOJI = {
-  CHAR_NARUTO_GENIN_001: '🍥',
-  CHAR_SASUKE_GENIN_001: '⚡',
-  CHAR_SAKURA_GENIN_001: '🌸',
-  CHAR_SHIKAMARU_GENIN_001: '☁️',
-};
+/**
+ * Retrato/arte de combate real (D034) se o catálogo tiver `contentId` ligado;
+ * senão, placeholder. `categories` é tentado em ordem (ex: inimigos comuns só
+ * têm COMBAT, mas o boss Zabuza só tem ART/PORTRAIT — sem sprite COMBAT).
+ */
+function portraitSrcFor(defId, categories = ['PORTRAIT']) {
+  const cats = Array.isArray(categories) ? categories : [categories];
+  for (const category of cats) {
+    const assetId = findAssetIdByContent(defId, category);
+    if (assetId) return resolveAssetSrc(assetId);
+  }
+  return placeholderDataUri(defId, cats[0]);
+}
+
 const POSITION_LABEL = { FRENTE: 'Frente', CENTRO: 'Centro', TRAS: 'Trás' };
 const ACTION_LABEL = { ATAQUE_BASICO: 'Ataque Básico', DEFENDER: 'Defender' };
 const ROMAN = { 1: '', 2: ' II', 3: ' III', 4: ' IV' };
@@ -330,9 +333,11 @@ function renderCombatantCard(c, { isCurrentTurn, clickable }) {
     return `<span class="vs-tag ${controlCls}">${escapeHtml(label)}${s.stacks > 1 ? `×${s.stacks}` : ''} (${s.duration}r)</span>`;
   }).join('');
 
+  const defId = c.id.split('#')[0];
   return `
     <div class="vs-combatant ${isAlive(c) ? '' : 'is-down'} ${isCurrentTurn ? 'is-turn' : ''} ${clickable ? 'is-target-candidate' : ''}" data-target-id="${c.id}">
       <div class="vs-combatant-head">
+        <img class="vs-combatant-portrait" src="${portraitSrcFor(defId, ['COMBAT', 'ART', 'PORTRAIT'])}" alt="">
         <strong>${escapeHtml(c.name)}</strong>
         <span class="vs-combatant-meta">${POSITION_LABEL[c.position]}${meta ? ` · ${escapeHtml(meta.aiLevel)}` : ''}</span>
       </div>
@@ -411,7 +416,7 @@ function renderSquadScreen() {
     const combatant = createCombatantFromCharacter(def);
     return `
       <div class="vs-card">
-        <div class="vs-portrait" style="background:${PORTRAIT_COLORS[def.id]}">${PORTRAIT_EMOJI[def.id]}</div>
+        <img class="vs-portrait" src="${portraitSrcFor(def.id)}" alt="${escapeHtml(def.name)}">
         <h3>${escapeHtml(def.name)}</h3>
         <p class="vs-role">${escapeHtml(def.role.join(' · '))} · Rank ${def.rank} · Custo ${def.squadCost}</p>
         ${barRow('HP', combatant.hp, combatant.attributes.hpMax, 'hp')}

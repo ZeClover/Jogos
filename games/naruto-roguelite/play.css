@@ -124,12 +124,9 @@ main.vs-main {
   aspect-ratio: 1 / 1;
   border-radius: 6px;
   margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.2rem;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  display: block;
+  object-fit: cover;
+  background: #2f3b52;
 }
 
 .vs-card h3 { margin: 4px 0; font-size: 1rem; }
@@ -182,9 +179,17 @@ main.vs-main {
 .vs-combatant.is-target-candidate { cursor: pointer; }
 .vs-combatant.is-target-candidate:hover { background: #f3e9cf; }
 
-.vs-combatant-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.vs-combatant-head strong { font-size: 0.95rem; }
+.vs-combatant-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.vs-combatant-head strong { font-size: 0.95rem; flex: 1; }
 .vs-combatant-meta { font-size: 0.7rem; color: var(--ink-soft); }
+.vs-combatant-portrait {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #2f3b52;
+  flex-shrink: 0;
+}
 
 .vs-tag-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 .vs-tag {
@@ -273,6 +278,7 @@ main.vs-main {
 .vs-node-card:hover { background: #f3e9cf; }
 .vs-node-card.is-boss { border-color: var(--seal-red); }
 .vs-node-card.is-reclassified { border-color: var(--gold); }
+.vs-node-icon { width: 32px; height: 32px; object-fit: contain; display: block; margin: 0 0 6px; }
 .vs-node-card h4 { margin: 0 0 6px; }
 .vs-node-card .vs-node-meta { font-size: 0.75rem; color: var(--ink-soft); margin: 0 0 4px; }
 

@@ -13,25 +13,86 @@
 //   sequer autorado (ver CANON_RULES.md #50). Viram entradas formais quando
 //   o conteúdo correspondente for criado (personagem, região, etc.).
 //
-// Nenhuma imagem foi gerada nesta sessão (PROMPT MESTRE #63): todo status é
-// "prompt_ready" (P0, prompt completo pronto para gerar) ou "missing" (P1,
-// só o nome existe ainda).
+// D034 (ver DECISIONS.md): o usuário enviou as 127 imagens deste manifesto,
+// geradas fora desta sessão a partir dos prompts já registrados abaixo (ou,
+// para os itens que só tinham nome no backlog P1, gerada por conta própria
+// seguindo o mesmo esquema de Asset ID). Nenhuma imagem foi gerada por mim
+// (PROMPT MESTRE #63) — GENERATED_ASSET_IDS só registra o que chegou pronto.
+// Todo o resto continua "prompt_ready" (P0, prompt pronto) ou "missing" (P1,
+// só o nome existe).
 
 /** @typedef {import('../engine/types.js').AssetManifestEntry} AssetManifestEntry */
 
 const STYLE_NOTE = 'Seguir Style Bible Visual (docs/design/14_STYLE_BIBLE_VISUAL.md): '
   + 'anime premium, line-art limpa, cel shading controlado, sem fotorrealismo, sem chibi.';
 
+// Asset IDs cujo arquivo real já está em `assets/<categoria>/<assetId>.png`
+// (recebidos do usuário — D034). Um Set estático em vez de checar o
+// filesystem porque este módulo roda também no navegador (dev console).
+const GENERATED_ASSET_IDS = new Set([
+  'PORTRAIT_CHAR_NARUTO_GENIN_001', 'FULL_CHAR_NARUTO_GENIN_001', 'COMBAT_CHAR_NARUTO_GENIN_001',
+  'PORTRAIT_CHAR_SASUKE_GENIN_001', 'FULL_CHAR_SASUKE_GENIN_001', 'COMBAT_CHAR_SASUKE_GENIN_001',
+  'PORTRAIT_CHAR_SAKURA_GENIN_001', 'FULL_CHAR_SAKURA_GENIN_001', 'COMBAT_CHAR_SAKURA_GENIN_001',
+  'PORTRAIT_CHAR_SHIKAMARU_GENIN_001', 'FULL_CHAR_SHIKAMARU_GENIN_001', 'COMBAT_CHAR_SHIKAMARU_GENIN_001',
+  'PORTRAIT_BOSS_ZABUZA_001', 'ART_BOSS_ZABUZA_001', 'ICON_BOSS_ZABUZA_001',
+  'ICON_JUT_KAGE_BUNSHIN_001', 'ART_JUT_KAGE_BUNSHIN_001',
+  'ICON_JUT_RASENGAN_001', 'ART_JUT_RASENGAN_001',
+  'ICON_JUT_KATON_GOKAKYU_001', 'ART_JUT_KATON_GOKAKYU_001',
+  'ICON_JUT_CHIDORI_001', 'ART_JUT_CHIDORI_SASUKE_GENIN_001',
+  'ICON_JUT_KAGEMANE_001', 'ART_JUT_KAGEMANE_001',
+  'ICON_JUT_KAWARIMI_001',
+  'BG_WAVES_ROAD_001', 'BG_WAVES_BRIDGE_001', 'BG_WAVES_BRIDGE_MIST_001', 'BG_WAVES_FOREST_001',
+  'COMBAT_ENEMY_WAVES_BANDIT_001', 'COMBAT_ENEMY_WAVES_MERCENARY_001',
+  'COMBAT_ENEMY_KIRI_NINJA_001', 'COMBAT_ENEMY_KIRI_ELITE_001',
+  'ICON_ITEM_KUNAI_BASIC_001', 'ICON_ITEM_SHURIKEN_BASIC_001', 'ICON_ITEM_SMOKE_BOMB_001',
+  'ICON_ITEM_EXPLOSIVE_TAG_001', 'ICON_ITEM_SOLDIER_PILL_001', 'ICON_ITEM_ANTIDOTE_001',
+  'ICON_STATUS_BURNING_001', 'ICON_STATUS_WET_001', 'ICON_STATUS_ELECTRIFIED_001',
+  'ICON_STATUS_BLEEDING_001', 'ICON_STATUS_IMMOBILIZED_001', 'ICON_STATUS_STUNNED_001',
+  'ICON_STATUS_EXPOSED_001', 'ICON_STATUS_OFF_BALANCE_001', 'ICON_STATUS_HIDDEN_001',
+  'ICON_STATUS_FOCUSED_001',
+  'ART_EVENT_INJURED_NINJA_ROAD_001',
+  'UI_FRAME_CHARACTER_CARD_001', 'UI_FRAME_JUTSU_BUTTON_001', 'UI_FRAME_BOSS_HP_001',
+  'UI_FRAME_TOOLTIP_001', 'UI_NODE_MISSION_001', 'UI_NODE_ELITE_001', 'UI_NODE_BOSS_001',
+  'UI_NODE_EVENT_001', 'UI_NODE_SHOP_001', 'UI_NODE_HOSPITAL_001', 'UI_NODE_TRAINING_001',
+  'UI_NODE_SECRET_001', 'UI_RESOURCE_CHAKRA_001', 'UI_RESOURCE_HP_001', 'UI_RESOURCE_GUARD_001',
+  'UI_RESOURCE_RYO_001',
+  // --- P1 promovidos a formais nesta entrega (D034) -----------------------
+  'PORTRAIT_CHAR_KAKASHI_JONIN_001', 'PORTRAIT_CHAR_INO_GENIN_001', 'PORTRAIT_CHAR_CHOJI_GENIN_001',
+  'PORTRAIT_CHAR_HINATA_GENIN_001', 'PORTRAIT_CHAR_KIBA_GENIN_001', 'PORTRAIT_CHAR_SHINO_GENIN_001',
+  'PORTRAIT_CHAR_ROCK_LEE_GENIN_001', 'PORTRAIT_CHAR_NEJI_GENIN_001', 'PORTRAIT_CHAR_TENTEN_GENIN_001',
+  'PORTRAIT_CHAR_GUY_JONIN_001', 'PORTRAIT_CHAR_GAARA_EXAM_001', 'PORTRAIT_CHAR_TEMARI_EXAM_001',
+  'PORTRAIT_CHAR_KANKURO_EXAM_001', 'PORTRAIT_CHAR_HAKU_001', 'PORTRAIT_CHAR_KABUTO_CLASSIC_001',
+  'PORTRAIT_CHAR_OROCHIMARU_CLASSIC_001', 'PORTRAIT_CHAR_ITACHI_AKATSUKI_001',
+  'PORTRAIT_CHAR_KISAME_AKATSUKI_001', 'PORTRAIT_CHAR_JIRAIYA_CLASSIC_001',
+  'BG_REGION_KONOHA_001', 'BG_REGION_FOREST_DEATH_001', 'BG_REGION_SUNA_001',
+  'BG_REGION_KIRI_001', 'BG_REGION_AME_001', 'BG_REGION_ORO_LAB_001',
+  'EFFECT_SHARINGAN_1T_001', 'EFFECT_SHARINGAN_2T_001', 'EFFECT_BYAKUGAN_001',
+  'EFFECT_CURSED_SEAL_STAGE1_001', 'EFFECT_GAARA_SAND_ARMOR_001', 'EFFECT_EIGHT_GATES_BASIC_001',
+  'EFFECT_AKIMICHI_EXPANSION_001', 'EFFECT_ABURAME_SWARM_001', 'EFFECT_INUZUKA_SYNC_001',
+  'ICON_ELEMENT_KATON_001', 'ICON_ELEMENT_SUITON_001', 'ICON_ELEMENT_FUTON_001',
+  'ICON_ELEMENT_RAITON_001', 'ICON_ELEMENT_DOTON_001',
+  'ICON_STATUS_FROZEN_001', 'ICON_STATUS_POISONED_001', 'ICON_STATUS_MARKED_001',
+  'ICON_STATUS_BROKEN_001', 'ICON_STATUS_CONFUSED_001', 'ICON_STATUS_AFRAID_001',
+  'ICON_STATUS_SEALED_001', 'ICON_STATUS_CHAKRA_DISRUPTED_001', 'ICON_STATUS_PROTECTED_001',
+  'ICON_STATUS_KNOCKED_DOWN_001',
+  'UI_RARITY_C_001', 'UI_RARITY_B_001', 'UI_RARITY_A_001', 'UI_RARITY_S_001',
+  'UI_RARITY_SS_001', 'UI_RARITY_EX_001',
+  'UI_BG_ROULETTE_001', 'UI_EFFECT_CHARACTER_REVEAL_001',
+  'UI_BG_RUN_MAP_001',
+  'ICON_FACTION_KONOHA_001', 'ICON_FACTION_KIRI_001',
+]);
+
 function entry({
   assetId, contentId = null, category, priority, prompt, note,
 }) {
+  const hasArt = GENERATED_ASSET_IDS.has(assetId);
   return {
     assetId,
     contentId,
     category,
     path: `assets/${category.toLowerCase()}/${assetId}.png`,
     priority,
-    status: prompt ? 'prompt_ready' : 'missing',
+    status: hasArt ? 'generated' : (prompt ? 'prompt_ready' : 'missing'),
     prompt: prompt ? `${prompt} ${STYLE_NOTE}` : undefined,
     note,
   };
@@ -295,33 +356,33 @@ export const assetManifest = [
   // --- P0 — Inimigos genéricos ---------------------------------------------
   entry({
     assetId: 'COMBAT_ENEMY_WAVES_BANDIT_001',
+    contentId: 'ENEMY_WAVES_BANDIT_001',
     category: 'COMBAT',
     priority: 'P0',
     prompt: 'Bandido mercenário, roupa improvisada, arma simples, sem bandana ninja.',
-    note: 'Arquétipo de inimigo comum do País das Ondas; entidade ENEMY_ formal a criar no Marco 5.',
   }),
   entry({
     assetId: 'COMBAT_ENEMY_WAVES_MERCENARY_001',
+    contentId: 'ENEMY_WAVES_MERCENARY_001',
     category: 'COMBAT',
     priority: 'P0',
     prompt: 'Mercenário profissional, proteção leve, kunai/espada curta.',
-    note: 'Arquétipo de inimigo comum do País das Ondas; entidade ENEMY_ formal a criar no Marco 5.',
   }),
   entry({
     assetId: 'COMBAT_ENEMY_KIRI_NINJA_001',
+    contentId: 'ENEMY_KIRI_NINJA_001',
     category: 'COMBAT',
     priority: 'P0',
     prompt: 'Ninja genérico de Kiri, tons frios, equipamento furtivo, sem copiar personagem '
       + 'canônico.',
-    note: 'Arquétipo de inimigo comum de Kiri; entidade ENEMY_ formal a criar no Marco 5.',
   }),
   entry({
     assetId: 'COMBAT_ENEMY_KIRI_ELITE_001',
+    contentId: 'ENEMY_KIRI_ELITE_001',
     category: 'COMBAT',
     priority: 'P0',
     prompt: 'Elite de Kiri, espada, proteção melhor, cicatriz/máscara parcial, não parecer '
       + 'Zabuza.',
-    note: 'Arquétipo de elite de Kiri; entidade ENEMY_ formal a criar no Marco 5.',
   }),
 
   // --- P0 — Itens iniciais --------------------------------------------------
@@ -423,6 +484,156 @@ export const assetManifest = [
   ].map(([assetId, prompt]) => entry({
     assetId, category: 'UI', priority: 'P0', prompt,
   })),
+
+  // --- P1 promovidos a formais (D034 — arte chegou antes do prompt) --------
+  // Estes itens só tinham nome em `assetBacklogP1`. O usuário enviou a arte
+  // já usando o próprio esquema de Asset ID do backlog, então a entrada vira
+  // formal agora — sem inventar conteúdo novo (CANON_RULES.md #50): o nome e
+  // o grupo já estavam declarados, só o Asset ID e o registro formal são
+  // novos. `prompt` fica de fora porque não foi eu que gerei a imagem.
+  ...[
+    ['PORTRAIT_CHAR_KAKASHI_JONIN_001', null, 'Personagens P1 — Kakashi Jōnin.'],
+    ['PORTRAIT_CHAR_INO_GENIN_001', null, 'Personagens P1 — Ino.'],
+    ['PORTRAIT_CHAR_CHOJI_GENIN_001', null, 'Personagens P1 — Chōji.'],
+    ['PORTRAIT_CHAR_HINATA_GENIN_001', null, 'Personagens P1 — Hinata.'],
+    ['PORTRAIT_CHAR_KIBA_GENIN_001', null, 'Personagens P1 — Kiba.'],
+    ['PORTRAIT_CHAR_SHINO_GENIN_001', null, 'Personagens P1 — Shino.'],
+    ['PORTRAIT_CHAR_ROCK_LEE_GENIN_001', null, 'Personagens P1 — Rock Lee.'],
+    ['PORTRAIT_CHAR_NEJI_GENIN_001', null, 'Personagens P1 — Neji.'],
+    ['PORTRAIT_CHAR_TENTEN_GENIN_001', null, 'Personagens P1 — Tenten.'],
+    ['PORTRAIT_CHAR_GUY_JONIN_001', null, 'Personagens P1 — Guy.'],
+    ['PORTRAIT_CHAR_GAARA_EXAM_001', null, 'Personagens P1 — Gaara Exam.'],
+    ['PORTRAIT_CHAR_TEMARI_EXAM_001', null, 'Personagens P1 — Temari.'],
+    ['PORTRAIT_CHAR_KANKURO_EXAM_001', null, 'Personagens P1 — Kankurō.'],
+    ['PORTRAIT_CHAR_HAKU_001', null, 'Personagens P1 — Haku.'],
+    ['PORTRAIT_CHAR_KABUTO_CLASSIC_001', null, 'Personagens P1 — Kabuto.'],
+    ['PORTRAIT_CHAR_OROCHIMARU_CLASSIC_001', null, 'Personagens P1 — Orochimaru.'],
+    ['PORTRAIT_CHAR_ITACHI_AKATSUKI_001', null, 'Personagens P1 — Itachi.'],
+    ['PORTRAIT_CHAR_KISAME_AKATSUKI_001', null, 'Personagens P1 — Kisame.'],
+    ['PORTRAIT_CHAR_JIRAIYA_CLASSIC_001', null, 'Personagens P1 — Jiraiya.'],
+  ].map(([assetId, contentId, note]) => entry({
+    assetId,
+    contentId,
+    category: 'PORTRAIT',
+    priority: 'P1',
+    note: `${note} Personagem ainda não tem entidade CHAR_ formal no catálogo (src/data/catalog/characters.js).`,
+  })),
+
+  ...[
+    ['BG_REGION_KONOHA_001', null, 'Regiões P1 — Konoha.'],
+    ['BG_REGION_FOREST_DEATH_001', 'REG_FLORESTA_DA_MORTE_001', 'Regiões P1 — Floresta da Morte.'],
+    ['BG_REGION_SUNA_001', 'REG_SUNA_001', 'Regiões P1 — Suna.'],
+    ['BG_REGION_KIRI_001', null, 'Regiões P1 — Kiri.'],
+    ['BG_REGION_AME_001', null, 'Regiões P1 — Ame.'],
+    ['BG_REGION_ORO_LAB_001', null, 'Regiões P1 — Laboratório Orochimaru.'],
+  ].map(([assetId, contentId, note]) => entry({
+    assetId,
+    contentId,
+    category: 'BG',
+    priority: 'P1',
+    note: contentId
+      ? note
+      : `${note} Região ainda não tem entidade REG_ formal no catálogo (src/data/catalog/regions.js).`,
+  })),
+
+  ...[
+    ['EFFECT_SHARINGAN_1T_001', 'Transformações P1 — Sharingan 1 tomoe.'],
+    ['EFFECT_SHARINGAN_2T_001', 'Transformações P1 — Sharingan 2 tomoe.'],
+    ['EFFECT_BYAKUGAN_001', 'Transformações P1 — Byakugan.'],
+    ['EFFECT_CURSED_SEAL_STAGE1_001', 'Transformações P1 — Selo Amaldiçoado Stage 1.'],
+    ['EFFECT_GAARA_SAND_ARMOR_001', 'Transformações P1 — Armadura de Areia (Gaara).'],
+    ['EFFECT_EIGHT_GATES_BASIC_001', 'Transformações P1 — Oito Portões (básico).'],
+    ['EFFECT_AKIMICHI_EXPANSION_001', 'Transformações P1 — Expansão Akimichi.'],
+    ['EFFECT_ABURAME_SWARM_001', 'Transformações P1 — Enxame Aburame.'],
+    ['EFFECT_INUZUKA_SYNC_001', 'Transformações P1 — Sincronia Inuzuka.'],
+  ].map(([assetId, note]) => entry({
+    assetId,
+    category: 'ART',
+    priority: 'P1',
+    note: `${note} Transformação/passiva ainda sem mecânica formal implementada.`,
+  })),
+
+  ...[
+    ['ICON_ELEMENT_KATON_001', 'TAG_KATON_001', 'Katon'],
+    ['ICON_ELEMENT_SUITON_001', 'TAG_SUITON_001', 'Suiton'],
+    ['ICON_ELEMENT_FUTON_001', 'TAG_FUTON_001', 'Fūton'],
+    ['ICON_ELEMENT_RAITON_001', 'TAG_RAITON_001', 'Raiton'],
+    ['ICON_ELEMENT_DOTON_001', 'TAG_DOTON_001', 'Doton'],
+  ].map(([assetId, contentId, name]) => entry({
+    assetId,
+    contentId,
+    category: 'ICON',
+    priority: 'P1',
+    note: `Elementos P1 — ícone de natureza Chakra "${name}" (ver src/data/catalog/tags.js).`,
+  })),
+
+  ...[
+    ['ICON_STATUS_FROZEN_001', 'Congelado'],
+    ['ICON_STATUS_POISONED_001', null],
+    ['ICON_STATUS_MARKED_001', 'Marcado'],
+    ['ICON_STATUS_BROKEN_001', 'Quebrado'],
+    ['ICON_STATUS_CONFUSED_001', 'Confuso'],
+    ['ICON_STATUS_AFRAID_001', 'Medo'],
+    ['ICON_STATUS_SEALED_001', 'Selado'],
+    ['ICON_STATUS_CHAKRA_DISRUPTED_001', 'Chakra Perturbado'],
+    ['ICON_STATUS_PROTECTED_001', 'Protegido'],
+    ['ICON_STATUS_KNOCKED_DOWN_001', 'Derrubado'],
+  ].map(([assetId, canonicalPt]) => entry({
+    assetId,
+    category: 'ICON',
+    priority: 'P1',
+    note: canonicalPt
+      ? `Status extras P1 — ícone do Estado canônico "${canonicalPt}" (ver src/data/catalog/statuses.js).`
+      : 'Status extras P1 — nome do backlog original sem Estado canônico correspondente em '
+        + 'src/data/catalog/statuses.js; ícone sem uso mecânico definido ainda.',
+  })),
+
+  ...[
+    ['UI_RARITY_C_001', 'C'], ['UI_RARITY_B_001', 'B'], ['UI_RARITY_A_001', 'A'],
+    ['UI_RARITY_S_001', 'S'], ['UI_RARITY_SS_001', 'SS'], ['UI_RARITY_EX_001', 'EX'],
+  ].map(([assetId, rank]) => entry({
+    assetId,
+    category: 'UI',
+    priority: 'P1',
+    note: `Molduras de Raridade P1 — moldura de rank "${rank}" (RANKS em src/engine/enums.js; `
+      + '"SS" não faz parte do vocabulário canônico de RANKS ainda).',
+  })),
+
+  entry({
+    assetId: 'UI_BG_ROULETTE_001',
+    category: 'UI',
+    priority: 'P1',
+    note: 'Roleta P1 — pergaminho cerimonial + selos + Chakra. Tela de roleta ainda não implementada.',
+  }),
+  entry({
+    assetId: 'UI_EFFECT_CHARACTER_REVEAL_001',
+    category: 'UI',
+    priority: 'P1',
+    note: 'Roleta P1 — efeito de reveal de personagem. Tela de roleta ainda não implementada.',
+  }),
+  entry({
+    assetId: 'UI_BG_RUN_MAP_001',
+    category: 'UI',
+    priority: 'P1',
+    note: 'Mapa P1 — fundo estilizado do mapa da Run.',
+  }),
+
+  // --- Ícones de Facção (conteúdo já existe desde o Marco 9/D026, mas não
+  // tinha entrada no Asset Manifest ainda) -----------------------------------
+  entry({
+    assetId: 'ICON_FACTION_KONOHA_001',
+    contentId: 'FACTION_KONOHA_001',
+    category: 'ICON',
+    priority: 'P1',
+    note: 'Ícone da facção Konohagakure (ver src/data/catalog/factions.js).',
+  }),
+  entry({
+    assetId: 'ICON_FACTION_KIRI_001',
+    contentId: 'FACTION_KIRI_001',
+    category: 'ICON',
+    priority: 'P1',
+    note: 'Ícone da facção Kirigakure (ver src/data/catalog/factions.js).',
+  }),
 ];
 
 /**
@@ -430,33 +641,27 @@ export const assetManifest = [
  * definidos. Não são AssetManifestEntry formais — viram uma quando o
  * conteúdo correspondente for autorado (ver comentário no topo do arquivo).
  */
-export const assetBacklogP1 = [
-  ...[
-    'Kakashi Jōnin', 'Ino', 'Chōji', 'Hinata', 'Kiba', 'Shino', 'Rock Lee', 'Neji',
-    'Tenten', 'Guy', 'Gaara Exam', 'Temari', 'Kankurō', 'Haku', 'Kabuto', 'Orochimaru',
-    'Itachi', 'Kisame', 'Jiraiya',
-  ].map((name) => ({ category: 'PORTRAIT', group: 'Personagens P1', name })),
-  ...['Konoha', 'Floresta da Morte', 'Suna', 'Kiri', 'Ame', 'Laboratório Orochimaru']
-    .map((name) => ({ category: 'BG', group: 'Regiões P1', name })),
-  ...[
-    'Sharingan 1T', 'Sharingan 2T', 'Byakugan', 'Selo Amaldiçoado Stage1', 'Sand Armor',
-    'Eight Gates basic', 'Akimichi Expansion', 'Aburame Swarm', 'Inuzuka Sync',
-  ].map((name) => ({ category: 'ART', group: 'Transformações P1', name })),
-  ...['Katon', 'Suiton', 'Fūton', 'Raiton', 'Doton']
-    .map((name) => ({ category: 'ICON', group: 'Elementos P1', name })),
-  ...[
-    'Frozen', 'Poisoned', 'Marked', 'Broken', 'Confused', 'Afraid', 'Sealed',
-    'Chakra Disrupted', 'Protected', 'Knocked Down',
-  ].map((name) => ({ category: 'ICON', group: 'Status extras P1', name })),
-  ...['C', 'B', 'A', 'S', 'SS', 'EX']
-    .map((name) => ({ category: 'UI', group: 'Molduras de Raridade P1', name })),
-  { category: 'BG', group: 'Roleta P1', name: 'UI_BG_ROULETTE_001 — pergaminho cerimonial + selos + Chakra' },
-  { category: 'UI', group: 'Roleta P1', name: 'UI_EFFECT_CHARACTER_REVEAL_001 — reveal de personagem' },
-  { category: 'BG', group: 'Mapa P1', name: 'UI_BG_RUN_MAP_001 — mapa ninja estilizado' },
-];
+// Vazio desde D034: todos os grupos que existiam aqui (Personagens P1,
+// Regiões P1, Transformações P1, Elementos P1, Status extras P1, Molduras
+// de Raridade P1, Roleta P1, Mapa P1) tiveram a arte enviada pelo usuário e
+// foram promovidos a entradas formais em `assetManifest` (ver o bloco
+// "P1 promovidos a formais" acima). Novos itens sem Asset ID/prompt ainda
+// definidos entram aqui de novo quando aparecerem.
+export const assetBacklogP1 = [];
 
 /** Índice assetId -> entry, para lookups O(1) (usado por validators.js). */
 export const assetManifestIndex = new Map(assetManifest.map((e) => [e.assetId, e]));
+
+/**
+ * Encontra o Asset ID de uma `category` (PORTRAIT/FULL/COMBAT/...) ligado a
+ * um `contentId` de catálogo (ex: 'CHAR_NARUTO_GENIN_001'). Usado pelas
+ * telas jogáveis para resolver o retrato/arte de combate de um personagem/
+ * inimigo/boss sem hardcodar o Asset ID em cada tela.
+ */
+export function findAssetIdByContent(contentId, category) {
+  const found = assetManifest.find((e) => e.contentId === contentId && e.category === category);
+  return found?.assetId ?? null;
+}
 
 /** Contagem de entradas por status, para relatórios (PROJECT_STATUS.md, dev console). */
 export function summarizeManifestByStatus(entries = assetManifest) {

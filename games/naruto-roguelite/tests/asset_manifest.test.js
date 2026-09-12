@@ -41,9 +41,9 @@ test('summarizeManifestByStatus soma para o total de entradas', () => {
   assert.equal(total, assetManifest.length);
 });
 
-test('nenhuma imagem foi "gerada" ainda nesta sessão (Marco 0 é só fundação)', () => {
+test('todas as entradas do manifesto têm arte "generated" desde D034', () => {
   const summary = summarizeManifestByStatus();
-  assert.equal(summary.generated ?? 0, 0);
+  assert.equal(summary.generated ?? 0, assetManifest.length);
   assert.equal(summary.reviewed ?? 0, 0);
   assert.equal(summary.integrated ?? 0, 0);
 });
@@ -54,9 +54,9 @@ test('placeholderDataUri produz um data URI de SVG', () => {
   assert.ok(uri.includes('PORTRAIT_CHAR_NARUTO_GENIN_001'.replace(/_/g, '_'))); // legenda presente (encoded)
 });
 
-test('resolveAssetSrc retorna placeholder para entradas conhecidas sem arte ainda', () => {
+test('resolveAssetSrc retorna o caminho real para entradas com arte "generated" (D034)', () => {
   const src = resolveAssetSrc('PORTRAIT_CHAR_NARUTO_GENIN_001');
-  assert.ok(src.startsWith('data:image/svg+xml'), 'deveria ser um placeholder, já que status ainda não é generated+');
+  assert.equal(src, 'assets/portrait/PORTRAIT_CHAR_NARUTO_GENIN_001.png');
 });
 
 test('resolveAssetSrc não quebra para um assetId desconhecido (nunca bloqueia)', () => {

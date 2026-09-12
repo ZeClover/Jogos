@@ -33,6 +33,7 @@ import {
   xpToNextLevel, MASTERY_MAX_LEVEL,
   getReputationValue, reputationLevel,
 } from '../engine/progression/index.js';
+import { resolveAssetSrc } from '../content/asset_manifest.js';
 
 const DEFAULT_REGION_ID = 'REG_PAIS_DAS_ONDAS_001';
 const SQUAD_IDS = [
@@ -40,6 +41,12 @@ const SQUAD_IDS = [
 ];
 const NODE_LABEL = {
   MISSAO: 'Missão', ELITE: 'Elite', BOSS: 'Confronto Final', DESCANSO: 'Descanso', LOJA: 'Mercador',
+};
+// Ícone de nó de mapa (D034): DESCANSO usa UI_NODE_HOSPITAL_001 (cura/recuperação),
+// os outros 4 tipos já têm um UI_NODE_* próprio no Asset Manifest.
+const NODE_ICON_ASSET_ID = {
+  MISSAO: 'UI_NODE_MISSION_001', ELITE: 'UI_NODE_ELITE_001', BOSS: 'UI_NODE_BOSS_001',
+  DESCANSO: 'UI_NODE_HOSPITAL_001', LOJA: 'UI_NODE_SHOP_001',
 };
 // Itens vendíveis no nó LOJA (Marco 10, D028): qualquer Item do catálogo com `price` definido.
 const SHOP_ITEM_IDS = () => items.all().filter((def) => typeof def.price === 'number').map((def) => def.id);
@@ -746,6 +753,7 @@ function renderMapScreen() {
       .filter(Boolean);
     return `
       <button class="vs-node-card ${node.isBoss ? 'is-boss' : ''} ${node.reclassified ? 'is-reclassified' : ''}" data-node-id="${node.id}">
+        <img class="vs-node-icon" src="${resolveAssetSrc(NODE_ICON_ASSET_ID[node.type])}" alt="">
         <h4>${NODE_LABEL[node.type]}${node.reclassified ? ' ⚠️' : ''}</h4>
         <p class="vs-node-meta">${escapeHtml(node.name)}${node.rank ? ` · Rank ${escapeHtml(node.rank)}` : ''}</p>
         ${enemyNames.length ? `<p class="vs-node-meta">${escapeHtml(enemyNames.join(', '))}</p>` : ''}
