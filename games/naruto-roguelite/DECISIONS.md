@@ -1259,3 +1259,36 @@ Mane Complete Restraint" (Shikamaru, também suprema pendente).
 4. **Nenhuma mudança de UI** — `getActionOptions` (`game.js`/`run.js`)
    já iterava `loadout.ativas`/`suprema` genericamente; as 9 fichas
    novas aparecem nas opções de ação sem nenhum código extra.
+
+## D033 — Jutsu passa a poder GASTAR o recurso exclusivo do ator (`requiresResource`)
+
+**Contexto:** D017 e D032 #2 registraram a mesma lacuna: `spendResource`
+existe em `combatant.js` desde o Marco 4, mas nenhum Jutsu o usava — só
+`grantsResource` (conceder) tinha fiação real em `actions.js`. Bunshin
+Feint (D032) ficou documentado como "deveria gastar 1 Clone, mas ainda
+não exige" até este lote fechar a lacuna.
+
+**Decisões:**
+
+1. **Novo campo de ficha `requiresResource: { amount }`** (`jutsus.js`),
+   mesmo formato de `grantsResource`. `handleJutsu` (`actions.js`) checa
+   `actor.resource.current >= amount` no mesmo momento da checagem de
+   Chakra — sem recurso suficiente, a ação falha com
+   `INSUFFICIENT_RESOURCE` e não consome o turno (mesmo contrato de
+   `INSUFFICIENT_CHAKRA`); com recurso suficiente, gasta via
+   `spendResource` junto com o desconto de Chakra, antes de resolver o
+   efeito.
+2. **Bunshin Feint (Naruto) é o primeiro Jutsu a usar** — agora exige e
+   gasta 1 Clone de verdade; sem Clones ativos (ex: logo no início do
+   combate, antes de usar Kage Bunshin), a ação falha.
+3. **UI mostra o requisito e desabilita a opção sem recurso suficiente**
+   — mesmo tratamento que já existia para Chakra insuficiente/cooldown
+   em `getActionOptions` (`game.js`/`run.js`); o detalhe da ação ganha
+   "· exige N <nome do recurso>".
+4. **`result.resourceSpent`** — novo campo no resultado da ação (mesmo
+   espírito de `result.resourceGained`), pra quem consome o resultado
+   saber quanto foi gasto.
+5. **Nenhum outro Jutsu foi alterado** — Kage Bunshin/Analyze continuam
+   só concedendo recurso; nenhuma sinergia adicional (ex: Rasengan
+   escalando com Clones ativos, D016/D017) foi implementada — esse
+   lote só fecha o "gastar", não abre escopo novo de sinergia.

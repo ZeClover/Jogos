@@ -18,6 +18,10 @@
 //   grantsResource { amount } — soma ao recurso exclusivo do PRÓPRIO ator ao
 //     acertar/resolver com sucesso (ver DECISIONS.md D017); só tem efeito
 //     se o combatente tiver `resource` (characterBridge.js, Marco 4).
+//   requiresResource { amount } — exige e GASTA essa quantidade do recurso
+//     exclusivo do ator ANTES de resolver o efeito (mesmo momento do custo
+//     de Chakra); sem recurso suficiente, a ação falha com
+//     INSUFFICIENT_RESOURCE e não consome o turno (ver DECISIONS.md D033).
 //
 // Simplificações ainda pendentes (ver DECISIONS.md D016/D017): sinergia de
 // Rasengan/Uzumaki Naruto Rendan com número de Clones ativos, bônus de
@@ -297,8 +301,9 @@ export const JUTSU_DEFINITIONS = [
     range: 'MELEE',
     cooldown: 2,
     effect: 'DAMAGE',
+    requiresResource: { amount: 1 },
     appliesStates: [{ stateId: 'STATUS_VULNERAVEL_001', chance: 0.7, stacks: 1 }],
-    note: 'Naruto (D032) — um Clone finge o golpe, o de verdade acerta o alvo desprevenido (Vulnerável). Gastar 1 do recurso Clones ao usar fica pendente (Jutsu ainda não consome recurso exclusivo, só concede — ver D017); por ora não exige Clones ativos.',
+    note: 'Naruto (D032/D033) — um Clone finge o golpe, o de verdade acerta o alvo desprevenido (Vulnerável). Consome 1 do recurso Clones de verdade (`requiresResource`, D033) — sem Clones ativos (ex: logo no início do combate, antes de usar Kage Bunshin), a ação falha por INSUFFICIENT_RESOURCE.',
   },
   {
     id: 'JUT_SHURIKEN_COMBO_001',

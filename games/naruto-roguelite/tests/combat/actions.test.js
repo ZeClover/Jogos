@@ -7,7 +7,7 @@ import { resolveAction } from '../../src/engine/combat/actions.js';
 import { ACTION_TYPES, ACTION_SLOTS, POSITIONS } from '../../src/engine/enums.js';
 
 function makeState({
-  teamA, teamB, seed = 'seed-actions', itemCatalog = new Map(),
+  teamA, teamB, seed = 'seed-actions', itemCatalog = new Map(), jutsuCatalog = new Map(),
 }) {
   const all = [...teamA, ...teamB];
   return {
@@ -16,6 +16,7 @@ function makeState({
     teamAIds: teamA.map((c) => c.id),
     teamBIds: teamB.map((c) => c.id),
     itemCatalog,
+    jutsuCatalog,
     sideIds(id) {
       return this.teamAIds.includes(id) ? this.teamAIds : this.teamBIds;
     },
@@ -119,6 +120,64 @@ test('JUTSU com categoria desconhecida é rejeitado', () => {
   });
   assert.equal(result.applied, false);
   assert.equal(result.reason, 'INVALID_CATEGORY');
+});
+
+const FIXTURE_JUTSU_REQUIRES_RESOURCE = {
+  id: 'JUT_FIXTURE_REQUIRES_RESOURCE_001',
+  category: 'TAIJUTSU',
+  cost: 5,
+  power: 10,
+  range: 'MELEE',
+  effect: 'DAMAGE',
+  requiresResource: { amount: 2 },
+};
+
+function fighterWithResource(id, resource, overrides = {}) {
+  return createCombatant({
+    id, position: POSITIONS.FRENTE, attributes: createAttributes(overrides), resource,
+  });
+}
+
+test('JUTSU com requiresResource falha com INSUFFICIENT_RESOURCE sem recurso suficiente (sem gastar Chakra)', () => {
+  const actor = fighterWithResource('atacante', { id: 'clones', name: 'Clones', max: 5, current: 1 }, { chakraMax: 100 });
+  const target = fighter('alvo', {}, POSITIONS.FRENTE);
+  const jutsuCatalog = new Map([[FIXTURE_JUTSU_REQUIRES_RESOURCE.id, FIXTURE_JUTSU_REQUIRES_RESOURCE]]);
+  const state = makeState({ teamA: [actor], teamB: [target], jutsuCatalog });
+
+  const result = resolveAction(state, actor, {
+    type: ACTION_TYPES.JUTSU, jutsuId: FIXTURE_JUTSU_REQUIRES_RESOURCE.id, targetId: target.id,
+  });
+  assert.equal(result.applied, false);
+  assert.equal(result.reason, 'INSUFFICIENT_RESOURCE');
+  assert.equal(actor.chakra, 100, 'Chakra não deveria ser gasto numa ação rejeitada');
+  assert.equal(actor.resource.current, 1, 'recurso não deveria ser gasto numa ação rejeitada');
+});
+
+test('JUTSU com requiresResource gasta o recurso e devolve resourceSpent com recurso suficiente', () => {
+  const actor = fighterWithResource('atacante', { id: 'clones', name: 'Clones', max: 5, current: 3 }, { ...ALWAYS_HIT, ...NEVER_CRIT, chakraMax: 100 });
+  const target = fighter('alvo', {}, POSITIONS.FRENTE);
+  const jutsuCatalog = new Map([[FIXTURE_JUTSU_REQUIRES_RESOURCE.id, FIXTURE_JUTSU_REQUIRES_RESOURCE]]);
+  const state = makeState({ teamA: [actor], teamB: [target], jutsuCatalog });
+
+  const result = resolveAction(state, actor, {
+    type: ACTION_TYPES.JUTSU, jutsuId: FIXTURE_JUTSU_REQUIRES_RESOURCE.id, targetId: target.id,
+  });
+  assert.equal(result.applied, true);
+  assert.equal(result.resourceSpent, 2);
+  assert.equal(actor.resource.current, 1);
+});
+
+test('JUTSU sem requiresResource não mexe no recurso exclusivo do ator', () => {
+  const actor = fighterWithResource('atacante', { id: 'clones', name: 'Clones', max: 5, current: 3 }, { ...ALWAYS_HIT, ...NEVER_CRIT, chakraMax: 100 });
+  const target = fighter('alvo', {}, POSITIONS.FRENTE);
+  const state = makeState({ teamA: [actor], teamB: [target] });
+
+  const result = resolveAction(state, actor, {
+    type: ACTION_TYPES.JUTSU, targetId: target.id, cost: 5, power: 10, range: 'RANGED',
+  });
+  assert.equal(result.applied, true);
+  assert.equal(result.resourceSpent, undefined);
+  assert.equal(actor.resource.current, 3);
 });
 
 test('DEFENDER define a guarda como 30% da Defesa Física do ator', () => {

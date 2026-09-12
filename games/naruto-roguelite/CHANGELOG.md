@@ -3,6 +3,33 @@
 Formato livre, em ordem cronológica reversa (mais recente primeiro). Este
 changelog é interno ao subprojeto `games/naruto-roguelite/`.
 
+## Jutsu passa a poder gastar o recurso exclusivo do ator (`requiresResource`)
+
+### Adicionado
+
+- `src/data/catalog/jutsus.js` — novo campo `requiresResource: { amount }`
+  (mesmo formato de `grantsResource`); Bunshin Feint (Naruto) é o
+  primeiro Jutsu a usar — exige e gasta 1 Clone de verdade.
+- `src/engine/combat/actions.js` — `handleJutsu` checa e gasta o
+  recurso (via `spendResource`) no mesmo momento do custo de Chakra;
+  sem recurso suficiente, falha com `INSUFFICIENT_RESOURCE` sem
+  consumir o turno. Novo `result.resourceSpent`.
+- `src/ui/game.js`/`src/ui/run.js` — opção de ação desabilitada sem
+  recurso suficiente (mesmo tratamento de Chakra insuficiente/
+  cooldown); detalhe mostra "· exige N &lt;recurso&gt;".
+- 3 novos testes (`tests/combat/actions.test.js`) — total do projeto:
+  399 testes.
+- DECISIONS.md D033 (fecha a lacuna registrada em D017/D032 #2; nenhuma
+  sinergia adicional tipo Rasengan-com-Clones foi aberta neste lote).
+
+### Validado
+
+- `npm test`: 399/399 passando.
+- `run.html` testado em Chromium headless (Playwright): com 0 Clones,
+  Bunshin Feint aparece desabilitada com "exige 1 Clones"; após usar
+  Kage Bunshin, a opção habilita e foi usada de fato num combate real;
+  sem erros de console.
+
 ## Fichas reais para os 9 jutsus pendentes dos 4 Genin (fecha D017 #2)
 
 ### Adicionado

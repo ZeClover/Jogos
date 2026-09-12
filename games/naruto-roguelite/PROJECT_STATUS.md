@@ -638,9 +638,29 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   fiação em Jutsu —, `pendingAtivas`/`pendingSuprema` removidos por
   completo dos 4 Genin).
 
+### Concluído (Jutsu passa a poder gastar o recurso exclusivo do ator)
+
+- **`requiresResource: { amount }`** novo campo de ficha (`jutsus.js`),
+  mesmo formato de `grantsResource` — `handleJutsu` (`actions.js`) checa
+  e gasta via `spendResource` no mesmo momento do custo de Chakra; sem
+  recurso suficiente, falha com `INSUFFICIENT_RESOURCE` sem consumir o
+  turno.
+- **Bunshin Feint (Naruto) é o primeiro Jutsu a exigir/gastar recurso de
+  verdade** — 1 Clone por uso; sem Clones ativos, a ação falha.
+- **UI** (`game.js`/`run.js`): opção desabilitada sem recurso
+  suficiente (mesmo tratamento de Chakra insuficiente/cooldown),
+  detalhe da ação mostra "· exige N &lt;recurso&gt;".
+- `result.resourceSpent` novo, mesmo espírito de `result.resourceGained`.
+- 3 novos testes (`tests/combat/actions.test.js`) — total do projeto:
+  399 testes.
+- DECISIONS.md D033 (novo campo de ficha, checagem/gasto no mesmo
+  momento do custo de Chakra, Bunshin Feint como primeiro caso real, UI
+  desabilita e mostra o requisito, nenhuma sinergia adicional tipo
+  Rasengan-escalando-com-Clones foi aberta).
+
 ## Validado
 
-- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **396/396
+- `npm test` (`node --test`) dentro de `games/naruto-roguelite/`: **399/399
   passando**.
 - Dev console verificado no Chromium headless (Playwright), Marcos 0-5:
   engine carrega sem erros de página, todos os módulos ES retornam HTTP
@@ -757,6 +777,11 @@ completa de design em `docs/design/00` a `16` + `17_PROMPT_MESTRE.md`
   Shikamaru); Bunshin Feint, Inner Sakura e Kage Mane Complete
   Restraint de fato usados num combate real sem erro; sem erros de
   console.
+- **Jutsu gastando recurso exclusivo (Bunshin Feint) verificado no
+  Chromium headless (Playwright)**: com 0 Clones, a opção Bunshin
+  Feint aparece desabilitada e o detalhe mostra "exige 1 Clones"; usar
+  Kage Bunshin habilita a opção; usada de fato num combate real sem
+  erro; sem erros de console.
 - Revisão manual do diff antes do commit.
 
 ## Em andamento
@@ -765,8 +790,9 @@ Marco 10 — Expansão: 1º a 5º lotes (Itens consumíveis, Economia da Run
 — Ryō com ganho e gasto via nó LOJA, Equipamento persistente com as 9
 Armas Lendárias do doc completas) concluídos; salvar/carregar Run em
 andamento também concluído (fecha D020 #9); fichas reais para os 9
-jutsus pendentes dos 4 Genin também concluído (fecha D017 #2); próximo
-lote a definir.
+jutsus pendentes dos 4 Genin também concluído (fecha D017 #2); Jutsu
+gastando recurso exclusivo de verdade também concluído; próximo lote a
+definir.
 
 ## Pendente (próximos marcos/aprofundamentos, não começados)
 
@@ -856,13 +882,15 @@ também foi entregue** (D030), fechando a pendência D020 #9 aberta desde
 o Marco 7, e **as fichas reais para os 9 jutsus pendentes dos 4 Genin**
 também foram entregues (D032), fechando a pendência D017 #2 aberta
 desde o Marco 4 — Sakura e Shikamaru têm Suprema de verdade pela
-primeira vez. Próximo lote a definir — candidatos: slots CORPO/ACESSORIO
-de Equipamento (sem nome citado no doc ainda, precisa de mais base ou
-de uma decisão de nomear algo genérico), Economia de Armas (comprar/
-achar as Lendárias em vez de escolha livre), Jutsu consumindo recurso
-exclusivo de verdade (`spendResource` já existe, sem fiação — D032
-#2), mais Personagens/Jutsus/Inimigos, ou o Gerador de Missão completo
-agora que Facções existem.
+primeira vez. **Jutsu consumindo recurso exclusivo de verdade** também
+foi entregue (D033, `requiresResource`) — Bunshin Feint agora exige e
+gasta 1 Clone. Próximo lote a definir — candidatos: slots CORPO/
+ACESSORIO de Equipamento (sem nome citado no doc ainda, precisa de mais
+base ou de uma decisão de nomear algo genérico), Economia de Armas
+(comprar/achar as Lendárias em vez de escolha livre), sinergia de
+Rasengan/Uzumaki Naruto Rendan com número de Clones ativos (D016/D017,
+agora possível com `requiresResource`), mais Personagens/Jutsus/
+Inimigos, ou o Gerador de Missão completo agora que Facções existem.
 
 Pendências explícitas que continuam em aberto de marcos anteriores:
 "recuar" voltando uma camada no mapa (D020 #9), persistência de
@@ -872,9 +900,9 @@ D028/D029, só o kit fixo ainda reseta por combate, D025 #5), RNG não
 perfeitamente contínua entre save/load de Run (D030 #3), passivas
 alternativas/skins de Maestria com ficha real (D022 #1), Pós-game e
 Economia Permanente com Legado/Tickets/Fragmentos (D022 #7), slots
-CORPO/ACESSORIO e Economia de Armas (D029 #6), Jutsu gastando recurso
-exclusivo (D032 #2), Gerador de Missão completo do doc 04 (D026 #8).
-Nenhuma imagem real foi gerada — os placeholders SVG continuam em uso
-(PROMPT MESTRE §63: só gerar arte sob pedido explícito, e nenhuma
+CORPO/ACESSORIO e Economia de Armas (D029 #6), Gerador de Missão
+completo do doc 04 (D026 #8). Nenhuma imagem real foi gerada — os
+placeholders SVG continuam em uso (PROMPT MESTRE §63: só gerar arte sob
+pedido explícito, e nenhuma
 ferramenta de geração de imagem está
 disponível nesta sessão).

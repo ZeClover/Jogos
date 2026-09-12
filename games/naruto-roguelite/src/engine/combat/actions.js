@@ -28,12 +28,16 @@
 // Marco 10 (Itens): ITEM consome 1 unidade de `combatant.inventory` (sem
 // custo de Chakra/cooldown) e reaproveita os mesmos 5 efeitos genéricos
 // de Jutsu + `RESTORE_CHAKRA` (exclusivo de Item) — ver DECISIONS.md D025.
+//
+// Um JUTSU com `requiresResource` na ficha (D033) exige e GASTA essa
+// quantidade do recurso exclusivo do ator no mesmo momento do custo de
+// Chakra — sem recurso suficiente, falha com INSUFFICIENT_RESOURCE.
 
 import {
   ACTION_SLOTS, ACTION_TYPES, POSITIONS, JUTSU_EFFECTS, ITEM_EFFECTS,
 } from '../enums.js';
 import {
-  isAlive, applyDamage, applyHeal, gainResource, hasItem, consumeItem,
+  isAlive, applyDamage, applyHeal, gainResource, spendResource, hasItem, consumeItem,
 } from './combatant.js';
 import { isValidRangeTarget } from './positions.js';
 import {
@@ -172,6 +176,11 @@ function handleJutsu(state, actor, action) {
   const cost = Math.round(rawCost * (1 - Math.min(1, Math.max(0, actor.attributes.eficiencia))));
   if (actor.chakra < cost) return { applied: false, reason: 'INSUFFICIENT_CHAKRA' };
 
+  const requiredResource = jutsuDef?.requiresResource?.amount ?? 0;
+  if (requiredResource > 0 && (actor.resource?.current ?? 0) < requiredResource) {
+    return { applied: false, reason: 'INSUFFICIENT_RESOURCE' };
+  }
+
   const range = effective.range ?? 'RANGED';
   const sideMembers = state.sideIds(target.id).map((id) => state.combatants.get(id));
   if (!isValidRangeTarget({
@@ -181,6 +190,7 @@ function handleJutsu(state, actor, action) {
   }
 
   actor.chakra -= cost;
+  if (requiredResource > 0) spendResource(actor, requiredResource);
   if (action.jutsuId) setCooldown(actor, action.jutsuId, effective.cooldown ?? 0);
 
   let result;
@@ -244,6 +254,7 @@ function handleJutsu(state, actor, action) {
   if (result.success && jutsuDef?.grantsResource) {
     result.resourceGained = gainResource(actor, jutsuDef.grantsResource.amount);
   }
+  if (requiredResource > 0) result.resourceSpent = requiredResource;
 
   return result;
 }

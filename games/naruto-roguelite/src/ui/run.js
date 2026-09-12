@@ -173,14 +173,16 @@ function getActionOptions(actor) {
       if (!def) continue;
       const cost = effectiveJutsuCost(actor, def);
       const cooldownLeft = actor.cooldowns.get(jutsuId) ?? 0;
+      const requiredResource = def.requiresResource?.amount ?? 0;
+      const lacksResource = requiredResource > 0 && (actor.resource?.current ?? 0) < requiredResource;
       options.push({
         kind: 'JUTSU',
         jutsuId,
         label: def.name,
-        detail: `${def.rank} · Custo ${cost}${def.cooldown ? ` · CD ${def.cooldown}` : ''}${cooldownLeft > 0 ? ` · recarregando (${cooldownLeft}r)` : ''}`,
+        detail: `${def.rank} · Custo ${cost}${def.cooldown ? ` · CD ${def.cooldown}` : ''}${cooldownLeft > 0 ? ` · recarregando (${cooldownLeft}r)` : ''}${requiredResource ? ` · exige ${requiredResource} ${actor.resource?.name ?? 'recurso'}` : ''}`,
         slot: def.slot ?? 'PRINCIPAL',
         targetKind: targetKindForRange(def.range),
-        disabled: cooldownLeft > 0 || actor.chakra < cost,
+        disabled: cooldownLeft > 0 || actor.chakra < cost || lacksResource,
       });
     }
   }
